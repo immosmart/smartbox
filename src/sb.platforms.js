@@ -182,7 +182,7 @@
 					$externalCssContainer.appendChild(el);
 				});
 
-				document.head.appendChild($externalCssContainer);
+				document.body.appendChild($externalCssContainer);
 			}
 		},
 
