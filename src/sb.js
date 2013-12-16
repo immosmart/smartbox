@@ -20,8 +20,16 @@
 			 * @type: {String} ex: browser, samsung, lg
 			 */
 			currentPlatform: ''
-		}
+		},
 
+		initialise: function (cb) {
+			var self = this;
+			$$log('initialising SB');
+			SB.platforms.initialise(function (currentPlatform) {
+				self.currentPlatform = currentPlatform;
+				cb && cb.call();
+			});
+		}
 	};
 
 	SB.utils = {
@@ -30,17 +38,22 @@
 		 * @param msg
 		 */
 		error: function ( msg ) {
-
+			alert('!!! ERROR: ' + msg);
 		},
 
 		/**
 		 * Show messages in log
 		 */
-		log: function () {
-
+		log: function (msg) {
+			alert('!!! LOGGING: ' + msg);
 		}
 	};
 
+	window.$$log = SB.utils.log;
+	window.$$error = SB.utils.error;
 
+	$(function () {
+		SB.initialise();
+	});
 	window.SB = SB;
 })(this);

@@ -26,19 +26,28 @@
 		},
 
 		// Detect & initialise platform
-		initialise: function () {
+		initialise: function (cb) {
+			var prevTime = new Date().getTime();
 
 			// get first platform, where detect() return true
 			var currentPlatform = _.find(_supportedPlatforms, function ( platform ) {
 				return platform.detect();
 			});
 
+			$$log('Get platform time: ' + (new Date().getTime() - prevTime));
+
 			currentPlatform = currentPlatform || _defaultPlatform;
 			if ( !currentPlatform ) {
-				SB.error('No Platform detected!');
+				$$error('No Platform detected!');
 			} else {
-				_platform = currentPlatform;
-				currentPlatform.initialise();
+				$$log('detect platform: ' + currentPlatform.name);
+				currentPlatform.addExternalFiles(function () {
+					$$log('adding files callback');
+					currentPlatform.setPlugins();
+					currentPlatform.initialise();
+					_platform = currentPlatform;
+					cb && cb.call(this, currentPlatform);
+				});
 			}
 		}
 	};
@@ -54,16 +63,129 @@
 	};
 
 	PlatformPrototype = {
-		externalCss: {},
-		externalJs: {},
+		externalCss: [],
+		externalJs: [],
 
+		DUID: '',
+
+		/**
+		 * Detecting current platform
+		 * @returns {boolean} true if running on current platform
+		 */
 		detect: function () {
 			// should be override
+			return false;
 		},
-		// main initialization of platform
+
+		/**
+		 * Function called if running on current platform
+		 */
 		initialise: function () {},
-		// load external files for platform
-		addPlatformFiles: function () {},
+
+		/**
+		 * Get DUID in case of Config
+		 * @return {string} DUID
+		 */
+		getDUID: function () {
+			return '';
+		},
+
+		/**
+		 * Returns random DUID for platform
+		 * @returns {string}
+		 */
+		getRandomDUID: function () {
+			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
+		},
+
+		/**
+		 * Returns native DUID for platform if exist
+		 * @returns {string}
+		 */
+		getNativeDUID: function () {
+			return '';
+		},
+
+		/**
+		 * Set custom plugins
+		 */
+		setPlugins: function () {},
+
+		// TODO: volume for all platforms
+		volumeUp: function() {},
+		volumeDown: function () {},
+		getVolume: function () {},
+
+		setData: function () {},
+
+		getData: function () {},
+
+		removeData: function () {},
+
+		addExternalFiles: function (cb) {
+			this.addExternalJS(cb);
+			this.addExternalCss();
+		},
+
+		/**
+		 * Asynchroniosly adding platform files
+		 * @param cb {Function} callback on load javascript files
+		 */
+		addExternalJS: function (cb) {
+			var defferedArray = [],
+				$externalJsContainer;
+
+			if ( this.externalJs.length ) {
+
+				$externalJsContainer = document.createDocumentFragment();
+
+				_.each(this.externalJs, function ( src ) {
+
+					var d = $.Deferred(),
+						el = document.createElement('script');
+
+					el.onload = function() {
+						d.resolve();
+						el.onload = null;
+					};
+
+					el.type = 'text/javascript';
+					el.src = src;
+
+					defferedArray.push(d);
+					$externalJsContainer.appendChild(el);
+				});
+
+				document.body.appendChild($externalJsContainer);
+				$.when.apply($, defferedArray).done(function () {
+					cb && cb.call();
+				});
+			} else {
+
+				// if no external js simple call cb
+				cb && cb.call(this);
+			}
+		},
+
+		addExternalCss: function () {
+			var $externalCssContainer;
+
+			if (this.externalCss.length) {
+				$externalCssContainer = document.createDocumentFragment();
+				_.each(this.externalJs, function ( src ) {
+
+					var el = document.createElement('link');
+
+					el.rel = 'stylesheet';
+					el.href = src;
+
+					$externalCssContainer.appendChild(el);
+				});
+
+				document.head.appendChild($externalCssContainer);
+			}
+		},
+
 		exit: function () {}
 	};
 
