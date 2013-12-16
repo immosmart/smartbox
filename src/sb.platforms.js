@@ -123,23 +123,23 @@
 		removeData: function () {},
 
 		addExternalFiles: function (cb) {
-			this.addExternalJS(cb);
-			this.addExternalCss();
+			this.addExternalJS(this.externalJs, cb);
+			this.addExternalCss(this.externalCss);
 		},
 
 		/**
 		 * Asynchroniosly adding platform files
 		 * @param cb {Function} callback on load javascript files
 		 */
-		addExternalJS: function (cb) {
+		addExternalJS: function (filesArray ,cb) {
 			var defferedArray = [],
 				$externalJsContainer;
 
-			if ( this.externalJs.length ) {
+			if ( filesArray.length ) {
 
 				$externalJsContainer = document.createDocumentFragment();
 
-				_.each(this.externalJs, function ( src ) {
+				_.each(filesArray, function ( src ) {
 
 					var d = $.Deferred(),
 						el = document.createElement('script');
@@ -167,12 +167,12 @@
 			}
 		},
 
-		addExternalCss: function () {
+		addExternalCss: function (filesArray) {
 			var $externalCssContainer;
 
-			if (this.externalCss.length) {
+			if (filesArray.length) {
 				$externalCssContainer = document.createDocumentFragment();
-				_.each(this.externalJs, function ( src ) {
+				_.each(filesArray, function ( src ) {
 
 					var el = document.createElement('link');
 
