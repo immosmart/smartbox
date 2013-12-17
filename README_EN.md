@@ -7,7 +7,7 @@ SmartTV Framework
 
 ## Platforms
 
-- Определение текущей платформы и подгрузка файлов для платформы
+- The defining of the current platform and files uploading for the platform
 - Platform's files are in the folder with the name tv.[platform's name]
 - Platform's modules (mediaplayer, voice) are named as tv.[platform's name].[module's name]
 
@@ -24,8 +24,4 @@ SmartTV Framework
 
 
 ## Features
-
-
-
-## после написания
 
