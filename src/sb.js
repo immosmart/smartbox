@@ -45,7 +45,7 @@
 		 * Show messages in log
 		 */
 		log: function (msg) {
-			alert('!!! LOGGING: ' + msg);
+			//console.log('!!! LOGGING: ' + msg);
 		}
 	};
 

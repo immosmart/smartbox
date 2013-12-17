@@ -43,8 +43,11 @@
 				$$log('detect platform: ' + currentPlatform.name);
 				currentPlatform.addExternalFiles(function () {
 					$$log('adding files callback');
+
 					currentPlatform.setPlugins();
+					currentPlatform.refreshKeys();
 					currentPlatform.initialise();
+
 					_platform = currentPlatform;
 					cb && cb.call(this, currentPlatform);
 				});
@@ -59,12 +62,32 @@
 	 */
 	Platform = function ( name ) {
 		this.name = name;
+		var _keys = {};
+
+
+		this.refreshKeys = function refreshKeys() {
+			_keys = {};
+			for(var keyName in this.keys) {
+				_keys[this.keys[keyName]] = keyName.toLowerCase();
+			}
+		};
+
+		/**
+		 * Returns key name by key code
+		 * @param keyCode
+		 * @returns {string} key name
+		 */
+		this.getKeyByKeyCode = function ( keyCode) {
+			return _keys[keyCode];
+		};
+
 		SB.platforms.addPlatform(this);
 	};
 
 	PlatformPrototype = {
 		externalCss: [],
 		externalJs: [],
+		keys: {},
 
 		DUID: '',
 
