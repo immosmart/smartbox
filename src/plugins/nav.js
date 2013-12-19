@@ -230,10 +230,17 @@
 						self.current(this, 'mouseenter');
 					}
 				});
-				this.loopType = this.$container.attr('data-nav_loop') || null;
-				if (this.loopType) {
-					this.setLoop();
-				}
+
+                this.$container.find('[data-nav_type]').each(function(){
+                    var $el=$(this);
+                    var navType=$el.attr("data-nav_type");
+                    $el.removeAttr('data-nav_type');
+                    //self.setLoop($el);
+                    var loop=$el.attr("data-nav_loop");
+
+                    self.siblingsTypeNav($el, navType, loop);
+                });
+
 
 				$body
 					.bind('keydown.navigation', onKeyDown)
@@ -246,49 +253,47 @@
 				return this;
 			},
 
-			/**
-			 * Set loop navigation on current container
-			 */
-			setLoop: function () {
-				this.$container.off('.loop').bind('nav_key:left.loop nav_key:right.loop nav_key:up.loop nav_key:down.loop',
-					_.bind(this.loopNav,this));
+			siblingsTypeNav: function ($container, type, loop) {
+                var self=this;
+                $container.on('nav_key:left nav_key:right nav_key:upp nav_key:down', this.area_selector,
+					function(e){
+                        var last = 'last',
+                            cur = self.current(),
+                            fn;
+
+                        //check if direction concur with declared
+                        if ((type == 'hbox' && e.keyName == 'left') ||
+                            (type == 'vbox' && e.keyName == 'up')) {
+                            fn = 'prev';
+                        }else if ((type == 'hbox' && e.keyName == 'right') ||
+                            (type == 'vbox' && e.keyName == 'down')) {
+                            fn = 'next';
+                        }
+
+                        if (fn == 'next') {
+                            last = 'first';
+                        }
+
+                        if (fn) {
+                            var next = cur[fn](self.area_selector);
+
+                            while ( next.length && !next.is(':visible') ) {
+                                next = next[fn](self.area_selector);
+                            }
+
+                            if (!next.length && loop) {
+                                next = $container.find(self.area_selector).filter(':visible')[last]();
+                            }
+
+                            if (next.length) {
+                                nav.current(next);
+                                return false;
+                            }
+                        }
+                    });
 			},
 
 
-			loopNav: function (e) {
-				var last = 'last',
-					cur = this.current(),
-					type = this.loopType,
-					fn;
-
-				if ((type == 'hbox' && e.keyName == 'left') ||
-						(type == 'vbox' && e.keyName == 'up')) {
-					fn = 'prev';
-				}else if ((type == 'hbox' && e.keyName == 'right') ||
-									(type == 'vbox' && e.keyName == 'down')) {
-					fn = 'next';
-				}
-
-				if (fn == 'next') {
-					last = 'first';
-				}
-				if (fn) {
-					var next = cur[fn](nav.area_selector);
-
-					while ( next.length && !next.is(':visible') ) {
-						next = next[fn](nav.area_selector);
-					}
-
-					if (!next.length) {
-						next = this.$container.find(nav.area_selector).filter(':visible')[last]();
-					}
-
-					if (next.length) {
-						nav.current(next);
-						return false;
-					}
-				}
-			},
 
 			/**
 			 * Turn off navigation from container, disable navigation from current element
