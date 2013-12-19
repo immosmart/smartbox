@@ -1,6 +1,6 @@
 !(function ( window, undefined ) {
 
-	var $body = $(document.body),
+	var $body = null,
 		nav;
 
 	function Navigation () {
@@ -240,7 +240,7 @@
 					.bind('nav_key:enter.navigation', onClick);
 
 				if ( !cur ) {
-					cur = $(container).find(this.area_selector).filter(':visible')[0];
+					cur = this.$container.find(this.area_selector).filter(':visible')[0];
 				}
 				this.current(cur);
 				return this;
@@ -558,7 +558,7 @@
 	nav = window.$$nav = new Navigation();
 
 	$(function () {
-
+        $body = $(document.body);
 		// Navigation events handler
 		$body.bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),
