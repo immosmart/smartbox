@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../../bootstrap.min.css"/>
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        /*button highlight style*/
+        .btn.focus {
+            background-color: #006DCC;
+            background-image: linear-gradient(to bottom, #0088CC, #0044CC);
+            background-repeat: repeat-x;
+            border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+            color: #FFFFFF;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .a, .b, .c {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            font-size: 50px;
+            line-height: 100px;
+        }
+
+        .a {
+            left: 20px;
+            top: 20px;
+        }
+
+        .b {
+            left: 220px;
+            top: 120px;
+        }
+
+        .c {
+            left: 20px;
+            top: 220px;
+        }
+
+        .phantom {
+            background: #ff5967;
+            width: 20px;
+            height: 20px;
+            left: 100px;
+            top: 160px;
+            position: absolute;
+        }
+
+        .toggle_phantom, .toggle_phantom_opacity {
+            position: absolute;
+            top: 370px;
+            left: 20px;
+        }
+        .toggle_phantom_opacity{
+            left: 160px;
+        }
+
+    </style>
+
+    <script src="../../../src/libs/jquery-1.10.2.min.js"></script>
+    <script src="../../../src/libs/lodash.compat.min.js"></script>
+    <script src="../../../src/sb.js"></script>
+    <script src="../../../src/sb.platforms.js"></script>
+    <script src="../../../src/platforms/browser/sb.platform.browser.js"></script>
+    <script src="../../../src/plugins/nav.js"></script>
+    <script>
+        $(function () {
+
+            $$nav.on();
+
+            var $phantom = $('.phantom');
+            $('.toggle_phantom').click(function () {
+                $phantom.toggle();
+            });
+
+            var opacity = 1;
+            $('.toggle_phantom_opacity').click(function () {
+                opacity = opacity ? 0 : 1;
+                $phantom.css('opacity', opacity);
+            });
+        });
+    </script>
+</head>
+<body>
+<body>
+<p>Use keyboard, Luke</p>
+
+
+<div class="nav-item btn a">A</div>
+<div class="nav-item btn b">B</div>
+<div class="nav-item btn c">C</div>
+
+<div class="nav-item phantom" data-nav-phantom=".b"></div>
+
+<div class="btn toggle_phantom">Toggle phantom</div>
+<div class="btn toggle_phantom_opacity">Toggle phantom opacity</div>
+</body>
+</body>
+</html>
