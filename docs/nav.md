@@ -93,3 +93,25 @@ $(function(){
 </div>
 ```
 Когда задается атрибут `data-nav_type` плагин перестает использовать поиск направления согласно положению элементов на странице, и фокус начинает перемещаться от одного sibling элемента к другому, что гораздо быстрее. Если тип задан как `vbox` перемещение осуществляется кнопками `up` и `down`, если `hbox` то `left` и `right`. Если задать дополнительно атрибут `data-nav_loop` фокус будет перемещаться зацикленно по кругу с последнего на первый и наоборот.
+
+Атрибут должен быть задан над первым родительским элементом для `.nav-item`, то есть такие варианты не работают:
+
+```
+<ul class="btn-group" data-nav_type="hbox" li-nav_loop="true">
+   <li class="btn"><a class="nav-item">Menu item 1</a></div>
+   <li class="btn"><a class="nav-item">Menu item 2</a></div>
+   <li class="btn"><a class="nav-item">Menu item 3</a></div>
+   <li class="btn"><a class="nav-item">Menu item 4</a></div>
+</ul>
+```
+
+```
+<div class="btn-group" data-nav_type="hbox" data-nav_loop="true">
+   <div class="some_wrapper">
+      <div class="btn nav-item">Menu item 1</div>
+      <div class="btn nav-item">Menu item 2</div>
+      <div class="btn nav-item">Menu item 3</div>
+      <div class="btn nav-item">Menu item 4</div>
+   </div>
+</div>
+```
