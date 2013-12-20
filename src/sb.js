@@ -4,7 +4,8 @@
 (function (window, undefined) {
 
 	// save in case of overwrite
-	var document = window.document;
+	var document = window.document,
+		readyCallbacks = [];
 
 	var SB = {
 
@@ -22,12 +23,25 @@
 			currentPlatform: ''
 		},
 
+		/**
+		 * Main function
+		 */
+		ready: function (cb) {
+			readyCallbacks.push(cb);
+		},
+
 		initialise: function (cb) {
-			var self = this;
-			$$log('initialising SB');
+			var self = this,
+				utils = this.utils;
+
+			window.$$log = utils.log.log;
+			window.$$error = utils.error;
+
+			$$log('!!!!!!!!!LOG: initialising SB');
+
 			SB.platforms.initialise(function (currentPlatform) {
 				self.currentPlatform = currentPlatform;
-				cb && cb.call();
+				cb && cb.call(self);
 			});
 		}
 	};
@@ -43,17 +57,23 @@
 
 		/**
 		 * Show messages in log
+		 * all functionality in main.js
 		 */
-		log: function (msg) {
-			//console.log('!!! LOGGING: ' + msg);
+		log: {
+			log: function () {},
+			state: function () {},
+			show: function () {},
+			hide: function () {},
+			startProfile: function () {},
+			stopProfile: function () {}
 		}
 	};
 
-	window.$$log = SB.utils.log;
-	window.$$error = SB.utils.error;
-
 	$(function () {
-		SB.initialise();
+		alert('!!!!!!!!!LOG: DOM READY');
+		SB.initialise(function () {
+			$$nav.on('#nav');
+		});
 	});
 	window.SB = SB;
 })(this);

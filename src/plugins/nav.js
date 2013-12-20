@@ -9,13 +9,13 @@
 		// for methods save и restore
 		var savedNavs = [],
 
-			// object for store throttled color keys  methods
+		// object for store throttled color keys  methods
 			throttledMethods = {},
 
-			// current el in focus
+		// current el in focus
 			navCur = null,
 
-			// arrays
+		// arrays
 			numsKeys = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9'],
 			colorKeys = ['green', 'red', 'yellow', 'red'],
 
@@ -69,7 +69,7 @@
 			var keyMethod = throttledMethods[key];
 
 			// lazy init
-			if (!keyMethod) {
+			if ( !keyMethod ) {
 				keyMethod = throttledMethods[key] = _.throttle(function () {
 					triggerKeyEvent(key);
 				}, 800, {
@@ -219,7 +219,10 @@
 			 */
 			on: function ( container, cur ) {
 
-				var self = this;
+				var self = this,
+					$navTypeEls;
+
+				$body = $body || $(document.body);
 
 				this.off();
 
@@ -231,16 +234,22 @@
 					}
 				});
 
-                this.$container.find('[data-nav_type]').each(function(){
-                    var $el=$(this);
-                    var navType=$el.attr("data-nav_type");
-                    $el.removeAttr('data-nav_type');
-                    //self.setLoop($el);
-                    var loop=$el.attr("data-nav_loop");
 
-                    self.siblingsTypeNav($el, navType, loop);
-                });
+				$navTypeEls = this.$container.find('[data-nav_type]');
 
+				if (this.$container.attr('data-nav_type')) {
+					$navTypeEls = $navTypeEls.add(this.$container);
+				}
+
+				$navTypeEls.each(function () {
+					var $el = $(this);
+					var navType = $el.attr("data-nav_type");
+					$el.removeAttr('data-nav_type');
+					//self.setLoop($el);
+					var loop = $el.attr("data-nav_loop");
+
+					self.siblingsTypeNav($el, navType, loop);
+				});
 
 				$body
 					.bind('keydown.navigation', onKeyDown)
@@ -253,47 +262,45 @@
 				return this;
 			},
 
-			siblingsTypeNav: function ($container, type, loop) {
-                var self=this;
-                $container.on('nav_key:left nav_key:right nav_key:upp nav_key:down', this.area_selector,
-					function(e){
-                        var last = 'last',
-                            cur = self.current(),
-                            fn;
+			siblingsTypeNav: function ( $container, type, loop ) {
+				var self = this;
+				$container.on('nav_key:left nav_key:right nav_key:up nav_key:down', this.area_selector,
+					function ( e ) {
+						var last = 'last',
+							cur = self.current(),
+							fn;
 
-                        //check if direction concur with declared
-                        if ((type == 'hbox' && e.keyName == 'left') ||
-                            (type == 'vbox' && e.keyName == 'up')) {
-                            fn = 'prev';
-                        }else if ((type == 'hbox' && e.keyName == 'right') ||
-                            (type == 'vbox' && e.keyName == 'down')) {
-                            fn = 'next';
-                        }
+						//check if direction concur with declared
+						if ( (type == 'hbox' && e.keyName == 'left') ||
+								 (type == 'vbox' && e.keyName == 'up') ) {
+							fn = 'prev';
+						} else if ( (type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down') ) {
+							fn = 'next';
+						}
 
-                        if (fn == 'next') {
-                            last = 'first';
-                        }
+						if ( fn == 'next' ) {
+							last = 'first';
+						}
 
-                        if (fn) {
-                            var next = cur[fn](self.area_selector);
+						if ( fn ) {
+							var next = cur[fn](self.area_selector);
 
-                            while ( next.length && !next.is(':visible') ) {
-                                next = next[fn](self.area_selector);
-                            }
+							while ( next.length && !next.is(':visible') ) {
+								next = next[fn](self.area_selector);
+							}
 
-                            if (!next.length && loop) {
-                                next = $container.find(self.area_selector).filter(':visible')[last]();
-                            }
+							if ( !next.length && loop ) {
+								next = $container.find(self.area_selector).filter(':visible')[last]();
+							}
 
-                            if (next.length) {
-                                nav.current(next);
-                                return false;
-                            }
-                        }
-                    });
+							if ( next.length ) {
+								nav.current(next);
+								return false;
+							}
+						}
+					});
 			},
-
-
 
 			/**
 			 * Turn off navigation from container, disable navigation from current element
@@ -563,16 +570,15 @@
 	nav = window.$$nav = new Navigation();
 
 	$(function () {
-        $body = $(document.body);
 		// Navigation events handler
 		$body.bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),
 				$navs,
 				n;
 
-				$navs = nav.$container.find(nav.area_selector).filter(':visible');
-				n = nav.findNav(cur, e.keyName, $navs);
-				n && nav.current(n);
+			$navs = nav.$container.find(nav.area_selector).filter(':visible');
+			n = nav.findNav(cur, e.keyName, $navs);
+			n && nav.current(n);
 		});
 	});
 

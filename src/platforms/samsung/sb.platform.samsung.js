@@ -96,8 +96,6 @@
 			var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
 				TVPlugin = this.$plugins.pluginObjectTV;
 
-			$$log('Plugin  nnavi ' + NNAVIPlugin);
-
 			this.modelCode = NNAVIPlugin.GetModelCode();
 			this.firmware = NNAVIPlugin.GetFirmware();
 			this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
@@ -107,7 +105,7 @@
 			this.widgetAPI = new Common.API.Widget();
 
 			this.productType = TVPlugin.GetProductType();
-			this.initStorage();
+			this.setKeys();
 
 			// enable standart volume indicator
 			this.pluginAPI.unregistKey(sf.key.KEY_VOL_UP);
@@ -117,11 +115,10 @@
 		},
 
 		/**
-		 * In 2011 window.localstorage is undefined
-		 * In 2012 if app is deleted, localstorage for app is still enabled with old data
+		 * Set keys for samsung platform
 		 */
-		initStorage: function () {
-
+		setKeys: function () {
+			this.keys = sf.key;
 		},
 
 		/**

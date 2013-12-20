@@ -34,15 +34,13 @@
 				return platform.detect();
 			});
 
-			$$log('Get platform time: ' + (new Date().getTime() - prevTime));
-
 			currentPlatform = currentPlatform || _defaultPlatform;
 			if ( !currentPlatform ) {
 				$$error('No Platform detected!');
 			} else {
-				$$log('detect platform: ' + currentPlatform.name);
+				//$$log('detect platform: ' + currentPlatform.name);
 				currentPlatform.addExternalFiles(function () {
-					$$log('adding files callback');
+					//$$log('adding files callback');
 
 					currentPlatform.setPlugins();
 					currentPlatform.refreshKeys();
