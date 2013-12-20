@@ -1,0 +1,33 @@
+{
+  "name": "smartbox",
+  "version": "0.0.0",
+  "description": "smartbox\r ========",
+  "main": "Gruntfile.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/immosmart/smartbox.git"
+  },
+  "author": "",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/immosmart/smartbox/issues"
+  },
+  "dependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt-jsdoc": "~0.4.2",
+    "grunt-contrib-jshint": "~0.7.2",
+    "jshint-stylish": "~0.1.4",
+    "load-grunt-tasks": "~0.2.1",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-concat": "~0.3.0"
+  }
+}
