@@ -70,7 +70,6 @@
 	};
 
 	$(function () {
-		alert('!!!!!!!!!LOG: DOM READY');
 		SB.initialise(function () {
 			$$nav.on('#nav');
 		});
