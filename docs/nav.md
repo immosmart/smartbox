@@ -34,6 +34,10 @@ $('.nav-item').click(function(){
     alert(this.innerHTML);
 });
 ```
+
+http://immosmart.github.io/smartbox/examples/navigation/hello_world/
+
+
 # on, off, save, restore
 Удобная связка методов для того чтобы направить плагин в нужную область и вернуться обратно.
 
@@ -80,6 +84,8 @@ $(function(){
 
 Функции `save` и `restore` работают как `push` и `pop` для стека. Таким образом можно иметь бесконечную историю состояний.
 
+http://immosmart.github.io/smartbox/examples/navigation/popup/
+
 # data-nav_type
 
 Этот атрибут используется для лучшей производительности и совместно с атрибутом `data-nav_loop` для создания зацикленных меню. 
@@ -115,3 +121,5 @@ $(function(){
    </div>
 </div>
 ```
+
+http://immosmart.github.io/smartbox/examples/navigation/complex/
