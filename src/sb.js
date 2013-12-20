@@ -12,13 +12,15 @@
 		config: {
 			/**
 			 * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-			 * @type: {String} ex: browser, samsung, lg
+			 * ex: browser, samsung, lg
+			 * @type: {String}
 			 */
 			defaultPlatform: 'browser',
 
 			/**
 			 * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-			 * @type: {String} ex: browser, samsung, lg
+			 *  ex: browser, samsung, lg
+			 * @type: {String}
 			 */
 			currentPlatform: ''
 		},
@@ -52,7 +54,7 @@
 		 * @param msg
 		 */
 		error: function ( msg ) {
-			alert('!!! ERROR: ' + msg);
+			$$log(msg, 'error');
 		},
 
 		/**

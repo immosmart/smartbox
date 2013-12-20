@@ -106,7 +106,8 @@
 
 			/**
 			 * Current looping type
-			 * @type {String|Boolean} false / hbox/ vbox
+			 * false/hbox/vbox
+			 * @type {boolean|string}
 			 */
 			loopType: null,
 

@@ -6,7 +6,8 @@
 	var platform = new window.SB.Platform('samsung'),
 		/**
 		 * Native plugins
-		 * @type {{id: clsid}} id - DOM element id
+		 * id: clsid (DOM element id : CLSID)
+		 * @type {{object}}
 		 */
 			plugins = {
 			audio: 'SAMSUNG-INFOLINK-AUDIO',
