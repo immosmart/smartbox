@@ -52,6 +52,7 @@
 ```
 
 В этом примере при попытке перейти из **С** в **A**  фокус будет переведен на элемент **B**
+
 http://immosmart.github.io/smartbox/examples/navigation/phantom/index.html
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide7.png" />
