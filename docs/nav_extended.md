@@ -1,4 +1,3 @@
-
 Алгоритм поиска элемента можно изменить в случаях когда требуется иное поведение.
 
 
@@ -49,9 +48,13 @@
 Фантом это такой `nav-item`, который при попадании в фокус переводит фокус на другой элемент. Работает только для клавиатуры. При управлении жестами игнорируется.
 
 ```
-<div class="nav-item" data-nav-phantom="#card_owner"></div>
+<div class="nav-item" data-nav-phantom=".selector_to_nav_item"></div>
 ```
 
-В этом примере при оппадании фокуса на элемент фокус будет переведен на элемент #card_owner
+В этом примере при попытке перейти из **С** в **A**  фокус будет переведен на элемент **B**
+http://immosmart.github.io/smartbox/examples/navigation/phantom/index.html
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide7.png" />
+
+
+
