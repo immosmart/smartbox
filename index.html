@@ -18,6 +18,16 @@
     <script type="text/javascript" src="src/platforms/browser/sb.platform.browser.js"></script>
     <script type="text/javascript" src="src/platforms/samsung/sb.platform.samsung.js"></script>
     <script type="text/javascript" src="test/platform.test.js"></script>
+
+
+    <script type="text/javascript" src="src/libs/event_emitter.js"></script>
+    <script type="text/javascript" src="src/plugins/player/stub.js"></script>
+    <script type="text/javascript" src="src/plugins/player/html5.js"></script>
+    <script type="text/javascript" src="src/plugins/player/samsung.js"></script>
+    <!--script type="text/javascript" src="src/plugins/player/lg.js"></script-->
+
+    <script type="text/javascript" src="test/player.config.js"></script>
+    <script type="text/javascript" src="test/player.test.js"></script>
 </head>
 <body>
 <style>
@@ -36,6 +46,8 @@
         };
         var currentWindowOnload = window.onload;
         window.onload = function () {
+            Player.init();
+
             if ( currentWindowOnload ) {
                 currentWindowOnload();
             }
