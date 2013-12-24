@@ -25,7 +25,7 @@ module.exports = function ( grunt ) {
 				reporter: require('jshint-stylish')
 			},
 			all: [
-				'src/*.js', 'src/plugins/*.js', 'src/plugins/player/*.js', 'src/platforms/{,*/}*.js'
+				'src/*.js', 'src/plugins/*.js', 'src/platforms/{,*/}*.js'
 			]
 		},
 

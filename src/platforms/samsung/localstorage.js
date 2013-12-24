@@ -8,7 +8,7 @@
 
 	//if Samsung 11
 
-	if ( _.isFunction(FileSystem)) {
+	if (_.isFunction(window.FileSystem)) {
 
 		fileSysObj = new FileSystem();
 		commonDir = fileSysObj.isValidCommonPath(curWidget.id);

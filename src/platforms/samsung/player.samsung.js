@@ -222,26 +222,3 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
     }());
 
 }
-
-
-$(function(){
-    var $overlay=$(".overlay");
-
-    nav.on(".page"); //первоначальная инициализация
-    //теперь фокус на .open_popup_button
-
-    $(".open_popup_button").click(function(){
-        $overlay.show();
-        nav.save(); //сохраняет текущую область и фокус
-        nav.on($overlay);//переносит навигацию в новую область(попап) и выставляет новый фокус
-        //теперь фокус на .close_popup_button
-    });
-
-    $(".close_popup_button").click(function(){
-        $overlay.hide();
-        nav.restore(); //восстанавливает предыдущее сохраненное состояние
-        //теперь фокус на .open_popup_button
-    });
-
-
-});
