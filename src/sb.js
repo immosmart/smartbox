@@ -73,7 +73,7 @@
 
 	$(function () {
 		SB.initialise(function () {
-			$$nav.on('#nav');
+
 		});
 	});
 	window.SB = SB;
