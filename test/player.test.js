@@ -8,6 +8,11 @@ describe('Player', function () {
 
     describe('basic support', function () {
 
+        it('init shall not fail', function(){
+            expect(function(){
+                Player.init();
+            }).not.toThrow()
+        });
 
         it('supports ready', function () {
             var spy = jasmine.createSpy('ready handler');
