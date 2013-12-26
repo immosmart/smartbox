@@ -68,16 +68,31 @@
             }
             this._state = 'stop';
         },
+        /**
+         * Pause playback
+         */
         pause: function () {
             this._stop();
             this._state = "pause";
         },
+        /**
+         * Resume playback
+         */
         resume: function () {
             stub_play(this);
         },
         _stop: function () {
             clearInterval(updateInterval);
         },
+        /**
+         * Converts time in seconds to readable string in format H:MM:SS
+         * @param seconds {Number} time to convert
+         * @returns {String} result string
+         * Example:
+         * $('#duration').html(Player.formatTime(PLayer.videoInfo.duration));
+         * Result:
+         * <div id="duration">1:30:27</div>
+         */
         formatTime: function (seconds) {
             var hours = Math.floor(seconds / (60 * 60));
             var divisor_for_minutes = seconds % (60 * 60);
@@ -92,13 +107,32 @@
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
+
         videoInfo: {
+            /**
+             * Total video duration in seconds
+             */
             duration: 31,
+            /**
+             * Video stream width in pixels
+             */
             width: 640,
+            /**
+             * Video stream height in pixels
+             */
             height: 360,
+            /**
+             * Current playback time in seconds
+             */
             currentTime: 0
         },
-        autoInit: true,
+        /**
+         * If set to true Player.init() calls after DOM ready
+         */
+        autoInit: false,
+        /**
+         * @param seconds time to seek
+         */
         seek: function (seconds) {
             var self = this;
             self.videoInfo.currentTime = seconds;
@@ -109,10 +143,21 @@
                 self.resume();
             }, 500);
         },
+        /**
+         * For multi audio tracks videos
+         */
         audio: {
+            /**
+             * Set audio track index
+             * @param index
+             */
             set: function (index) {
                 curAudio = index;
             },
+            /**
+             * Returns list of supported language codes
+             * @returns {Array}
+             */
             get: function () {
                 var len = 2;
                 var result = [];
@@ -121,6 +166,9 @@
                 }
                 return result;
             },
+            /**
+             * @returns {Number} index of current playing audio track
+             */
             cur: function () {
                 return curAudio;
             }
