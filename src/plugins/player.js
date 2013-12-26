@@ -1,12 +1,12 @@
 (function (window) {
 
-    var updateInterval, curAudio=0;
+    var updateInterval, curAudio = 0;
 
-    var stub_play=function(self){
+    var stub_play = function (self) {
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
-            if(self.videoInfo.currentTime>=self.videoInfo.duration){
+            if (self.videoInfo.currentTime >= self.videoInfo.duration) {
                 self.stop();
                 self.trigger("complete");
             }
@@ -48,10 +48,10 @@
             }
             this._state = 'stop';
         },
-        pause: function(){
+        pause: function () {
             this._stop();
         },
-        resume: function(){
+        resume: function () {
             stub_play(this);
         },
         _stop: function () {
@@ -78,12 +78,12 @@
             currentTime: 0
         },
         autoInit: true,
-        seek: function(seconds){
-            var self=this;
-            self.videoInfo.currentTime=seconds;
+        seek: function (seconds) {
+            var self = this;
+            self.videoInfo.currentTime = seconds;
             self.pause();
             self.trigger("bufferingBegin");
-            setTimeout(function(){
+            setTimeout(function () {
                 self.trigger("bufferingEnd");
                 self.resume();
             }, 500);
@@ -130,12 +130,14 @@
 
     Player.extend(eventProto);
 
-    if (Player.autoInit) {
-        $(function () {
+
+    $(function () {
+        if (Player.autoInit) {
             $('body').on('load', function () {
                 Player.init();
             });
-        });
-    }
+        }
+    });
+
 
 }(this));
