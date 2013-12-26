@@ -2,7 +2,9 @@
 
     var updateInterval, curAudio = 0;
 
+    //emulates events after `play` method called
     var stub_play = function (self) {
+        self._state="play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -14,10 +16,24 @@
     }
 
     var Player = window.Player = {
+        /**
+         * inserts player object to DOM and do some init work
+         */
         init: function () {
-
+            //no need to do anything because just stub
         },
+        /**
+         * current player state ["play", "stop", "pause"]
+         */
         _state: 'stop',
+        /**
+         * Runs some video
+         * @param options object {
+         *      url: "path to video file/stream"
+         *      from: optional {Number} time in seconds where need start playback
+         *      type: optional {String} should be set to "hls" if stream is hls
+         * }
+         */
         play: function (options) {
             this.stop();
             this._state = 'play';
@@ -39,6 +55,10 @@
             }, 1000);
 
         },
+        /**
+         * Stop video playback
+         * @param silent {Boolean} if flag is set, player will no trigger "stop" event
+         */
         stop: function (silent) {
             if (this._state != 'stop') {
                 this._stop();
@@ -50,6 +70,7 @@
         },
         pause: function () {
             this._stop();
+            this._state = "pause";
         },
         resume: function () {
             stub_play(this);

@@ -12,6 +12,7 @@ describe('Player', function () {
             expect(function(){
                 Player.init();
             }).not.toThrow()
+            expect(Player._state).toBe("stop");
         });
 
         it('supports ready', function () {
@@ -26,6 +27,10 @@ describe('Player', function () {
             waitsFor(function () {
                 return spy.calls.length == 1
             }, 'ready have been triggered', 2000);
+
+            runs(function(){
+                expect(Player._state).toBe("play");
+            });
         });
 
         it('has video duration', function () {
@@ -44,6 +49,27 @@ describe('Player', function () {
         });
 
 
+
+        it('supports pause, resume methods', function () {
+            var time=Player.videoInfo.currentTime;
+            Player.pause();
+
+            expect(Player._state).toBe("pause");
+            waits(1000);
+            runs(function(){
+
+                expect(Player.videoInfo.currentTime).toBe(time);
+                Player.resume();
+                expect(Player._state).toBe("play");
+            });
+            waits(1000);
+            runs(function(){
+                expect(Player.videoInfo.currentTime).not.toBe(time);
+            });
+        });
+
+
+
         var spyStop = jasmine.createSpy('stop handler');
 
 
@@ -52,6 +78,7 @@ describe('Player', function () {
                 Player.on('stop', spyStop);
                 Player.stop();
                 expect(spyStop).toHaveBeenCalled();
+                expect(Player._state).toBe("stop");
             });
 
             waitsFor(function () {
@@ -176,7 +203,7 @@ describe('Player', function () {
             }, 'onComplete was called', 15000 + timeToWait * 1000);
 
             runs(function () {
-                Player.stop();
+                expect(Player._state).toBe("stop");
             });
         });
 
