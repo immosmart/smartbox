@@ -1,7 +1,11 @@
 Player.extend({
     init: function () {
         var self = this;
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;"></video>');
+        var ww = window.innerWidth;
+        var wh = window.innerHeight;
+
+
+        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
         var video = this.$video_container[0];
         $('body').append(this.$video_container);
 
@@ -21,6 +25,7 @@ Player.extend({
                 self.videoInfo.currentTime = video.currentTime;
                 self.trigger('update');
             }).on('ended', function () {
+                self._state = "stop";
                 self.trigger('complete');
             });
 
@@ -62,6 +67,14 @@ Player.extend({
     _stop: function () {
         this.$video_container[0].pause();
         this.$video_container[0].src = '';
+    },
+    pause: function () {
+        this.$video_container[0].pause();
+        this._state = "pause";
+    },
+    resume: function () {
+        this.$video_container[0].play();
+        this._state = "play";
     },
     seek: function (time) {
         this.$video_container[0].currentTime = time;

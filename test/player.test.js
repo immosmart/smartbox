@@ -4,12 +4,10 @@ describe('Player', function () {
     var currentType = '';
 
 
-
-
     describe('basic support', function () {
 
-        it('init shall not fail', function(){
-            expect(function(){
+        it('init shall not fail', function () {
+            expect(function () {
                 Player.init();
             }).not.toThrow()
             expect(Player._state).toBe("stop");
@@ -28,7 +26,7 @@ describe('Player', function () {
                 return spy.calls.length == 1
             }, 'ready have been triggered', 2000);
 
-            runs(function(){
+            runs(function () {
                 expect(Player._state).toBe("play");
             });
         });
@@ -49,25 +47,23 @@ describe('Player', function () {
         });
 
 
-
         it('supports pause, resume methods', function () {
-            var time=Player.videoInfo.currentTime;
+            var time = Player.videoInfo.currentTime;
             Player.pause();
 
             expect(Player._state).toBe("pause");
             waits(1000);
-            runs(function(){
+            runs(function () {
 
                 expect(Player.videoInfo.currentTime).toBe(time);
                 Player.resume();
                 expect(Player._state).toBe("play");
             });
             waits(1000);
-            runs(function(){
+            runs(function () {
                 expect(Player.videoInfo.currentTime).not.toBe(time);
             });
         });
-
 
 
         var spyStop = jasmine.createSpy('stop handler');
@@ -138,15 +134,9 @@ describe('Player', function () {
             }, 'update have been triggered', 5000);
 
 
-            runs(function () {
-                expect(Math.floor(Player.videoInfo.currentTime)).toBe(0);
-                date = (new Date().getTime());
-            });
-
             waitsFor(function () {
                 return Player.videoInfo.currentTime >= 2;
             }, '2 seconds playing', 5000);
-
         });
 
 

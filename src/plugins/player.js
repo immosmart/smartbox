@@ -4,7 +4,7 @@
 
     //emulates events after `play` method called
     var stub_play = function (self) {
-        self._state="play";
+        self._state = "play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -80,6 +80,13 @@
          */
         resume: function () {
             stub_play(this);
+        },
+        togglePause: function () {
+            if (this._state == "play") {
+                this.pause();
+            } else {
+                this.resume();
+            }
         },
         _stop: function () {
             clearInterval(updateInterval);
