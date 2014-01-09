@@ -103,7 +103,7 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 Атрибут должен быть задан над первым родительским элементом для `.nav-item`, то есть такие варианты не работают:
 
 ```
-<ul class="btn-group" data-nav_type="hbox" li-nav_loop="true">
+<ul class="btn-group" data-nav_type="hbox" data-nav_loop="true">
    <li class="btn"><a class="nav-item">Menu item 1</a></div>
    <li class="btn"><a class="nav-item">Menu item 2</a></div>
    <li class="btn"><a class="nav-item">Menu item 3</a></div>
