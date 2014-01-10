@@ -126,3 +126,32 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 ```
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
+
+# События `nav_focus`, `nav_blur`. Отмена перехода.
+
+После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
+
+```
+$('.button1').on('nav_blur', function(event, originEvent, $nextElement){
+});
+
+$('.button2').on('nav_focus', function(event, originEvent, $prevElement){
+});
+```
+
+`event` - jQuery событие,
+`originEvent` - строка которая определяет каким именно способом элемент получил фокус, может быть отправелено через метод `$$nav.current(target, originEvent)`. Значение по умолчанию: `nav_key`, это означает что фокус был получен с помощью клавиатуры. Так же может быть `mouseenter`, если фокус был получен с помощью мыши. Остальные значения пользовательские.
+`$nextElement` - jQuery объект. Для события `nav_blur` - элемент на который перешел фокус.
+`$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
+
+Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
+Пример:
+
+```
+$('.middle_button').on('nav_key:left', function(e){
+   if(some_cond){
+      e.stopPropagation();
+      $$nav.current('.right_button');
+   }
+});
+```
