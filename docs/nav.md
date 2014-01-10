@@ -127,7 +127,7 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
 
-## События `nav_focus`, `nav_blur`. Отмена перехода.
+## События `nav_focus`, `nav_blur`.
 
 После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
 
@@ -147,6 +147,9 @@ $('.button2').on('nav_focus', function(event, originEvent, $prevElement){
 
 `$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
 
+
+## Отмена перехода.
+
 Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
 Пример:
 
@@ -157,4 +160,19 @@ $('.middle_button').on('nav_key:left', function(e){
       $$nav.current('.right_button');
    }
 });
+```
+
+## Если нужно отличить `click` и `enter`
+
+Нужно отменть событие `nav_key:enter` аналогично предыдущему примеру. Тогда `click` будет выполняться только по настоящему клику мышью. 
+
+```
+$('.button').click(function(){
+
+});
+
+$('.button').on('nav_key:enter',function(e){
+      e.stopPropageion();
+});
+
 ```
