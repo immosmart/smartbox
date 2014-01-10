@@ -1,0 +1,95 @@
+
+.smart_input-container,
+.smart_input-wrap,
+.smart_input-decor-l,
+.smart_input-decor-r,
+.smart_input-decor-c {
+    height: 52px;
+}
+
+.smart_input-wrap {
+    margin: 10px 20px;
+    color: #000;
+    font-size: 18px;
+    position: relative;
+    z-index: 1;
+    height: 32px;
+    overflow: hidden;
+    line-height: 32px;
+}
+
+.smart_input-decor-l,
+.smart_input-decor-r,
+.smart_input-decor-c {
+    position: absolute;
+    top: 0;
+    background: url("smartinput.png") repeat-x;
+}
+
+.smart_input-container {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+}
+
+.smart_input-decor-l {
+    left: 0;
+    background-position: 0 -52px;
+}
+
+.smart_input-decor-r {
+    right: 0;
+    background-position: 0 -260px;
+}
+
+.smart_input-decor-c {
+    right: 12px;
+    left: 12px;
+    background-position: 0 -156px;
+}
+
+.focus .smart_input-decor-l {
+    background-position: 0 0;
+}
+
+.focus .smart_input-decor-r {
+    background-position: 0 -208px;
+}
+
+.focus .smart_input-decor-c {
+    background-position: 0 -104px;
+}
+
+.smart_input-decor-r,
+.smart_input-decor-l {
+    width: 12px;
+}
+
+.smart_input-text {
+    white-space: pre;
+}
+
+.smart_input-cursor {
+    border-right: 2px solid #000000;
+    display: inline-block;
+    height: 22px;
+    margin-left: 1px;
+    vertical-align: middle;
+    white-space: pre;
+}
+
+.smart_input-cursor_hidden {
+    visibility: hidden;
+}
+
+.smart_input-wrap_right .smart_input-text {
+    position: absolute;
+    right: 7px;
+    top: 0;
+}
+
+.smart_input-wrap_right .smart_input-cursor {
+    position: absolute;
+    right: 0px;
+    top: 5px;
+}
