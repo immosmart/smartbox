@@ -30,6 +30,7 @@
     position: relative;
     display: inline-block;
     width: 200px;
+    vertical-align: middle;
 }
 
 .smart_input-decor-l {

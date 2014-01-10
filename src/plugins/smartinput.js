@@ -35,9 +35,10 @@
                 $cursor.toggleClass('smart_input-cursor_hidden');
             }, 500);
         },
-        stopBlink: function () {
+        stopBlink: function ($input) {
             if (blink_interval) {
                 clearInterval(blink_interval);
+                $input.parent().find('.smart_input-cursor').addClass('smart_input-cursor_hidden');
             }
         },
         setText: function ($inp, text) {
@@ -270,6 +271,7 @@
             if (options.directKeyboardInput) {
                 $input.parent().on({
                     nav_focus: function () {
+                        privateMethods.startBlink($input);
                         $('body').on('keypress.smartinput', function (e) {
                             if (e.charCode) {
                                 e.preventDefault();
@@ -287,6 +289,7 @@
                         });
                     },
                     nav_blur: function () {
+                        privateMethods.stopBlink($input);
                         $('body').off('keypress.smartinput');
                     }
                 });

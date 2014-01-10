@@ -2,10 +2,8 @@ $(function () {
 
     //init player and navigation
     Player.init();
+    $('input').smartInput();
     $$nav.on();
-
-    $('input').smartInput().smartInput("startBlink");
-
 
     //shortcuts for controls
     var $progress = $('.progress'),

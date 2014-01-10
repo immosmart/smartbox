@@ -18,7 +18,7 @@ body {
     width: 100%;
     bottom: 0;
     padding: 20px;
-    height: 100px;
+    height: 120px;
     color: #6a6a6a;
 }
 
@@ -79,4 +79,8 @@ body {
 
 .progress-bar {
     transition: none;
+}
+
+.btn {
+    padding: 15px 20px;
 }
