@@ -127,7 +127,7 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
 
-# События `nav_focus`, `nav_blur`. Отмена перехода.
+## События `nav_focus`, `nav_blur`. Отмена перехода.
 
 После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
 
