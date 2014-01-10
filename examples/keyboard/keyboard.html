@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="application/ce-html+xml; charset=UTF-8"/>
+    <title></title>
+    <link rel="stylesheet" href="../../css/keyboard.css"/>
+</head>
+<body>
+
+<div id="keyboard" class="keyboard_popup_wrapper"></div>
+
+<script type="text/javascript" src="../../src/libs/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../../src/libs/lodash.compat.min.js"></script>
+<script type="text/javascript" src="../../src/plugins/keyboard.js"></script>
+<script type="text/javascript">
+    $('#keyboard').SBKeyboard({
+        type: 'fulltext_ru',
+        haveNumKeyboard: true
+    });
+</script>
+</body>
+</html>
