@@ -43,6 +43,8 @@ http://immosmart.github.io/smartbox/examples/navigation/hello_world/
 
 
 # on, off, save, restore
+
+Handy methods bundle to direct the plugin in necessary field 
 Удобная связка методов для того чтобы направить плагин в нужную область и вернуться обратно.
 
 Распространенный случай: попап с сообщением.
