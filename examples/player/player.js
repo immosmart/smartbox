@@ -2,7 +2,9 @@ $(function () {
 
     //init player and navigation
     Player.init();
-    $('input').smartInput();
+    $('input').smartInput({
+
+    });
     $$nav.on();
 
     //shortcuts for controls

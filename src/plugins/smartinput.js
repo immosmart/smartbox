@@ -89,14 +89,16 @@
             //jump to next input if is set
             if (text.length == options.max && options.max != 0 && options.next !== undefined) {
                 privateMethods.hideKeyboard($input);
-                nav.current(options.next);
-                nav.current().click();
+                $$nav.current(options.next);
+                $$nav.current().click();
             }
         },
         hideKeyboard: function ($this, isComplete) {
-            $this.removeClass('smart-input-active').trigger('keyboard_hide');
+            var $wrapper=$this.parent();
+            $wrapper.removeClass('smart-input-active');
+            $this.trigger('keyboard_hide');
             $('#keyboard_overlay').hide();
-            nav.restore();
+            $$nav.restore();
             $.voice.restore();
             $this.data('keyboard_active', false);
             if (isComplete) {
@@ -109,20 +111,23 @@
         },
         showKeyboard: function ($this, options) {
             $this.data('keyboard_active', true);
-            $this.addClass('smart-input-active');
+            var $wrapper=$this.parent();
+            $wrapper.addClass('smart-input-active');
             var h = $this.height();
             var o = $this.offset();
             var top = o.top + h;
             var $pop = $('#keyboard_popup');
-            $pop.smartKeyboard(options.keyboard).css({
+
+            console.log(options.keyboard);
+            $pop.SBKeyboard(options.keyboard).css({
                 'left': o.left,
                 'top': top
             }).off('type backspace delall complete cancel').on('type',function (e) {
-                    type($this, e.letter, options);
+                    privateMethods.type($this, e.letter, options);
                 }).on('backspace',function (e) {
-                    type($this, 'backspace', options);
+                    privateMethods.type($this, 'backspace', options);
                 }).on('delall',function (e) {
-                    type($this, 'delall', options);
+                    privateMethods.type($this, 'delall', options);
                 }).on('complete cancel', function (e) {
                     var isComplete = false;
                     if (e.type === 'complete') {
@@ -144,28 +149,33 @@
                     'left': 1280 - kw - 20
                 })
             }
-            $.voice.save();
-            nav.save();
-            nav.on('#keyboard_popup');
-            $('#keyboard_popup').smartKeyboard('refreshVoice').voiceLink();
-            $this.addClass(nav.higlight_class);
+            //$.voice.save();
+            $$nav.save();
+            $$nav.on('#keyboard_popup');
+            $('#keyboard_popup').SBKeyboard('refreshVoice');//.voiceLink();
+            $this.addClass($$nav.higlight_class);
             $('#keyboard_popup').trigger('keyboard_show');
         },
-        bindEvents: function ($self) {
-            $self.off('nav_focus nav_blur click');
-            var options = optionsHash[$self.attr('id')];
+        bindEvents: function ($input) {
 
-            var $cursor = $self.find('.sig-cursor');
+            var $wrapper=$input.parent();
+
+            $wrapper.off('nav_focus nav_blur click');
+            var options = optionsHash[$input.attr('id')];
+
+            console.log(options);
+
+            var $cursor = $wrapper.find('.sig-cursor');
 
             options.bindKeyboard && (options.keyboard = false);
             if (options.keyboard) {
-                $self.on('click', function () {
+                $wrapper.on('click', function () {
                     privateMethods.startBlink($cursor);
-                    privateMethods.showKeyboard($self, options);
+                    privateMethods.showKeyboard($input, options);
                 })
             }
 
-            $self.on({
+            $input.on({
                 'startBlink': function () {
                     privateMethods.startBlink($cursor);
                 },
@@ -173,48 +183,48 @@
                     privateMethods.stopBlink();
                 },
                 'hideKeyboard': function () {
-                    if ($self.hasClass('smart-input-active')) {
-                        privateMethods.hideKeyboard($self);
+                    if ($wrapper.hasClass('smart-input-active')) {
+                        privateMethods.hideKeyboard($input);
                     }
                 },
                 'showKeyboard': function () {
-                    privateMethods.showKeyboard($self, options);
+                    privateMethods.showKeyboard($input, options);
                 }
             });
 
             if (options.bindKeyboard) {
                 options.bindKeyboard.off('type backspace delall').on('type',function (e) {
-                    privateMethods.type($self, e.letter, options);
+                    privateMethods.type($input, e.letter, options);
                 }).on('backspace',function (e) {
-                        privateMethods.type($self, 'backspace', options);
+                        privateMethods.type($input, 'backspace', options);
                     }).on('delall', function (e) {
-                        privateMethods.type($self, 'delall', options);
+                        privateMethods.type($input, 'delall', options);
                     });
             }
 
-            $self.on('nav_focus', function (e) {
+            $wrapper.on('nav_focus', function (e) {
                 if ((options && (options.noKeyboard || options.bindNums))) {
                     $self.unbind('nav_key:num nav_key:red').bind('nav_key:num nav_key:red', function (e) {
-                        typeNum(e, $self, options)
+                        typeNum(e, $input, options)
                     });
                 }
             });
             /*
-             $self.on('nav_focus', function (e) {
-             if (!options.keyboard) {
-             $self.bind('nav_key:num nav_key:red', function (e) {
-             typeNum(e, $self, options)
-             });
-             }
-             else {
-             if (!$self.data('keyboard_active') && options.keyboard.autoshow !== false) {
-             e.stopPropagation();
-             showKeyboard($self, options);
-             }
-             }
-             })
-             //*/
-            $self.on('nav_blur', function () {
+            $self.on('nav_focus', function (e) {
+                if (!options.keyboard) {
+                    $self.bind('nav_key:num nav_key:red', function (e) {
+                        typeNum(e, $self, options)
+                    });
+                }
+                else {
+                    if (!$self.data('keyboard_active') && options.keyboard.autoshow !== false) {
+                        e.stopPropagation();
+                        showKeyboard($self, options);
+                    }
+                }
+            })
+            //*/
+            $wrapper.on('nav_blur', function () {
                 var $this = $(this);
                 if (!options.keyboard) {
                     $this.unbind('nav_key:num nav_key:red');
@@ -233,10 +243,11 @@
 
     var defaultInputOptions = {
         keyboard: {
-            type: 'fulltext',
-            firstClass: 'keyboard_en shift_active keyboard_num'
+            type: 'fulltext_ru',
+            firstLang: 'ru',
+            //firstClass: 'keyboard_en shift_active keyboard_num',
+            haveNumKeyboard: true
         },
-
         directKeyboardInput: true,
 
         max: 0,
@@ -259,7 +270,6 @@
             $wrapper.append($input);
 
             var $text = $wrapper.find(".smart_input-text");
-
 
 
             $input.on({
@@ -295,6 +305,7 @@
                 });
             }
 
+            privateMethods.bindEvents($input);
 
             privateMethods.setText($input, $input.val(), options);
         }
@@ -318,6 +329,7 @@
                 _opts = {};
             _opts = $.extend({}, defaultInputOptions, _opts);
 
+
             var $self = $(this);
 
             if (!this.id)
@@ -338,4 +350,8 @@
         });
         return this;
     };
+
+    $(function(){
+        $('body').append('<div id="keyboard_overlay"><div class="keyboard_popup_wrapper" id="keyboard_popup"></div></div>');
+    });
 })(jQuery);
