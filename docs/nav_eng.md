@@ -43,21 +43,19 @@ http://immosmart.github.io/smartbox/examples/navigation/hello_world/
 
 
 # on, off, save, restore
-Удобная связка методов для того чтобы сменить, сохранить и восстановить контейнер в котором работает плагин.
+The handy connective of methods for container canging, saving and restoring (container in which the plugin is working)
 
-Распространенный случай: попап с сообщением.
+Frequent case: A Pop up with a message
 
-В исходном положении фокус находится на кнопке.
-После нажатия на кнопку должен показаться попап, фокус переходит туда и фокус не должен выходить за пределы попапа.
-Но видимых `nav-item` элементов уже несколько и чтобы они не конфликтовали плагину можно задать текущую рабочую область.
-Делается это с помощью метода `$$nav.on(jQuery_selector)`, где `jQuery_selector` это все что может принять в себя функция `$`
-и означает новую активную область, где будет производится поиск элементов `nav-item`.  `$$nav.on()` содержит в себе `$$nav.off()` и автоматически делает неактивной предыдущую область.
+In the starting position the focus is on the button. 
+After the button has been pressed the pop up appears and the focus is transited to pop up and can't go ouside this pop up.  
+There are some visible `nav-item` elements already and it's possible to set for the plugin a currect workspace to prevent conflicts. It can be done by using `$$nav.on(jQuery_selector)`, where `jQuery_selector` is all what function `$` can to possess inside and means the new active area where the searching of elements `nav-item` will be performed. `$$nav.on()` contains `$$nav.off()` and automatically makes inactive the previous area. 
 
 ```
 <div class="page">
      <div class="open_popup_button btn nav-item">Open</div>
 </div>
-<div class="overlay" style="display: none;"> <!-- Изначально попап скрыт -->
+<div class="overlay" style="display: none;"> <!-- The pop up isn't displayed initially -->
     <div class="popup">
          <div class="close_popup_button btn nav-item">Close</div>
     </div>
