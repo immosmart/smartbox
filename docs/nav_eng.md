@@ -1,35 +1,39 @@
-# Обзор
+# Review
 
-Плагин реализующий навигацию по элементам с помощью ПДУ или клавиатуры. Позволяет создавать интерфейсы с изменяющимся содержимым.
+The plugin implements the navigation on elements with using Remote or keyboard. It allows to create interfaces with changing content. 
 
-Основные фичи:
+The main features:
 
-1) автоматическое определение элемента, на который перемещается фокус для заданного направления, не нужно писать сложную логику для перехода от одного элемента к другому или задавать их вручную;
+1) Autodefining of the element which will be focused for a given direction, no need to write the difficult movement logic for transition from one element to another or set them manually;
 
-2) не нужно заботится как обработать случай когда какой-то элемент интерфейса окажется скрытым, невидимые элементы просто игнорируются;
+2) No need to care how to handle the case when an interface element is hidden, hidden elements are ignored;  
 
-3) создает прослойку для события keydown - `nav_key`. Таким образом, что `nav_key` становится уникальным для каждой кнопки:
+3) Creates the layer for keydown event - `nav_key` in such a way that `nav_key` become the unque for every button;
 
 ```
 $('.button').on('nav_key:red', function(){
-   //при нажатии на красную кнопку на пульте выполнится эта функция
+   //As soon as the red button has been pressed the function is executed
 });
 ```
 
-4) так же для нового события `nav_key` работает event bubbling что позволяет ловить события на нужном уровне, отменять и слушать нажатия только там где это нужно в данный момент.
+4) Also for the new event `nav_key` works "event bubbling" which allows to catch events on the necessary level, cancel  and listen to pressing only where it is necessary in this moment.
 
-# Как использовать
+# How to use
 
-В HTML надо элементы которые будут помечены классом `nav_target`. Это задает элементы по которым может осуществляться навигация и эти элементы могут получать фокус.
+It's necessary to define elements with the class `nav-item` in HTML. These elements can receive the focus and you can focus any of them with using keyboard. The focused element receives the class `focus`. 
+
 ```
 <body>
     <div class="nav-item">hello</div>
     <div class="nav-item">world</div>
 </body>
 ```
-После вызова `$$nav.on()` к первому элементу будет добавлен класс `focus` и навигация будет активирована. Нажатие стрелок на клавиатуре или ПДУ будет перемещать фокус, клавиша enter будет эмулировать клик по элементу, а наведение мыши будет переводить элементы в фокус. Таким образом поддержка жестов в телевизоре не требует дополнительной работы, а код приложения не сильно будет отличаться от обычного сайта.
+
+After `$$nav.on()` has been called the class `focus` will be added to the first element and navigation will be activated. 
+Pressing arrows keys on a keyboard or remote control will move the focus, key "Enter" will emulate the click on the element, the mouse over the element will set the focus on the element. So gestures recognition support on a TV doesn't require extra work and an application code isn't different too much from the regular website.
+
 ```
-//отлавливаем одновременно нажатие enter и простой клик
+// catch up pressing enter and click at one time
 $('.nav-item').click(function(){
     alert(this.innerHTML);
 });
@@ -39,7 +43,7 @@ http://immosmart.github.io/smartbox/examples/navigation/hello_world/
 
 
 # on, off, save, restore
-Удобная связка методов для того чтобы направить плагин в нужную область и вернуться обратно.
+Удобная связка методов для того чтобы сменить, сохранить и восстановить контейнер в котором работает плагин.
 
 Распространенный случай: попап с сообщением.
 
@@ -123,3 +127,53 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 ```
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
+
+## События `nav_focus`, `nav_blur`.
+
+После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
+
+```
+$('.button1').on('nav_blur', function(event, originEvent, $nextElement){
+});
+
+$('.button2').on('nav_focus', function(event, originEvent, $prevElement){
+});
+```
+
+`event` - jQuery событие,
+
+`originEvent` - строка которая определяет каким именно способом элемент получил фокус, может быть отправелено через метод `$$nav.current(target, originEvent)`. Значение по умолчанию: `nav_key`, это означает что фокус был получен с помощью клавиатуры. Так же может быть `mouseenter`, если фокус был получен с помощью мыши. Остальные значения пользовательские.
+
+`$nextElement` - jQuery объект. Для события `nav_blur` - элемент на который перешел фокус.
+
+`$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
+
+
+## Отмена перехода.
+
+Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
+Пример:
+
+```
+$('.middle_button').on('nav_key:left', function(e){
+   if(some_cond){
+      e.stopPropagation();
+      $$nav.current('.right_button');
+   }
+});
+```
+
+## Если нужно отличить `click` и `enter`
+
+Нужно отменть событие `nav_key:enter` аналогично предыдущему примеру. Тогда `click` будет выполняться только по настоящему клику мышью. 
+
+```
+$('.button').click(function(){
+
+});
+
+$('.button').on('nav_key:enter',function(e){
+      e.stopPropageion();
+});
+
+```
