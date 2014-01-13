@@ -43,9 +43,7 @@ http://immosmart.github.io/smartbox/examples/navigation/hello_world/
 
 
 # on, off, save, restore
-
-Handy methods bundle to direct the plugin in necessary field 
-Удобная связка методов для того чтобы направить плагин в нужную область и вернуться обратно.
+Удобная связка методов для того чтобы сменить, сохранить и восстановить контейнер в котором работает плагин.
 
 Распространенный случай: попап с сообщением.
 
@@ -129,3 +127,53 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 ```
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
+
+## События `nav_focus`, `nav_blur`.
+
+После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
+
+```
+$('.button1').on('nav_blur', function(event, originEvent, $nextElement){
+});
+
+$('.button2').on('nav_focus', function(event, originEvent, $prevElement){
+});
+```
+
+`event` - jQuery событие,
+
+`originEvent` - строка которая определяет каким именно способом элемент получил фокус, может быть отправелено через метод `$$nav.current(target, originEvent)`. Значение по умолчанию: `nav_key`, это означает что фокус был получен с помощью клавиатуры. Так же может быть `mouseenter`, если фокус был получен с помощью мыши. Остальные значения пользовательские.
+
+`$nextElement` - jQuery объект. Для события `nav_blur` - элемент на который перешел фокус.
+
+`$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
+
+
+## Отмена перехода.
+
+Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
+Пример:
+
+```
+$('.middle_button').on('nav_key:left', function(e){
+   if(some_cond){
+      e.stopPropagation();
+      $$nav.current('.right_button');
+   }
+});
+```
+
+## Если нужно отличить `click` и `enter`
+
+Нужно отменть событие `nav_key:enter` аналогично предыдущему примеру. Тогда `click` будет выполняться только по настоящему клику мышью. 
+
+```
+$('.button').click(function(){
+
+});
+
+$('.button').on('nav_key:enter',function(e){
+      e.stopPropageion();
+});
+
+```
