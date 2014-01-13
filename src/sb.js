@@ -23,7 +23,7 @@
 			 * @type: {String}
 			 */
 			currentPlatform: ''
-		},
+    },
 
 		/**
 		 * Main function

@@ -7,7 +7,6 @@
     keyRegExp = /([^{]+){{([^}]*)}}/,
     defaults = {
       type: 'en',
-      keyboardLangs: [],
       haveNumKeyboard: false,
       firstLayout: 'en'
     },
@@ -25,7 +24,7 @@
     this.type = options.type;
     this.currentLayout = '';
     this.previousLayout = '';
-    this.$el = $($el);
+    this.$el = $el;
 
     // jquery layout els
     this.$layouts = {};
@@ -77,7 +76,11 @@
         this.presets = _.without(this.presets,'fullnum')
       }
 
-      this.changeLayout(options.firstLayout);
+      if (this.presets.indexOf(options.firstLayout) !== -1) {
+        this.changeLayout(options.firstLayout);
+      } else {
+        this.changeLayout(this.presets[0]);
+      }
     },
 
     /**
@@ -120,16 +123,17 @@
      */
     generateBoard: function ( preset, type ) {
 
-      var boardHtml = '<div class="kb-c keyboard_generated_' + type + '">',
+      var boardHtml = '',
         rowHtml = '',
         keyAttrs = {},
         row, letter;
 
-      preset = preset();
-
       if ( generatedKeyboards[type] ) {
         return generatedKeyboards[type].board;
       }
+
+      preset = preset();
+      boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
 
       for ( var i = 0; i < preset.length; i++ ) {
         row = preset[i];
@@ -238,10 +242,13 @@
       }
 
       ev && this.$el.trigger(ev);
+
       e.stopPropagation();
     },
 
     triggerShiftLetters: function () {
+      var self = this;
+
       if ( this.isShiftActive ) {
         this.isShiftActive = false;
         this.$el.removeClass('shift_active');
@@ -251,9 +258,9 @@
       }
 
       // TODO: only for samsung 11
-      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
-        this.innerHTML = shift_active ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
-      });
+//      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
+//        this.innerHTML = self.isShiftActive ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
+//      });
     },
 
     /**
@@ -312,9 +319,11 @@
     },
     show: function () {
       this.$wrap.show();
+      this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
     },
     hide: function () {
       this.$wrap.hide();
+      this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
     }
   };
 
@@ -323,21 +332,35 @@
 
   // The actual plugin constructor
   function Plugin( element, options ) {
-    this.element = element;
+    this.$el = $(element);
     this.keyboards = {};
 
-    this.init($.extend({}, defaults, options));
+    options = $.extend({}, defaults, options);
+    this.addKeyboard(options);
+    this.$el.addClass('keyboard_popup_wrapper');
+    this.currentKeyboard = this.keyboards[options.type];
+    this.currentKeyboard.show();
   }
 
   pluginPrototype = {
-    init: function (opt) {
-      this.addKeyboard(opt);
-      this.element.className = 'keyboard_popup_wrapper ' + opt.type + '_wrap keyboard_' + opt.firstLayout;
-      this.currentKeyboard = this.keyboards[opt.type];
-      this.currentKeyboard.show();
+    /**
+     * Add keyboard to current element
+     * @param opt {Object}
+     */
+    addKeyboard: function (opt) {
+      var options = $.extend({}, defaults, opt);
+      this.keyboards[options.type] = new Keyboard(options, this.$el);
     },
-    addKeyboard: function ( opt) {
-      this.keyboards[opt.type] = new Keyboard(opt, this.element);
+    /**
+     * Change current active keyboard
+     * @param type {String} 'en', 'ru'
+     */
+    changeKeyboard: function (type) {
+      if (this.keyboards[type]) {
+        this.currentKeyboard.hide();
+        this.currentKeyboard = this.keyboards[type];
+        this.currentKeyboard.show();
+      }
     }
   };
 
@@ -358,7 +381,7 @@
         $.data(this, 'plugin_' + pluginName,
           new Plugin( this, options ));
       } else {
-        instance[method] && instance[method].apply(this, params);
+        instance[method] && instance[method](params);
       }
     });
   }
@@ -393,7 +416,7 @@ window.SB.keyboardPresets = {
 			'1234567890@'.split(''),
 			'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
 			'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
-			'zxcvbnm-.'.split('').concat('ok{{}}')
+			'zxcvbnm-.'.split('').concat('complete{{}}')
 		];
 	},
 
