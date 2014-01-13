@@ -100,7 +100,8 @@ This attribute is used for better perfomance and jointly with the attribute `dat
    <div class="btn nav-item">Menu item 4</div>
 </div>
 ```
-Когда задается атрибут `data-nav_type` плагин перестает использовать поиск направления согласно положению элементов на странице, и фокус начинает перемещаться от одного sibling элемента к другому, что гораздо быстрее. Если тип задан как `vbox` перемещение осуществляется кнопками `up` и `down`, если `hbox` то `left` и `right`. Если задать дополнительно атрибут `data-nav_loop` фокус будет перемещаться зацикленно по кругу с последнего на первый и наоборот.
+When the attribute `data-nav_type` is defined the plugin stops the direction searching according to elements position on the page and focus starts to move from one sibling element to another, it's more quickly. If the type is defined as `vbox` the transition is realized by pressing buttons `up` and `down`, if `hbox` : then `left` and `right`. If the extra attribute `data-nav_loop` is set the focus transits as looped: from the last to the first and vice versa.
+
 
 Атрибут должен быть задан над первым родительским элементом для `.nav-item`, то есть такие варианты не работают:
 
