@@ -12,6 +12,10 @@
     width: 495px;
 }
 
+.keyboard_email {
+    width: 455px;
+}
+
 .kb-wrap {
     position: relative;
     padding: 10px 5px 5px 10px;
@@ -155,4 +159,13 @@
     width: 1280px;
     height: 720px;
     z-index: 20;
+}
+
+#keyboard_popup {
+    position: absolute;
+    z-index: 50;
+    display: block;
+    left: 200px;
+    top: 200px;
+    margin: 0 0 0 -5px;
 }

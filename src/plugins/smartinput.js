@@ -113,8 +113,8 @@
             $this.data('keyboard_active', true);
             var $wrapper=$this.parent();
             $wrapper.addClass('smart-input-active');
-            var h = $this.height();
-            var o = $this.offset();
+            var h = $wrapper.height();
+            var o = $wrapper.offset();
             var top = o.top + h;
             var $pop = $('#keyboard_popup');
 

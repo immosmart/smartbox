@@ -1913,10 +1913,11 @@ $(document.body).on('nav_key:tools', function () {
     var defaultInputOptions = {
         keyboard: {
             type: 'fulltext_ru',
-            firstLang: 'ru',
+            firstLayout: 'ru',
             //firstClass: 'keyboard_en shift_active keyboard_num',
             haveNumKeyboard: true
         },
+
         directKeyboardInput: true,
 
         max: 0,

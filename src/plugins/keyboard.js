@@ -230,10 +230,10 @@
             return;
           case 'lang':
             this.changeKeyboardLang();
-            break;
+            return;
           case 'nums':
             this.triggerNumKeyboard();
-            break;
+            return;
           default:
             break;
         }
@@ -416,7 +416,7 @@ window.SB.keyboardPresets = {
 			'1234567890@'.split(''),
 			'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
 			'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
-			'zxcvbnm-.'.split('').concat('complete{{}}')
+			'zxcvbnm-.'.split('').concat('complete{{OK}}')
 		];
 	},
 
