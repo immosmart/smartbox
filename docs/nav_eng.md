@@ -102,8 +102,7 @@ This attribute is used for better perfomance and jointly with the attribute `dat
 ```
 When the attribute `data-nav_type` is defined the plugin stops the direction searching according to elements position on the page and focus starts to move from one sibling element to another, it's more quickly. If the type is defined as `vbox` the transition is realized by pressing buttons `up` and `down`, if `hbox` : then `left` and `right`. If the extra attribute `data-nav_loop` is set the focus transits as looped: from the last to the first and vice versa.
 
-
-Атрибут должен быть задан над первым родительским элементом для `.nav-item`, то есть такие варианты не работают:
+The attribute should be set under the first parent element for `.nav-item`, in other words the variants below do not work:
 
 ```
 <ul class="btn-group" data-nav_type="hbox" data-nav_loop="true">
@@ -127,7 +126,7 @@ When the attribute `data-nav_type` is defined the plugin stops the direction sea
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
 
-## События `nav_focus`, `nav_blur`.
+## Events `nav_focus`, `nav_blur`.
 
 После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
 
