@@ -1,10 +1,11 @@
 /**
  * Main smartbox file
  */
-(function (window, undefined) {
+(function ( window, undefined ) {
 
 	// save in case of overwrite
 	var document = window.document,
+		_inited = false,
 		readyCallbacks = [];
 
 	var SB = {
@@ -23,27 +24,47 @@
 			 * @type: {String}
 			 */
 			currentPlatform: ''
-    },
+		},
+
+		isInited: function () {
+			return _inited;
+		},
 
 		/**
 		 * Main function
+		 * @param cb {Function} callback after initialization
 		 */
-		ready: function (cb) {
+		ready: function ( cb ) {
 			readyCallbacks.push(cb);
 		},
 
-		initialise: function (cb) {
+		/**
+		 * Applying all ready callbacks
+		 * @private
+		 */
+		_onReady: function () {
+			for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+				readyCallbacks[i].call(this);
+			}
+		},
+
+		initialise: function () {
 			var self = this,
 				utils = this.utils;
+
+			if ( _inited ) {
+				return;
+			}
 
 			window.$$log = utils.log.log;
 			window.$$error = utils.error;
 
 			$$log('!!!!!!!!!LOG: initialising SB');
 
-			SB.platforms.initialise(function (currentPlatform) {
+			SB.platforms.initialise(function ( currentPlatform ) {
 				self.currentPlatform = currentPlatform;
-				cb && cb.call(self);
+				_inited = true;
+				self._onReady();
 			});
 		}
 	};
@@ -62,19 +83,23 @@
 		 * all functionality in main.js
 		 */
 		log: {
-			log: function () {},
-			state: function () {},
-			show: function () {},
-			hide: function () {},
-			startProfile: function () {},
-			stopProfile: function () {}
+			log: function () {
+			},
+			state: function () {
+			},
+			show: function () {
+			},
+			hide: function () {
+			},
+			startProfile: function () {
+			},
+			stopProfile: function () {
+			}
 		}
 	};
 
 	$(function () {
-		SB.initialise(function () {
-
-		});
+		SB.initialise();
 	});
 	window.SB = SB;
 })(this);
