@@ -20,8 +20,8 @@ $('.button').on('nav_key:red', function(){
 
 # How to use
 
+It's necessary to define elements with the class `nav-item` in HTML. These elements can receive the focus and you can focus any of them with using keyboard. The focused element receives the class `focus`. 
 
-В HTML надо элементы которые будут помечены классом `nav_target`. Это задает элементы по которым может осуществляться навигация и эти элементы могут получать фокус.
 ```
 <body>
     <div class="nav-item">hello</div>
