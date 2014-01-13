@@ -84,13 +84,13 @@ $(function(){
 });
 ```
 
-Функции `save` и `restore` работают как `push` и `pop` для стека. Таким образом можно иметь бесконечную историю состояний.
+Functions `save` and `restore` works as `push` and `pop` for a stack. So it's possible to have endless conditions history.  
 
 http://immosmart.github.io/smartbox/examples/navigation/popup/
 
 # data-nav_type
 
-Этот атрибут используется для лучшей производительности и совместно с атрибутом `data-nav_loop` для создания зацикленных меню. 
+This attribute is used for better perfomance and jointly with the attribute `data-nav_loop` for looped menus creating. 
 
 ```
 <div class="btn-group" data-nav_type="hbox" data-nav_loop="true">
