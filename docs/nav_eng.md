@@ -146,7 +146,7 @@ $('.button2').on('nav_focus', function(event, originEvent, $prevElement){
 
 `$nextElement` - jQuery object. For the event `nav_blur` - the element on which the focus has moved on.
 
-`$prevElement` - jQuery объект. For the event `nav_focus` - the element on which the focus has been earlier. 
+`$prevElement` - jQuery object. For the event `nav_focus` - the element on which the focus has been earlier. 
 
 
 ## Transition cancellation.
