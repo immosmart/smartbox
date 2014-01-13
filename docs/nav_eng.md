@@ -66,20 +66,20 @@ There are some visible `nav-item` elements already and it's possible to set for 
 $(function(){
     var $overlay=$(".overlay");
 
-    $$nav.on(".page"); //первоначальная инициализация
-    //теперь фокус на .open_popup_button
+    $$nav.on(".page"); //First initialisation 
+    //The focus is on the .open_popup_button
 
     $(".open_popup_button").click(function(){
         $overlay.show();
-        $$nav.save(); //сохраняет текущую область и фокус
-        $$nav.on($overlay);//переносит навигацию в новую область(попап) и выставляет новый фокус
-        //теперь фокус на .close_popup_button
+        $$nav.save(); //save the current area and the focus
+        $$nav.on($overlay);//transits the navigation in the new area (pop up) and sets the new focus
+        //Focus is on the .close_popup_button now
     });
 
     $(".close_popup_button").click(function(){
         $overlay.hide();
-        $$nav.restore(); //восстанавливает предыдущее сохраненное состояние
-        //теперь фокус на .open_popup_button
+        $$nav.restore(); //Restores the previous saved condition
+        //Now the is focus is on the .open_popup_button
     });
 });
 ```
