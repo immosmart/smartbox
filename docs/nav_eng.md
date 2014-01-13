@@ -128,7 +128,8 @@ http://immosmart.github.io/smartbox/examples/navigation/complex/
 
 ## Events `nav_focus`, `nav_blur`.
 
-После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
+As soon as the element has received the focus the event `nav_focus` triggers on the element.
+As soon as the element has lost the focus the event `nav_blur` triggers.  
 
 ```
 $('.button1').on('nav_blur', function(event, originEvent, $nextElement){
@@ -138,19 +139,21 @@ $('.button2').on('nav_focus', function(event, originEvent, $prevElement){
 });
 ```
 
-`event` - jQuery событие,
+`event` - jQuery event,
 
-`originEvent` - строка которая определяет каким именно способом элемент получил фокус, может быть отправелено через метод `$$nav.current(target, originEvent)`. Значение по умолчанию: `nav_key`, это означает что фокус был получен с помощью клавиатуры. Так же может быть `mouseenter`, если фокус был получен с помощью мыши. Остальные значения пользовательские.
-
-`$nextElement` - jQuery объект. Для события `nav_blur` - элемент на который перешел фокус.
-
-`$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
+`originEvent` - a string which defines a focus receiving method, it can be sent using the method `$$nav.current(target, originEvent)`. By default: `nav_key` means that the focus has been received from the keyboard. If the focus gas veeb received from mouse : `mouseenter`. Other values for `originEvent` can be defined by user. 
 
 
-## Отмена перехода.
+`$nextElement` - jQuery object. For the event `nav_blur` - the element on which the focus has moved on.
 
-Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
-Пример:
+`$prevElement` - jQuery объект. For the event `nav_focus` - the element on which the focus has been earlier. 
+
+
+## Transition cancellation.
+
+The transition from one element to another can be cancelled: stopping the propagation of the event `nav_key:{direction}`. The event can be cancelled on any element above `.nav-item` and below `body`.Событие можно 
+
+Example:
 
 ```
 $('.middle_button').on('nav_key:left', function(e){
@@ -161,9 +164,9 @@ $('.middle_button').on('nav_key:left', function(e){
 });
 ```
 
-## Если нужно отличить `click` и `enter`
+## How to distinguish `click` and `enter`
 
-Нужно отменть событие `nav_key:enter` аналогично предыдущему примеру. Тогда `click` будет выполняться только по настоящему клику мышью. 
+You should to cancel the event `nav_key:enter` in a similar way as previous example. Then `click` is perfomed as soon as the real mouse click has been done. 
 
 ```
 $('.button').click(function(){
