@@ -99,7 +99,7 @@
             $this.trigger('keyboard_hide');
             $('#keyboard_overlay').hide();
             $$nav.restore();
-            $.voice.restore();
+            $$voice.restore();
             $this.data('keyboard_active', false);
             if (isComplete) {
                 $this.trigger('keyboard_complete');
@@ -118,7 +118,7 @@
             var top = o.top + h;
             var $pop = $('#keyboard_popup');
 
-            console.log(options.keyboard);
+
             $pop.SBKeyboard(options.keyboard).css({
                 'left': o.left,
                 'top': top
@@ -134,7 +134,7 @@
                         isComplete = true;
                     }
                     privateMethods.hideKeyboard($this, isComplete);
-                    privateMethods.stopBlink();
+                    privateMethods.stopBlink($this);
                 });
             $('#keyboard_overlay').show();
             var kh = $pop.height();
@@ -149,12 +149,14 @@
                     'left': 1280 - kw - 20
                 })
             }
-            //$.voice.save();
+            $$voice.save();
             $$nav.save();
             $$nav.on('#keyboard_popup');
-            $('#keyboard_popup').SBKeyboard('refreshVoice');//.voiceLink();
+            $('#keyboard_popup').SBKeyboard('refreshVoice').voiceLink();
             $this.addClass($$nav.higlight_class);
             $('#keyboard_popup').trigger('keyboard_show');
+
+            privateMethods.startBlink($this);
         },
         bindEvents: function ($input) {
 
@@ -163,7 +165,6 @@
             $wrapper.off('nav_focus nav_blur click');
             var options = optionsHash[$input.attr('id')];
 
-            console.log(options);
 
             var $cursor = $wrapper.find('.sig-cursor');
 
@@ -180,7 +181,7 @@
                     privateMethods.startBlink($cursor);
                 },
                 'stopBlink': function () {
-                    privateMethods.stopBlink();
+                    privateMethods.stopBlink($input);
                 },
                 'hideKeyboard': function () {
                     if ($wrapper.hasClass('smart-input-active')) {
@@ -278,9 +279,12 @@
                 }
             });
 
+
+
             if (options.directKeyboardInput) {
                 $input.parent().on({
                     nav_focus: function () {
+
                         privateMethods.startBlink($input);
                         $('body').on('keypress.smartinput', function (e) {
                             if (e.charCode) {

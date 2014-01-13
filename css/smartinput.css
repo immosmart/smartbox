@@ -49,15 +49,18 @@
     background-position: 0 -156px;
 }
 
-.focus .smart_input-decor-l {
+.focus .smart_input-decor-l,
+.smart-input-active .smart_input-decor-l{
     background-position: 0 0;
 }
 
-.focus .smart_input-decor-r {
+.focus .smart_input-decor-r,
+.smart-input-active .smart_input-decor-r {
     background-position: 0 -208px;
 }
 
-.focus .smart_input-decor-c {
+.focus .smart_input-decor-c,
+.smart-input-active .smart_input-decor-c {
     background-position: 0 -104px;
 }
 
