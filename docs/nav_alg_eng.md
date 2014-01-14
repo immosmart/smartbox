@@ -17,16 +17,16 @@ The elements that have edges that intersect along the axis perpendicular to the 
 The element that has upper edge closer to the upper edge of the focused element is searched for from the last elements.  
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide4.png" />
 
+If on the second step intersected elements haven't been found the closest element is found. 
 
-Если на втором шаге пересекающихся элементов не было найдено с оставшимися элементами происходит тоже самое. Находится самый ближайший.
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide5.png" />
 
-# Это не баг, это фича.
-
+# It's not a bug, it's a feature!
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide6.png" />
 
-В этом примере двигаясь по вертикали из элемента **B** в элемент **A** перейти можно, но не наоборот.
-Это происходит потому что нижняя грань элемента **A**, ниже нижней грани элемента **B**.
-Таким образом **A** одновременно и выше и ниже **B**
+In this example moving vertically from the element **B** to the element **A** it's possible to transit the focus but not vise versaю
+It happens because of the bottom edge pf the element **A** is lower then the bottom edge of the element **B**.
+So **A**  is higher and lower **B** at the same time. 
+
