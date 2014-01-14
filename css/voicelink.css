@@ -80,33 +80,3 @@
 {
 	background: #c60202;
 }
-#help_voice_bubble
-{
-	width: 700px;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
-	background: url("help_buble.png") no-repeat;
-	padding: 27px 13px 0 37px;
-	min-height: 80px;
-	max-height: 174px;
-	line-height: 32px;
-	position: absolute;
-	right: 10px;
-	top: 74px;
-	z-index: 10;
-	color: #fff;
-	font-size: 17px;
-	display: none;
-}
-#help_voice_bubble:after
-{
-	content: '';
-	background: url("help_buble.png") 0 100% no-repeat;
-	display: block;
-	height: 30px;
-	width: 700px;
-	position: absolute;
-	left: 0;
-	bottom: -30px;
-}

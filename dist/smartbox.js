@@ -1,10 +1,11 @@
 /**
  * Main smartbox file
  */
-(function (window, undefined) {
+(function ( window, undefined ) {
 
 	// save in case of overwrite
 	var document = window.document,
+		_inited = false,
 		readyCallbacks = [];
 
 	var SB = {
@@ -25,25 +26,54 @@
 			currentPlatform: ''
 		},
 
+		isInited: function () {
+			return _inited;
+		},
+
 		/**
 		 * Main function
+		 * @param cb {Function} callback after initialization
 		 */
-		ready: function (cb) {
+		ready: function ( cb ) {
 			readyCallbacks.push(cb);
 		},
 
-		initialise: function (cb) {
+        readyForPlatform: function(platform, cb){
+            var self=this;
+            this.ready(function(){
+                if(platform==self.currentPlatform.name){
+                    cb();
+                }
+            });
+        },
+
+		/**
+		 * Applying all ready callbacks
+		 * @private
+		 */
+		_onReady: function () {
+			for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+				readyCallbacks[i].call(this);
+			}
+		},
+
+		initialise: function () {
 			var self = this,
 				utils = this.utils;
+
+			if ( _inited ) {
+				return;
+			}
 
 			window.$$log = utils.log.log;
 			window.$$error = utils.error;
 
 			$$log('!!!!!!!!!LOG: initialising SB');
 
-			SB.platforms.initialise(function (currentPlatform) {
+			SB.platforms.initialise(function ( currentPlatform ) {
 				self.currentPlatform = currentPlatform;
-				cb && cb.call(self);
+				_inited = true;
+				self._onReady();
 			});
 		}
 	};
@@ -62,19 +92,23 @@
 		 * all functionality in main.js
 		 */
 		log: {
-			log: function () {},
-			state: function () {},
-			show: function () {},
-			hide: function () {},
-			startProfile: function () {},
-			stopProfile: function () {}
+			log: function () {
+			},
+			state: function () {
+			},
+			show: function () {
+			},
+			hide: function () {
+			},
+			startProfile: function () {
+			},
+			stopProfile: function () {
+			}
 		}
 	};
 
 	$(function () {
-		SB.initialise(function () {
-
-		});
+		SB.initialise();
 	});
 	window.SB = SB;
 })(this);
@@ -304,7 +338,6 @@
     keyRegExp = /([^{]+){{([^}]*)}}/,
     defaults = {
       type: 'en',
-      keyboardLangs: [],
       haveNumKeyboard: false,
       firstLayout: 'en'
     },
@@ -322,7 +355,7 @@
     this.type = options.type;
     this.currentLayout = '';
     this.previousLayout = '';
-    this.$el = $($el);
+    this.$el = $el;
 
     // jquery layout els
     this.$layouts = {};
@@ -374,7 +407,11 @@
         this.presets = _.without(this.presets,'fullnum')
       }
 
-      this.changeLayout(options.firstLayout);
+      if (this.presets.indexOf(options.firstLayout) !== -1) {
+        this.changeLayout(options.firstLayout);
+      } else {
+        this.changeLayout(this.presets[0]);
+      }
     },
 
     /**
@@ -417,16 +454,17 @@
      */
     generateBoard: function ( preset, type ) {
 
-      var boardHtml = '<div class="kb-c keyboard_generated_' + type + '">',
+      var boardHtml = '',
         rowHtml = '',
         keyAttrs = {},
         row, letter;
 
-      preset = preset();
-
       if ( generatedKeyboards[type] ) {
         return generatedKeyboards[type].board;
       }
+
+      preset = preset();
+      boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
 
       for ( var i = 0; i < preset.length; i++ ) {
         row = preset[i];
@@ -523,10 +561,10 @@
             return;
           case 'lang':
             this.changeKeyboardLang();
-            break;
+            return;
           case 'nums':
             this.triggerNumKeyboard();
-            break;
+            return;
           default:
             break;
         }
@@ -535,10 +573,13 @@
       }
 
       ev && this.$el.trigger(ev);
+
       e.stopPropagation();
     },
 
     triggerShiftLetters: function () {
+      var self = this;
+
       if ( this.isShiftActive ) {
         this.isShiftActive = false;
         this.$el.removeClass('shift_active');
@@ -548,9 +589,9 @@
       }
 
       // TODO: only for samsung 11
-      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
-        this.innerHTML = shift_active ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
-      });
+//      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
+//        this.innerHTML = self.isShiftActive ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
+//      });
     },
 
     /**
@@ -609,9 +650,11 @@
     },
     show: function () {
       this.$wrap.show();
+      this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
     },
     hide: function () {
       this.$wrap.hide();
+      this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
     }
   };
 
@@ -620,21 +663,35 @@
 
   // The actual plugin constructor
   function Plugin( element, options ) {
-    this.element = element;
+    this.$el = $(element);
     this.keyboards = {};
 
-    this.init($.extend({}, defaults, options));
+    options = $.extend({}, defaults, options);
+    this.addKeyboard(options);
+    this.$el.addClass('keyboard_popup_wrapper');
+    this.currentKeyboard = this.keyboards[options.type];
+    this.currentKeyboard.show();
   }
 
   pluginPrototype = {
-    init: function (opt) {
-      this.addKeyboard(opt);
-      this.element.className = 'keyboard_popup_wrapper ' + opt.type + '_wrap keyboard_' + opt.firstLayout;
-      this.currentKeyboard = this.keyboards[opt.type];
-      this.currentKeyboard.show();
+    /**
+     * Add keyboard to current element
+     * @param opt {Object}
+     */
+    addKeyboard: function (opt) {
+      var options = $.extend({}, defaults, opt);
+      this.keyboards[options.type] = new Keyboard(options, this.$el);
     },
-    addKeyboard: function ( opt) {
-      this.keyboards[opt.type] = new Keyboard(opt, this.element);
+    /**
+     * Change current active keyboard
+     * @param type {String} 'en', 'ru'
+     */
+    changeKeyboard: function (type) {
+      if (this.keyboards[type]) {
+        this.currentKeyboard.hide();
+        this.currentKeyboard = this.keyboards[type];
+        this.currentKeyboard.show();
+      }
     }
   };
 
@@ -655,7 +712,7 @@
         $.data(this, 'plugin_' + pluginName,
           new Plugin( this, options ));
       } else {
-        instance[method] && instance[method].apply(this, params);
+        instance[method] && instance[method](params);
       }
     });
   }
@@ -690,7 +747,7 @@ window.SB.keyboardPresets = {
 			'1234567890@'.split(''),
 			'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
 			'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
-			'zxcvbnm-.'.split('').concat('ok{{}}')
+			'zxcvbnm-.'.split('').concat('complete{{OK}}')
 		];
 	},
 
@@ -1781,8 +1838,8 @@ $(document.body).on('nav_key:tools', function () {
             $this.data('keyboard_active', true);
             var $wrapper=$this.parent();
             $wrapper.addClass('smart-input-active');
-            var h = $this.height();
-            var o = $this.offset();
+            var h = $wrapper.height();
+            var o = $wrapper.offset();
             var top = o.top + h;
             var $pop = $('#keyboard_popup');
 
@@ -1913,11 +1970,10 @@ $(document.body).on('nav_key:tools', function () {
     var defaultInputOptions = {
         keyboard: {
             type: 'fulltext_ru',
-            firstLayout: 'ru',
+            firstLang: 'ru',
             //firstClass: 'keyboard_en shift_active keyboard_num',
             haveNumKeyboard: true
         },
-
         directKeyboardInput: true,
 
         max: 0,
@@ -1951,10 +2007,6 @@ $(document.body).on('nav_key:tools', function () {
 
 
             if (options.directKeyboardInput) {
-                console.log($input.parent());
-                $input.parent().on('nav_focus', function(){
-                    console.log('ыфвыфвф');
-                });
                 $input.parent().on({
                     nav_focus: function () {
 
@@ -2036,26 +2088,17 @@ $(document.body).on('nav_key:tools', function () {
     "use strict";
 
     var inited = false,
-        voiceEnabled = false,
-    // время для произношения команды и скрытия хелпбара в браузере
-        voiceTimeout = 10000,
+        enabled = false,
+        currentVoiceState,
+        curOptions,
+        $curTarget,
         $buble,
         $helpBubble,
-        elements,
-        groupNames = {},
-        gnCount = 0,
-        helpbarVisible = false,
-        helpbarVisibityTimeoutLink,
-        helperWasShowed = 0,
-        enabled = false,
-        paused = true,
-        generated = false,
-        curOptions = {},
         stack = [],
-        currentVoiceState,
-        voiceServer = false,
-        $curTarget,
-        $moreDiv = $('<div/>');
+        $moreDiv = $('<div/>'),
+
+        paused = false;
+
 
     var defaults = {
         selector: '.voicelink',
@@ -2068,147 +2111,167 @@ $(document.body).on('nav_key:tools', function () {
         // количество самсунговских всплывашек с командами
         helpbarMaxItems: 6,
         // включение сортировки по весу
-        sortByWeight: true
+        sortByWeight: true,
+        //Вес голосовых ссылок по умолчанию
+        helpbarItemWeight: 200,
+        candidateWeight: 0
     };
 
-    /**
-     * Вес голосовых ссылок по умолчанию
-     *
-     * #VOICEWEIGHT
-     * @type {{candidate: number, helpbarItem: number}}
-     */
-    var defaultWeights = {
-        candidate: 0,
-        helpbarItem: 200
-    };
+
+    var helpbarVisibityTimeoutLink;
+
+
+    window.$$voice = {
+        voiceTimeout: 10000,
+        _resetVisibilityTimeout: function () {
+            $$voice.helpbarVisible = true;
+
+            clearTimeout(helpbarVisibityTimeoutLink);
+            helpbarVisibityTimeoutLink = setTimeout(function () {
+
+                //чтобы обновлял подсказки если был вызван голосовой поиск смотри баг #966
+                if (typeof voiceServer == 'function') {
+                    voiceServer = false;
+                    $.voice.restore();
+                }
+
+                //скрытие пузыря вместе с хелпбаром самсунга
+                $helpBubble.hide();
+                $buble.hide();
+                $$voice.helpbarVisible = false;
+            }, this.voiceTimeout);
+        },
+        _init: function () {
+
+        },
+        _nativeCheckSupport: function () {
+
+        },
+        helpbarVisible: false,
+        enabled: function () {
+            return enabled;
+        },
+        _setVoiceHelp: function (voicehelp) {
+
+        },
+        pause: function () {
+            paused = true;
+        },
+        resume: function () {
+            paused = false;
+        },
+        say: function (text) {
+            if (paused)
+                return;
+            var result = text.toLowerCase();
+            var opts = $.extend({}, defaults, curOptions);
+            if (elements[result]) {
+                elements[result].trigger(opts.eventName);
+            }
+            if ($curTarget) {
+                generateHelpBar.call($curTarget, curOptions);
+            }
+        },
+        _nativeTurnOff: function () {
+
+        },
+        hide: function () {
+            this._nativeTurnOff();
+            $buble.hide();
+            return this;
+        },
+
+        setup: function (options) {
+            $.extend(defaults, options);
+            return this;
+        },
+        save: function () {
+            if (currentVoiceState)
+                stack.push(currentVoiceState);
+            return this;
+        },
+        restore: function () {
+            var last = stack.pop();
+            if (last)
+                $.fn.voiceLink.apply(last.self, last.args);
+            return this;
+        },
+        _nativeFromServer: function (title, callback) {
+
+        },
+        fromServer: function (title, callback) {
+            if (!inited)
+                return this;
+            this.save();
+            this._nativeFromServer(title, callback);
+            return this;
+        },
+        refresh: function () {
+            return this.save().restore();
+        }
+    }
+
+
+    var generated = false, elements;
+
 
     /**
-     * Показ хелпбара и установка таймаута на скрытие
+     * Преобразование jQuery коллекции в массив
+     * и добавление команд в объект elements
+     * @param elems
+     * @returns {Array}
      */
-    var resetVisibilityTimeout = function () {
-        helpbarVisible = true;
+    function voiceElementsToArray(elems) {
 
-        clearTimeout(helpbarVisibityTimeoutLink);
-        helpbarVisibityTimeoutLink = setTimeout(function () {
 
-            //чтобы обновлял подсказки если был вызван голосовой поиск смотри баг #966
-            if (typeof voiceServer == 'function') {
-                voiceServer = false;
-                $$voice.restore();
+        var items = [];
+
+        elems.each(function () {
+            var $el = $(this);
+            var commands = $el.attr('data-voice');
+            var group = $el.attr('data-voice-group');
+            var hidden = $el.attr('data-voice-hidden') === 'true' ? true : false;
+            var weight = $el.attr('data-voice-weight') || 0;
+            var main = false;
+
+            if (!commands) {
+                console.error('command in ', this, ' is not defined');
+                return;
             }
 
-            //скрытие пузыря вместе с хелпбаром самсунга
-            $helpBubble.hide();
-            $buble.hide();
-            helpbarVisible = false;
-        }, voiceTimeout);
-    };
 
-    /**
-     * Обработка нативных событий распознавания голоса
-     * @param evt событие от самсунга
-     */
-    var handleRecognitionEvent = function (evt) {
+            if ($el.attr('data-voice-disabled')) {
+                return;
+            }
 
-        switch (evt.eventtype) {
-            case "EVENT_VOICE_END_MONITOR":
-                //не работает в телевизоре
-                break;
-            case "EVENT_VOICE_BEGIN_MONITOR":
-            case "EVENT_VOICE_BTSOUND_START":
-                //this.updateVoiceKeyHelp();
-                if (paused) {
-                    break;
-                }
-                $('body').trigger('voiceStart');
-                if (helperWasShowed < defaults.showHelperTimes) {
-                    helperWasShowed++;
-                    $helpBubble.html(defaults.helpText).show();
-                }
-                resetVisibilityTimeout();
-
-
-                if ($curTarget) {
-                    doAll.call($curTarget, curOptions);
-                }
-                break;
-            case "EVENT_VOICE_RECOG_RESULT":
-                if (paused) {
-                    break;
-                }
-                resetVisibilityTimeout();
-                $buble.hide();
-                var result = evt.result.toLowerCase();
-                var opts = $.extend({}, defaults, curOptions);
-                $helpBubble.hide();
-                //если не голосовой поиск
-                if (typeof voiceServer != 'function') {
-                    if (elements[result]) {
-                        elements[result].trigger(opts.eventName);
-                    }
-                    if ($curTarget) {
-                        doAll.call($curTarget, curOptions);
-                    }
+            if (!weight) {
+                if (!group && !hidden) {
+                    weight = defaults.helpbarItemWeight
+                    main = true;
                 }
                 else {
-                    voiceServer(result);
-                    voiceServer = false;
-                    $$voice.restore();
+                    weight = defaults.candidateWeight
                 }
-                break;
-        }
-    };
-
-    /**
-     * Инициализация голосового управления
-     * @returns {boolean}
-     */
-    var init = function () {
-
-        paused = false;
-
-
-        // нативное управление в самсунге
-        if ($$voice.enabled() && !$$voice.emulate) {
-            deviceapis.recognition.SubscribeExEvent(deviceapis.recognition.PL_RECOGNITION_TYPE_VOICE, "SmartKino", function (evt) {
-                handleRecognitionEvent(evt);
-            });
-            deviceapis.recognition.SetVoiceTimeout(voiceTimeout);
-            $('body').append('<div id="voice_buble"></div><div id="help_voice_bubble"></div>');
-            $buble = $('#voice_buble');
-            $helpBubble = $("#help_voice_bubble");
-            return true;
-        }
-        else {
-            // эмулятор в браузере
-            if ($$voice.emulate) {
-                helpbarVisible = true;
-                $('body').append('<div id="voice_buble"></div><div id="help_voice_bubble"></div><div class="emul_voice_helpbar_wrap"><div id="emul_voice_helpbar"></div></div>');
-                $buble = $('#voice_buble');
-                $helpBubble = $("#help_voice_bubble");
-
-                // клики по кнопкам эмулятора голоса
-                $('#emul_voice_helpbar').on('click', '.emul_voice_trigger', function () {
-                    var result = $(this).html().toLowerCase();
-                    var opts = $.extend({}, defaults, curOptions);
-                    if (elements[result]) {
-                        elements[result].trigger(opts.eventName);
-                    }
-                    if ($curTarget) {
-                        doAll.call($curTarget, curOptions);
-                    }
-                });
-                return true;
             }
-            return false;
-        }
-    };
 
-    /**
-     * Сделать все =)
-     * @param options
-     */
-    var doAll = function (options) {
+            items.push({
+                itemText: commands,
+                weight: weight,
+                group: group,
+                hidden: hidden,
+                main: main
+            });
+
+            elements[commands.toLowerCase()] = $el;
+        });
+
+        return items;
+    }
+
+    var groupNames = {},
+        gnCount = 0;
+
+    var generateHelpBar = function (options) {
 
         if (generated) {
             return;
@@ -2228,6 +2291,7 @@ $(document.body).on('nav_key:tools', function () {
             helpbarMaxItems = opts.helpbarMaxItems,
             elems = this.find(opts.selector);
 
+
         var voicehelp = {
             helpbarType: "HELPBAR_TYPE_VOICE_CUSTOMIZE",
             bKeepCurrentInfo: "false",
@@ -2241,22 +2305,26 @@ $(document.body).on('nav_key:tools', function () {
             elems = elems.filter(':visible').add(force);
         }
 
+
         // сортировка элементов по весу (от большего к меньшему)
         if (opts.sortByWeight) {
-            voiceItems = _.sortBy(voiceElementsToArray(elems),function (el) {
-                return el.weight;
-            }).reverse();
+            voiceItems = _.sortBy(voiceElementsToArray(elems), function (el) {
+                return -el.weight;
+            });
         } else {
             voiceItems = voiceElementsToArray(elems);
         }
+
 
         // количество скрытых голосовых подсказок
         hiddenItems = $.grep(voiceItems, function (el) {
             return el.hidden === true;
         });
 
+
         // количество отображаемых подсказок
         activeItems = _.difference(voiceItems, hiddenItems);
+
 
         // добавление кнопки "Еще"
         if (activeItems.length > helpbarMaxItems) {
@@ -2268,7 +2336,7 @@ $(document.body).on('nav_key:tools', function () {
             });
             $moreDiv.unbind().bind(opts.eventName, function () {
                 $('body').trigger('showVoiceHelpbar');
-                resetVisibilityTimeout();
+                $$voice._resetVisibilityTimeout();
                 $buble.show();
             });
             elements[opts.moreText.toLowerCase()] = $moreDiv;
@@ -2304,6 +2372,7 @@ $(document.body).on('nav_key:tools', function () {
                 group = '';
             }
 
+
             if (!hidden) {
                 if (!groupNames[group]) {
                     gnCount++;
@@ -2332,187 +2401,28 @@ $(document.body).on('nav_key:tools', function () {
             voicehelp.candidateList = candidates;
         }
 
-        // отправляем данные в эмулятор или телевизор
-        if (!$$voice.emulate) {
-            deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(voicehelp));
-        }
-        else {
-            var $bar = $('#emul_voice_helpbar');
-            $bar.empty();
-            if (voicehelp.helpbarItemsList) {
-                $.each(voicehelp.helpbarItemsList, function (key, val) {
-                    $('<div>', {
-                        'attr': {
-                            'class': "emul_voice_trigger main"
-                        },
-                        html: val.itemText,
-                        appendTo: $bar
-                    });
-                });
-            }
-            if (voicehelp.candidateList) {
-                $.each(voicehelp.candidateList, function (key, val) {
-                    $('<div>', {
-                        'attr': {
-                            'class': "emul_voice_trigger"
-                        },
-                        html: val.candidate,
-                        appendTo: $bar
-                    });
-                });
-            }
-        }
+
+        $$voice._setVoiceHelp(voicehelp);
+
     };
-
-    /**
-     * Преобразование jQuery коллекции в массив
-     * и добавление команд в объект elements
-     * @param elems
-     * @returns {Array}
-     */
-    function voiceElementsToArray(elems) {
-
-        var items = [];
-
-        elems.each(function () {
-            var $el = $(this);
-            var commands = $el.attr('data-voice');
-            var group = $el.attr('data-voice-group');
-            var hidden = $el.attr('data-voice-hidden') === 'true' ? true : false;
-            var weight = $el.attr('data-voice-weight') || 0;
-            var main = false;
-
-            if (!commands) {
-                console.error('command in ', this, ' is not defined');
-                return;
-            }
-
-
-            if ($el.attr('data-voice-disabled')) {
-                return;
-            }
-
-            if (!weight) {
-                if (!group && !hidden) {
-                    weight = defaultWeights.helpbarItem
-                    main = true;
-                }
-                else {
-                    weight = defaultWeights.candidate
-                }
-            }
-
-            items.push({
-                itemText: commands,
-                weight: weight,
-                group: group,
-                hidden: hidden,
-                main: main
-            });
-
-            elements[commands.toLowerCase()] = $el;
-        });
-
-        return items;
-    }
-
-    window.$$voice = {
-        pause: function () {
-            paused = true;
-        },
-        resume: function () {
-            paused = false;
-        },
-        hide: function () {
-            if (!$$voice.emulate) {
-                if ($$voice.enabled()) {
-
-                    deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify({
-                        helpbarType: "HELPBAR_TYPE_VOICE_CUSTOMIZE",
-                        bKeepCurrentInfo: "false",
-                        helpbarItemsList: []
-                    }));
-                    $buble.hide();
-                }
-            }
-            else {
-                $('#emul_voice_helpbar').empty();
-                $buble.hide();
-            }
-
-        },
-        setup: function (options) {
-            $.extend(defaults, options);
-            return this;
-        },
-        save: function () {
-            if (currentVoiceState)
-                stack.push(currentVoiceState);
-            return this;
-        },
-        restore: function () {
-            var last = stack.pop();
-            if (last)
-                $.fn.voiceLink.apply(last.self, last.args);
-            return this;
-        },
-        toText: function (title, callback) {
-            if (!inited)
-                return this;
-            $$voice.save();
-            voiceServer = callback;
-            var describeHelpbar = {
-                helpbarType: "HELPBAR_TYPE_VOICE_SERVER_GUIDE_RETURN",
-                guideText: title
-            };
-            if (!this.emulate)
-                deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(describeHelpbar));
-            else {
-                var text = prompt(title);
-                callback(text || '');
-            }
-
-            return this;
-        },
-        enabled: function () {
-            if (enabled || this.emulate) {
-                enabled = true;
-                return enabled;
-            }
-            try {
-                enabled = deviceapis.recognition.IsRecognitionSupported()
-            } catch (e) {
-            }
-            return enabled;
-        },
-        refresh: function () {
-            return this.save().restore();
-        },
-        emulate: false
-    };
-
-    SB.ready(function () {
-        if (SB.currentPlatform == "browser") {
-            $$voice.emulate = true;
-        }
-    });
 
     $.fn.voiceLink = function (options) {
-
         // выходим, если нет реализации голоса
-        if (inited && !voiceEnabled) {
+        if (inited && !enabled) {
             return;
         }
 
         if (!inited) {
-            if (init()) {
-                inited = true;
-                voiceEnabled = true;
-            }
-            else {
-                inited = true;
+
+            enabled = $$voice._nativeCheckSupport();
+            if (!enabled) {
                 return;
             }
+
+            $$voice._init();
+            $buble = $('#voice_buble');
+            $helpBubble = $("#help_voice_bubble");
+            inited = true;
         }
 
         currentVoiceState = {
@@ -2524,10 +2434,12 @@ $(document.body).on('nav_key:tools', function () {
         options || (options = {});
         curOptions = options;
         $curTarget = this;
-        if (helpbarVisible) {
-            doAll.call(this, curOptions);
+
+        if ($$voice.helpbarVisible) {
+            generateHelpBar.call(this, curOptions);
         }
-    };
+    }
+
 })(jQuery);
 Player.extend({
     init: function () {
@@ -2716,6 +2628,58 @@ Player.extend({
 	_(platform).extend(platformObj);
 
 })(this);
+(function ($) {
+    "use strict";
+
+    SB.readyForPlatform('browser', function () {
+        _.extend($$voice, {
+            _init: function () {
+                this.helpbarVisible = true;
+                $('body').append('<div id="voice_buble"></div><div id="help_voice_bubble"></div><div class="emul_voice_helpbar_wrap"><div id="emul_voice_helpbar"></div></div>');
+                // клики по кнопкам эмулятора голоса
+                $('#emul_voice_helpbar').on('click', '.emul_voice_trigger', function () {
+                    $$voice.say(this.innerHTML);
+                });
+            },
+            _nativeTurnOff: function () {
+                $('#emul_voice_helpbar').empty();
+            },
+            _nativeFromServer: function (title, callback) {
+                var text = prompt(title);
+                callback(text || '');
+            },
+            _nativeCheckSupport: function () {
+                return true;
+            },
+            _setVoiceHelp: function (voicehelp) {
+                var $bar = $('#emul_voice_helpbar');
+                $bar.empty();
+                if (voicehelp.helpbarItemsList) {
+                    $.each(voicehelp.helpbarItemsList, function (key, val) {
+                        $('<div>', {
+                            'attr': {
+                                'class': "emul_voice_trigger main"
+                            },
+                            html: val.itemText,
+                            appendTo: $bar
+                        });
+                    });
+                }
+                if (voicehelp.candidateList) {
+                    $.each(voicehelp.candidateList, function (key, val) {
+                        $('<div>', {
+                            'attr': {
+                                'class': "emul_voice_trigger"
+                            },
+                            html: val.candidate,
+                            appendTo: $bar
+                        });
+                    });
+                }
+            }
+        });
+    });
+})(jQuery);
 if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
 
 
@@ -3223,3 +3187,100 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
 
 	_.extend(platform, platformObj);
 })(this);
+(function ($) {
+    "use strict";
+
+
+
+    SB.readyForPlatform('samsung', function(){
+        var voiceServer;
+
+        alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! samsung');
+        /**
+         * Обработка нативных событий распознавания голоса
+         * @param evt событие от самсунга
+         */
+        var handleRecognitionEvent = function (evt) {
+
+            switch (evt.eventtype) {
+                case "EVENT_VOICE_END_MONITOR":
+                    //не работает в телевизоре
+                    break;
+                case "EVENT_VOICE_BEGIN_MONITOR":
+                case "EVENT_VOICE_BTSOUND_START":
+                    //this.updateVoiceKeyHelp();
+                    /*if (paused) {
+                        break;
+                    }
+                    $('body').trigger('voiceStart');
+                    if (helperWasShowed < defaults.showHelperTimes) {
+                        helperWasShowed++;
+                        $helpBubble.html(defaults.helpText).show();
+                    }*/
+
+
+                    alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start');
+                    $$voice.refresh();
+
+                    $$voice._resetVisibilityTimeout();
+
+                    /*
+                    if ($curTarget) {
+                        doAll.call($curTarget, curOptions);
+                    }*/
+                    break;
+                case "EVENT_VOICE_RECOG_RESULT":
+
+                    var result = evt.result.toLowerCase();
+                    //если не голосовой поиск
+                    if (typeof voiceServer != 'function') {
+                        $$voice.say(result);
+                    }
+                    else {
+                        voiceServer(result);
+                        voiceServer = false;
+                        $$voice.restore();
+                    }
+                    break;
+            }
+        };
+        _.extend($$voice, {
+            _init: function(){
+                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! init');
+                deviceapis.recognition.SubscribeExEvent(deviceapis.recognition.PL_RECOGNITION_TYPE_VOICE, "Smartbox", function (evt) {
+                    handleRecognitionEvent(evt);
+                });
+                deviceapis.recognition.SetVoiceTimeout(this.voiceTimeout);
+                $('body').append('<div id="voice_buble"></div><div id="help_voice_bubble"></div>');
+            },
+            _nativeCheckSupport: function(){
+                var enabled=false;
+                try {
+                    enabled = deviceapis.recognition.IsRecognitionSupported();
+                } catch (e) {
+                }
+                return enabled;
+            },
+            _nativeFromServer: function(title, callback){
+                voiceServer = callback;
+                var describeHelpbar = {
+                    helpbarType: "HELPBAR_TYPE_VOICE_SERVER_GUIDE_RETURN",
+                    guideText: title
+                };
+
+                deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(describeHelpbar));
+            },
+            _setVoiceHelp: function(voicehelp){
+                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+JSON.stringify(voicehelp));
+                deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(voicehelp));
+            },
+            _nativeTurnOff: function(){
+                deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify({
+                    helpbarType: "HELPBAR_TYPE_VOICE_CUSTOMIZE",
+                    bKeepCurrentInfo: "false",
+                    helpbarItemsList: []
+                }));
+            }
+        });
+    });
+})(jQuery);

@@ -38,6 +38,15 @@
 			readyCallbacks.push(cb);
 		},
 
+        readyForPlatform: function(platform, cb){
+            var self=this;
+            this.ready(function(){
+                if(platform==self.currentPlatform.name){
+                    cb();
+                }
+            });
+        },
+
 		/**
 		 * Applying all ready callbacks
 		 * @private
