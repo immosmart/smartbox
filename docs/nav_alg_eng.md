@@ -14,8 +14,7 @@ The elements that have edges that intersect along the axis perpendicular to the 
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide3.png" />
 
-Из оставшихся элементов находится тот чья верхняя грань ближе всего к верхней грани элемента в фокусе. Это и есть искомый элемент.
-
+The element that has upper edge closer to the upper edge of the focused element is searched for from the last elements.  
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide4.png" />
 
 
