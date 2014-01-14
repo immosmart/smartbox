@@ -6,11 +6,11 @@ Example: There are navigation elements, focused element is marked in red.
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide1.png" />
 
-User presses the button "Up". The first occuring thing is eliminating of elements that have upper edge lower then upper edge of the focused element . 
+User presses the button "Up". The first occuring thing is eliminating of elements that have upper edge lower then upper edge of the focused element. 
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide2.png" />
 
-Находятся элементы, грани которых пересекаются по оси перпендикулярной направлению. Если такие элементы находятся, их приоритет становится выше и остальные отсеиваются.
+The elements that have edges that intersect along the axis perpendicular to the direction are found. If there is any of such element exists then their priority become higher and other elements are eliminated. 
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide3.png" />
 
