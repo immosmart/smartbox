@@ -1,12 +1,12 @@
-# Алгоритм поиска элемента
+# Element seaching alghorithm
 
-Алоритм справледлив для любого направления. Говоря ниже "верхняя грань" имеется в виду грань совпадающая с направлением движения. Для движения вверх - верхняя, вниз - нижняя, вправо - правая, влево - левая.
+The alghorithm is reasonable for any direction. "Upper edge" means an edge coincident with the movement direction. For the movement up - upper edge, down - bottom edge, right - right edge, left - left edge.   
 
-Пример: есть элементы навигации, элемент в фокусе обозначен красным цветом.
+Example: There are navigation elements, focused element is marked in red. 
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide1.png" />
 
-Юзер нижмает кнопку вверх. Первое что происходит - отсеиваютя элементы верхняя грань которых ниже чем верхняя грань элемента в фокусе.
+User presses the button "Up". The first occuring thing is eliminating of elements that have upper edge lower then upper edge of the focused element . 
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide2.png" />
 
