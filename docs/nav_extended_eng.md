@@ -1,9 +1,8 @@
-Алгоритм поиска элемента можно изменить в случаях когда требуется иное поведение.
+The element searching algorithm can be changed if different behaviour is needed.
 
 
 
-
-# Атрибут user defined
+# Attribute "user defined"
 
 ```
 <i class="fav-button nav-item" data-nav_ud="0,0,#pfl_film_watch,0"></i>
