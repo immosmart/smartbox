@@ -15,7 +15,7 @@
 
     var defaults = {
         selector: '.voicelink',
-        moreText: 'Еще',
+        moreText: 'More',
         eventName: 'voice',
         useHidden: false,
         helpText: '',
