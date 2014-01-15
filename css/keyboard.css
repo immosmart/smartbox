@@ -1,0 +1,171 @@
+
+*{
+    -webkit-user-select: none;
+}
+
+.keyboard_popup_wrapper {
+    width: 416px;
+    margin: 0 auto;
+}
+
+.keyboard_ru {
+    width: 495px;
+}
+
+.keyboard_email {
+    width: 455px;
+}
+
+.kb-wrap {
+    position: relative;
+    padding: 10px 5px 5px 10px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    display: none;
+}
+
+.kbw-wrap {
+    display: none;
+    margin: 0 auto;
+}
+
+.kb-c {
+    padding-bottom: 1px;
+    display: none;
+}
+
+.kb-row {
+    margin-bottom: 6px;
+    height: 43px;
+}
+
+.kb-row:after {
+    content: '';
+    clear: both;
+    display: block;
+}
+
+.kbtn {
+    float: left;
+    width: 35px;
+    height: 36px;
+    text-align: center;
+    font-size: 24px;
+    color: #000;
+    background: #fff;
+    cursor: pointer;
+    margin-right: 5px;
+    padding-top: 7px;
+    line-height: 31px;
+    border-radius: 4px;
+}
+
+.kbtn:hover {
+    background: #1295e4;
+    color: #fff;
+}
+
+.kbtn.nums, .kbtn.lang {
+    display: none;
+}
+
+/*show lang button on multilanguage keyboards*/
+.kb-multilang .kbtn.lang {
+     display: block;
+ }
+
+.keyboard_ru .kb-multilang .kbtn.space {
+    width: 275px;
+}
+
+.kb-havenums .kbtn.nums {
+    display: block;
+}
+
+.keyboard_fullnum .kbtn.nums {
+    width: 115px;
+}
+
+.kbtn.shift, .kbtn.nums, .kbtn.lang {
+    width: 55px;
+    font-size: 14px;
+}
+
+.kbtn.shift {
+    width: 75px;
+}
+
+.kbtn.delall {
+    font-size: 16px;
+    line-height: 18px;
+    padding-top: 3px;
+    height: 40px;
+}
+
+.kbtn.space {
+    width: 255px;
+}
+
+.kb-multilang .space {
+    width: 195px;
+}
+
+.keyboard_fullnum .space{
+    width: 315px;
+}
+
+.kbtn.complete {
+    width: 75px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.backspace_icon, .shift_icon {
+    background: url("img/key_i.png") -27px -4px no-repeat;
+    display: inline-block;
+    vertical-align: top;
+    width: 5px;
+    height: 14px;
+}
+
+.backspace_icon {
+    width: 14px;
+    height: 6px;
+    background-position: -2px -3px;
+    margin-top: 10px;
+}
+
+.shift_icon {
+    background-position: -36px -4px;
+    margin-top: 6px;
+    margin-right: 4px;
+}
+
+.shift_active .kbtn.shift {
+    color: #1295e4;
+}
+
+.shift_active .kbtn {
+    text-transform: uppercase;
+}
+
+#keyboard_overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1280px;
+    height: 720px;
+    z-index: 20;
+}
+
+#keyboard_popup {
+    position: absolute;
+    z-index: 50;
+    display: block;
+    left: 200px;
+    top: 200px;
+    margin: 0 0 0 -5px;
+}

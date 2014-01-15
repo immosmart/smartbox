@@ -572,7 +572,7 @@
 
 	$(function () {
 		// Navigation events handler
-		$body.bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
+		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),
 				$navs,
 				n;

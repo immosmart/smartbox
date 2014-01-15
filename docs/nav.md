@@ -20,14 +20,17 @@ $('.button').on('nav_key:red', function(){
 
 # Как использовать
 
-В HTML надо элементы которые будут помечены классом `nav_target`. Это задает элементы по которым может осуществляться навигация и эти элементы могут получать фокус.
+В HTML нужно задать элеметны с классом `nav-item`. Эти элементы могут получать фокус и с помощью клавиатуры по ним фокус переходит. Элементы в фокусе получают класс `focus`. 
+
 ```
 <body>
     <div class="nav-item">hello</div>
     <div class="nav-item">world</div>
 </body>
 ```
+
 После вызова `$$nav.on()` к первому элементу будет добавлен класс `focus` и навигация будет активирована. Нажатие стрелок на клавиатуре или ПДУ будет перемещать фокус, клавиша enter будет эмулировать клик по элементу, а наведение мыши будет переводить элементы в фокус. Таким образом поддержка жестов в телевизоре не требует дополнительной работы, а код приложения не сильно будет отличаться от обычного сайта.
+
 ```
 //отлавливаем одновременно нажатие enter и простой клик
 $('.nav-item').click(function(){
@@ -39,7 +42,7 @@ http://immosmart.github.io/smartbox/examples/navigation/hello_world/
 
 
 # on, off, save, restore
-Удобная связка методов для того чтобы направить плагин в нужную область и вернуться обратно.
+Удобная связка методов для того чтобы сменить, сохранить и восстановить контейнер в котором работает плагин.
 
 Распространенный случай: попап с сообщением.
 
@@ -103,7 +106,7 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 Атрибут должен быть задан над первым родительским элементом для `.nav-item`, то есть такие варианты не работают:
 
 ```
-<ul class="btn-group" data-nav_type="hbox" li-nav_loop="true">
+<ul class="btn-group" data-nav_type="hbox" data-nav_loop="true">
    <li class="btn"><a class="nav-item">Menu item 1</a></div>
    <li class="btn"><a class="nav-item">Menu item 2</a></div>
    <li class="btn"><a class="nav-item">Menu item 3</a></div>
@@ -123,3 +126,53 @@ http://immosmart.github.io/smartbox/examples/navigation/popup/
 ```
 
 http://immosmart.github.io/smartbox/examples/navigation/complex/
+
+## События `nav_focus`, `nav_blur`.
+
+После того как элемент получает фокус на элементе срабатывает событие `nav_focus`, а когда теряет фокус - `nav_blur`. 
+
+```
+$('.button1').on('nav_blur', function(event, originEvent, $nextElement){
+});
+
+$('.button2').on('nav_focus', function(event, originEvent, $prevElement){
+});
+```
+
+`event` - jQuery событие,
+
+`originEvent` - строка которая определяет каким именно способом элемент получил фокус, может быть отправелено через метод `$$nav.current(target, originEvent)`. Значение по умолчанию: `nav_key`, это означает что фокус был получен с помощью клавиатуры. Так же может быть `mouseenter`, если фокус был получен с помощью мыши. Остальные значения пользовательские.
+
+`$nextElement` - jQuery объект. Для события `nav_blur` - элемент на который перешел фокус.
+
+`$prevElement` - jQuery объект. Для события `nav_focus` - элемент на котором был фокус ранее. 
+
+
+## Отмена перехода.
+
+Переход с элемента на элемент можно отменить, отменяя распространение события `nav_key:{direction}`. Событие можно отменить на любом элементе выше `.nav-item` и ниже `body`.
+Пример:
+
+```
+$('.middle_button').on('nav_key:left', function(e){
+   if(some_cond){
+      e.stopPropagation();
+      $$nav.current('.right_button');
+   }
+});
+```
+
+## Если нужно отличить `click` и `enter`
+
+Нужно отменить событие `nav_key:enter` аналогично предыдущему примеру. Тогда `click` будет выполняться только по настоящему клику мышью. 
+
+```
+$('.button').click(function(){
+
+});
+
+$('.button').on('nav_key:enter',function(e){
+      e.stopPropageion();
+});
+
+```
