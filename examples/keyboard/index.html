@@ -4,19 +4,175 @@
     <meta http-equiv="content-type" content="application/ce-html+xml; charset=UTF-8"/>
     <title></title>
     <link rel="stylesheet" href="../../css/keyboard.css"/>
-    <link rel="stylesheet" href="../../css/smartinput.css"/>
+    <link rel="stylesheet" href="../../css/input.css"/>
+    <style type="text/css">
+        html,
+        body {
+            background: #eeeeee;
+            margin: 0;
+            padding: 0;
+        }
+
+        #log {
+            display: none;
+        }
+
+        .tile {
+            display: inline-block;
+            box-sizing: border-box;
+            padding: 10px;
+            margin: 5px;
+            min-width: 400px;
+            min-height: 300px;
+            background: #A1B8CE;
+            vertical-align: top;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+        }
+
+        .example {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        .smart_input-container {
+            width: 100%;
+        }
+
+        .smart_input-wrap {
+            background: #ffffff;
+        }
+
+        .description {
+            margin: 10px;
+            font-size: 1.2em;
+        }
+
+        .code {
+            margin: 10px -10px 0;
+            padding: 5px 0;
+            background: #eeeeee;
+        }
+
+    </style>
 </head>
 <body>
 
-<input id="input" class="url-input"/>
+<div class="tile">
+    <div class="description">
+        Input with default settings:
+    </div>
+    <div class="example">
+        <input id="input" class="url-input nav-item"/>
+    </div>
+    <div class="code">
+        <pre>
+            $('#input').SBInput({});
+        </pre>
+    </div>
+</div>
+
+<div class="tile">
+    <div class="description">
+        Input with email keyboard and predefined value
+    </div>
+    <div class="example">
+        <input id="input2" class="url-input nav-item" value="123"/>
+    </div>
+    <div class="code">
+        <pre>
+        $('#input2').SBInput({
+            keyboard: {
+              type: 'email'
+            }
+        });
+        </pre>
+    </div>
+</div>
+
+<div class="tile">
+    <div class="description">
+        Input with maximum 4 symbols
+    </div>
+    <div class="example">
+        <input id="input3" class="url-input nav-item"/>
+    </div>
+    <div class="code">
+        <pre>
+        $('#input3').SBInput({
+            max: 4
+        });
+        </pre>
+    </div>
+</div>
+
+<div class="tile">
+    <div class="description">
+        Input with num keyboard
+    </div>
+    <div class="example">
+        <input id="input4" class="url-input nav-item"/>
+    </div>
+    <div class="code">
+        <pre>
+        $('#input4').SBInput({
+            keyboard: {
+                type: 'num'
+            }
+        });
+        </pre>
+    </div>
+</div>
+
+<div class="tile">
+    <div class="description">
+        Input with formatText function
+    </div>
+    <div class="example">
+        <input id="input5" class="url-input nav-item"/>
+    </div>
+    <div class="code">
+        <pre>
+        $('#input5').SBInput({
+            formatText: function ( text ) {
+                return text.toUpperCase();
+            }
+        });
+        </pre>
+    </div>
+</div>
 
 <script type="text/javascript" src="../../src/libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../../src/libs/lodash.compat.min.js"></script>
-<script type="text/javascript" src="../../src/plugins/keyboard.js"></script>
-<script type="text/javascript" src="../../src/plugins/smartinput.js"></script>
+<script type="text/javascript" src="../../dist/smartbox.js"></script>
 
 <script type="text/javascript">
-    $('#input').smartInput({});
+    SB.ready(function() {
+        $('#input').SBInput({});
+        $('#input2').SBInput({
+            keyboard: {
+                type: 'email'
+            }
+        });
+
+        $('#input3').SBInput({
+            max: 4
+        });
+
+        $('#input4').SBInput({
+            keyboard: {
+                type: 'num'
+            }
+        });
+
+        $('#input5').SBInput({
+            formatText: function ( text ) {
+                return text.toUpperCase();
+            }
+        });
+
+        $$nav.on();
+    });
 </script>
 </body>
 </html>

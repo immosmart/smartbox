@@ -62,7 +62,8 @@
     border-radius: 4px;
 }
 
-.kbtn:hover {
+.kbtn:hover,
+.kbtn.focus {
     background: #1295e4;
     color: #fff;
 }
@@ -77,6 +78,10 @@
  }
 
 .keyboard_ru .kb-multilang .kbtn.space {
+    width: 335px;
+}
+
+.keyboard_ru .kb-multilang.kb-havenums .kbtn.space {
     width: 275px;
 }
 
@@ -108,12 +113,12 @@
     width: 255px;
 }
 
-.kb-multilang .space {
+.kb-multilang.kb-havenums .space {
     width: 195px;
 }
 
 .keyboard_fullnum .space{
-    width: 315px;
+    width: 315px!important;
 }
 
 .kbtn.complete {
@@ -168,4 +173,12 @@
     left: 200px;
     top: 200px;
     margin: 0 0 0 -5px;
+}
+
+.num_wrap {
+    width: 226px;
+}
+.num_wrap .kbtn,
+.num_wrap .kbtn.complete {
+    width: 65px;
 }
