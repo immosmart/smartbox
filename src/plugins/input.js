@@ -11,6 +11,10 @@
 				firstLayout: 'ru'
 			},
 
+			/**
+			 * Format function
+			 * @param text
+			 */
 			formatText: null,
 			bindKeyboard: null,
 
@@ -347,7 +351,7 @@
 			$$nav.on('#keyboard_popup');
 			$keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
 			this.$el.addClass($$nav.higlight_class);
-			$keyboardPopup.trigger('keyboard_show');
+			this.$input.trigger('keyboard_show');
 			this.startBlink();
 		}
 	};
