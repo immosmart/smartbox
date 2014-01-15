@@ -2093,7 +2093,6 @@ $(document.body).on('nav_key:tools', function () {
         curOptions,
         $curTarget,
         $buble,
-        $helpBubble,
         stack = [],
         $moreDiv = $('<div/>'),
 
@@ -2102,7 +2101,7 @@ $(document.body).on('nav_key:tools', function () {
 
     var defaults = {
         selector: '.voicelink',
-        moreText: 'Еще',
+        moreText: 'More',
         eventName: 'voice',
         useHidden: false,
         helpText: '',
@@ -2135,8 +2134,7 @@ $(document.body).on('nav_key:tools', function () {
                     $.voice.restore();
                 }
 
-                //скрытие пузыря вместе с хелпбаром самсунга
-                $helpBubble.hide();
+
                 $buble.hide();
                 $$voice.helpbarVisible = false;
             }, this.voiceTimeout);
@@ -2421,7 +2419,6 @@ $(document.body).on('nav_key:tools', function () {
 
             $$voice._init();
             $buble = $('#voice_buble');
-            $helpBubble = $("#help_voice_bubble");
             inited = true;
         }
 
@@ -3195,7 +3192,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
     SB.readyForPlatform('samsung', function(){
         var voiceServer;
 
-        alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! samsung');
         /**
          * Обработка нативных событий распознавания голоса
          * @param evt событие от самсунга
@@ -3219,7 +3215,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                     }*/
 
 
-                    alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start');
                     $$voice.refresh();
 
                     $$voice._resetVisibilityTimeout();
@@ -3246,7 +3241,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         };
         _.extend($$voice, {
             _init: function(){
-                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! init');
                 deviceapis.recognition.SubscribeExEvent(deviceapis.recognition.PL_RECOGNITION_TYPE_VOICE, "Smartbox", function (evt) {
                     handleRecognitionEvent(evt);
                 });
@@ -3271,7 +3265,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(describeHelpbar));
             },
             _setVoiceHelp: function(voicehelp){
-                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+JSON.stringify(voicehelp));
                 deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(voicehelp));
             },
             _nativeTurnOff: function(){
