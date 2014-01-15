@@ -4,19 +4,51 @@
     <meta http-equiv="content-type" content="application/ce-html+xml; charset=UTF-8"/>
     <title></title>
     <link rel="stylesheet" href="../../css/keyboard.css"/>
-    <link rel="stylesheet" href="../../css/smartinput.css"/>
+    <link rel="stylesheet" href="../../css/input.css"/>
 </head>
 <body>
 
-<input id="input" class="url-input"/>
+<input id="input" class="url-input nav-item"/>
+
+<input id="input2" class="url-input nav-item" value="123"/>
+
+<input id="input3" class="url-input nav-item"/>
+
+<input id="input4" class="url-input nav-item"/>
 
 <script type="text/javascript" src="../../src/libs/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="../../src/libs/lodash.compat.min.js"></script>
+<script type="text/javascript" src="../../src/sb.js"></script>
+<script type="text/javascript" src="../../src/sb.platforms.js"></script>
+<script type="text/javascript" src="../../src/platforms/browser/sb.platform.browser.js"></script>
+<script type="text/javascript" src="../../src/plugins/voicelink.js"></script>
+<script type="text/javascript" src="../../src/platforms/browser/voicelink.browser.js"></script>
+<script type="text/javascript" src="../../src/plugins/nav.js"></script>
 <script type="text/javascript" src="../../src/plugins/keyboard.js"></script>
-<script type="text/javascript" src="../../src/plugins/smartinput.js"></script>
+<script type="text/javascript" src="../../src/plugins/input.js"></script>
 
 <script type="text/javascript">
-    $('#input').smartInput({});
+    SB.ready(function() {
+        $('#input').SBInput({
+            keyboard: {
+                type: 'fulltext_ru_nums'
+            }
+        });
+        $('#input2').SBInput({});
+        $('#input3').SBInput({
+            keyboard: {
+                type: 'email'
+            }
+        });
+
+        $('#input4').SBInput({
+            keyboard: {
+                type: 'num'
+            }
+        });
+
+        $$nav.on();
+    });
 </script>
 </body>
 </html>
