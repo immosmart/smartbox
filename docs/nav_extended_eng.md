@@ -8,8 +8,9 @@ The element searching algorithm can be changed if different behaviour is needed.
 <i class="fav-button nav-item" data-nav_ud="0,0,#pfl_film_watch,0"></i>
 ```
 
-Если атрибут задан, то навигация перестает в некоторых случаях использовать интеллектуальный поиск элемента. В примере выше при нажатии "DOWN" фокус перейдет на элемент #pfl_film_watch
-Стороны указываются через запятую в порядке CSS - top, right, bottom, left
+If the attribute is defined then the navigation stops to use the intelligent element search in some cases. In the above example when the key "DOWN" has been pressed the focus transits to the element #pfl_film_watch.
+Edges are defined separated by commas in the CSS order - top, right, bottom, left
+
 
 ```
 <i class="fav-button nav-item" data-nav_ud="0,0,none,0"></i>
