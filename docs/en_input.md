@@ -74,27 +74,28 @@ Method can be called after plugin initialisation
 
 The cursor blinking implies the class adding up/deletion to the element cursor   
 
-Имя класса определяется следующим образом cursorClass + '_hidden'
+The class name is defined as: cursorClass + '_hidden'
 
-# Форматирование текста в инпуте
+# Text formatting in an input
 
-Если в опциях передана функция formatText, она будет вызываться после каждого ввода символа.
-Функция должна возвращать текст для инпута
+If the function formatText is assigned in the options then it will be called after every printed symbol.
+The function should return a text for the input. 
 
-# События инпута
+
+# Input events
 
  - 'keyboard_show'
  - 'keyboard_hide'
  - 'keyboard_cancel'
  - 'keyboard_complete'
 
-# Как узнать значение инпута?
+# How to get to know the input's value?
 
-После инициализаци инпута на элементе
+After the input's initialisation on the element
 
         $(el).SBInput(options);
 
-Значение можно узнать из элемента
+The value can be got to know for the element
 
         el.value;
         $(el).val();
