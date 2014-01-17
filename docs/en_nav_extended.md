@@ -16,37 +16,35 @@ Edges are defined separated by commas in the CSS order - top, right, bottom, lef
 <i class="fav-button nav-item" data-nav_ud="0,0,none,0"></i>
 ```
 
-В этом примере нажатие кнопки "DOWN" будет игнорироваться.
+In this example the key "DOWN" pressing is ignored.
 
 
 
 
+# Attribute entry point
 
-# Атрибут entry point
+The attribute forbidden to enter in the element with specified direction. 
 
-Атрибут который запрещает входить в элемент с определенного направления.
+The enter points are defined in the attribute with commas separated 0 and 1.
 
-Точки входа задаются в атрибуте с помощью 0 и 1 через запятые
+0 - forbiddens to enter 
 
-0 - входить нельзя
+1 - allows to enter
 
-1 - входить можно
-
-Стороны указываются в порядке CSS - top, right, bottom, left
+The edges are defined in the CSS order - top, right, bottom, left
 
 ```
 <i class="fav-button nav-item" data-nav_ep="1,1,0,1"></i>
 ```
-В этом примере в элемент нельзя войти снизу.
+In this example it's impossible to enter in the element from the bottom. 
 
 
 
 
 
-# Фантомы
+# Phantoms
 
-Фантом это такой `nav-item`, который при попадании в фокус переводит фокус на другой элемент. Работает только для клавиатуры. При управлении жестами игнорируется.
-
+A phantom is a `nav-item` which transits the focus on the another element as soon as the focus has come to this `nav-item`. It works only for a keyboard. It's ignored when gestures managing realize.
 ```
 <div class="nav-item" data-nav-phantom="#card_owner"></div>
 ```
