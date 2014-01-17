@@ -1,12 +1,12 @@
-# Обзор
+# Overview
 
-Плагин создает input, предназначенный для работы с пультом дистанционного управления
-и виртуальной клавиатурой
+A plugin creates input 
+Плагин создает input aimed for working with a TV remote control and a virtual keyboard. 
 
-# Инициализация
+# Initialisation
 
-SBInput - jQuery плагин, вызываемый на элементе input.
-Первичная инициализация плагина произодится следующим образом:
+SBInput - jQuery plugin called on the input element.
+The first plugin initialisation can be done as written below:
 
         $(el).SBInput(options);
 
@@ -54,25 +54,26 @@ SBInput - jQuery плагин, вызываемый на элементе input.
             next: null
         }
 
-# Методы плагина
+# Plugin's methods
 
-Метод может быть вызван после инициализации плагина
+Method can be called after plugin initialisation
 
-- startBlink  старт мигания курсора
+
+- startBlink  the start of a cursor blinking 
 
         $(el).SBInput('startBlink');
 
-- stopBlink  остановить мигания курсора
+- stopBlink  to stop a cursor blinking
 
         $(el).SBInput('stopBlink');
 
-- showKeyboard отобразить клавиатуру
+- showKeyboard to display a keyboard
 
         $(el).SBInput('showKeyboard');
 
-# Мигание курсора
+# Cursor blinking
 
-Мигание курсора подразумевает добавление/удаление класса к элементу cursor
+The cursor blinking implies the class adding up/deletion to the element cursor   
 
 Имя класса определяется следующим образом cursorClass + '_hidden'
 
