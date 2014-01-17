@@ -1,6 +1,6 @@
 # Overview
 
-A plugin creates input aimed for working with a TV remote control and a virtual keyboard. 
+A plugin creates input aimed for a working with a TV remote control and a virtual keyboard. 
 
 # Initialisation
 
