@@ -49,6 +49,6 @@ A phantom is a `nav-item` which transits the focus on the another element as soo
 <div class="nav-item" data-nav-phantom="#card_owner"></div>
 ```
 
-В этом примере при попадании фокуса на элемент фокус будет переведен на элемент #card_owner
+In this example when the focus comes to the element it's transited to the element #card_owner.
 
 <img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide7.png" />
