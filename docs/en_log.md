@@ -1,45 +1,44 @@
-# Обзор
+# Overview
 
-Лог позволяет отобразить сообщения из кода на экране.
+A log allows to display messages from the code on a screen.
 
-# Инициализация
+# Initialisation
 
-Лог инициализируется при подключении плагина лога.
-В DOM создается элемент <div id='log'></div>
+The log is initialisated after the log plugin is on.
+The element is created <div id='log'></div> in the DOM
 
-# Отображение сообщений
+# Message displaying
 
-По умолчанию кнопка для отображения сообщений tools.
-При клике по кнопке происходят события
-- отображение лога
-- смена панелей
-- скрытие лога
+The key tools is a button by default to display messages.
+When you press the button the next events happen:
+- log displaying
+- boards changing
+- log hiding
 
-# Методы плагина
+# Plugin's methods
 
-Объект лога находится в объекте SB.utils.log
+The log's object is situated in the object SB.utils.log
 
 1) SB.utils.log.log(msg, logName)
    window.$$log(msg, logName)
 
 Вывод сообщения msg в панели лога logName.
-
+msg message displaying in the log's board logName 
 2) show(logName)
 
-Отображение панели лога logName.
-
+The displaying of the log's board logName
 3) hide()
 
-Скрытие лога.
+Log hiding.
 
 4) state( msg, state, logName )
 
-Отображение сообщения в панели state лога logName
-По умолчанию state отображается внизу панели лога.
-Пример использования: вывод текущего времени проигрывания.
+The displaying of the message in the state log's board logName
+State is displayed belowe the log's board by default
 
+Example of the usage: The displaying of the current playing time 
 5) startProfile( profileName );
    stopProfile: function ( profileName )
 
-Функции профилирования. Выводят результат на панели profiler.
+Profiling functions. Display a result on the profiler board. 
 
