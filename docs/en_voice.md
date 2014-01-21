@@ -8,7 +8,7 @@ The voice management is emulated in a browser by the plugin generating an additi
 ## Example
 
 
-Юзер говорит "Назад" - элемент `#backVoiceLink` отправляет событие `voice`
+A user says "Back" - the element `#backVoiceLink` sends the event `voice`
 
 
 html:
@@ -26,16 +26,17 @@ SB.ready(function(){
 });
 ```
 
-## Атрибуты
+## Attributes
 
-### data-voice="[слово]"
+### data-voice="[word]"
 
-обязательный атрибут - подсказка в хелпбаре самсунга или в "пузыре"
-Примечание: "пузырь" - блок с группированными подсказками.
+The mandatory attribute is a hint in the Samsung's helpbar or in the "bubble"
+Note: "Bubble" is a block with grouped hints
 
-### data-voice-group="[название_группы]"
+### data-voice-group="[group_name]"
 
-опциональный атрибут - группа для подсказки. Если группа есть то элемент показывается в пузыре. Если нету в хелпбаре самсунга.
+The optional attribute is a group for the hint. If the group exists then the element is shown in the bubble, if not - in the Samsung's helpbar.
+
 
 ### data-voice-hidden="[true]"
 
