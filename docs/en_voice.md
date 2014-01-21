@@ -1,13 +1,12 @@
 # Voicelink
 
-jQuery плагин для работы с голосовым упралвением в smart tv.
+jQuery plugin for working with Smart TV voice management.
 
-Принцип работы: на элементах с указанным классом `voicelink` в атрибуте `data-voice` указывается фраза, которую должен произнести юзер.
-После произнесения фразы заданной в атрибуте `data-voice` элемент отправляет событие `voice`.
-Плагин генерирует нативный хелпбар голосового управления и добаляет в body свой который может быть вызван фразой "Еще" (фраза может быть измерена настройками плагина)
-В браузере плагин эмулирует голосовое управление генерируя дополнительный блок с кнопками с досупными фразами.
+The principle of operation: A phrase which the user should say is set on the elements with the defined class `voicelink` in the attribute `data-voice`. The plugin generates voice management native helpbar and adds a bar with remain commands in the body, it can be called with the phrase "More". (The phrase can be changed with the plugin adjustment)
+The voice management is emulated in a browser by the plugin generating an additional block with buttons and available phrases.
 
-## Пример
+## Example
+
 
 Юзер говорит "Назад" - элемент `#backVoiceLink` отправляет событие `voice`
 
