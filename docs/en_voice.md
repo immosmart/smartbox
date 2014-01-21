@@ -40,9 +40,10 @@ The optional attribute is a group for the hint. If the group exists then the ele
 
 ### data-voice-hidden="[true]"
 
-опциональный атрибут - показывает что слово произнести можно, но подсказка не будет нигде отображаться.
-Поведение зависит только от того пустое значение или нет, т.к. в 11 тв нет возможности сохранять $().data().
-Пример
+The optional attribute show that the word can be pronauced, but the hint won't be shown. 
+The behavior depends on the value is empty or not, because TV11 haven't got the ability to save $().data().
+
+Example
 
 ```
 data-voice-hidden="true" = data-voice-hidden="abc" = data-voice-hidden="1" = data-voice-hidden="false" = true
@@ -52,43 +53,44 @@ data-voice-hidden="" = false
 
 ### data-voice-force-visible="[true]"
 
-Показывает элемент в хелпбаре, даже если он скрыт и useHidden=false
+Shows the element in the helpbar, even if it's hidden and useHidden=false
 
 
 
-### Настройки
+### Options
 
-В хэше options можно задавать класс селектор для голосовых ссылок.
+In the hash options it's possible to set the selector class for voice links.
+
 ```
 options={
-  selector: '.voicelink',//селектор для поиска
-  moreText: 'More',//текст для показа "пузыря"
-  eventName: 'voice',//событие которое отправляет элемент
-  useHidden: false//фильтровать невидимые ссылки
+  selector: '.voicelink',// the selector for the searching 
+  moreText: 'More',//Text for the "bubble" showing
+  eventName: 'voice',//The event is sent by element событие которое отправляет элемент
+  useHidden: false//Filtering hidden links
 }
 
 $('#scene').voiceLink(options);
 ```
 
-`options` можно не задавать тогда настройки встанут по умолчанию, какие описаны выше
+It's not necessary to set `options`: then options will be set by default (as written above)
 
 ```
 $('#scene').voiceLink();
 ```
 
 ```
-$$voice.setup(newDefaults);//задает новые умолчания
+$$voice.setup(newDefaults);//sets new values for values by default
 ```
 
-## Методы
+## Methods
 
 ### $$voice.say(phrase);
 
-Эмулирует произнесение фразы.
+Emulates the phrase pronouncing
 
 ### $$voice.enabled();
 
-Определяет поддерживается ли голосове управление устройством. Возвращает boolean
+Defines if a device supports the voice recognition function. Returns boolean
 
 ### $$voice.setup(options);
 
@@ -132,7 +134,5 @@ $$voice.fromServer("скажите слово для поиска",function(resu
 ## Важно
 
 Событие voice распространяется вверх по DOM дереву, таким образом если вложить одну голосовую ссылку в другую и не вызвать e.preventDefault() при срабатывании дочерней ссылки родительская тоже получит событие.
-
-
 
 
