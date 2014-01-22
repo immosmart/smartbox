@@ -102,32 +102,32 @@ Saves the current condition (container and options) in the stack.
 
 ### $$voice.restore();
 
-Restores the last saved condition fron the stack and then deletes it from the stack
+Restores the last saved condition from the stack and then deletes it from the stack
 
 ### $$voice.fromServer(title,callback);
 
-Распознавание голоса с помощью сервера самсунга, title - текст который видит пользователь, callback - функция которая вызывается после успешного распознавания текста, принимает в себя результат.
-В браузере выводится prompt сообщение.
+The voice recognition with help of Samsung's server, title - a text which the user sees, callback - the function calling after successful text recognition, receives the result inside. 
+The prompt message is displayed in the browser.
 
-Пример:
+Example:
 
 ```
-$$voice.fromServer("скажите слово для поиска",function(result){
-   //если юзер сказал "привет мир" result = "привет мир"
+$$voice.fromServer("Say the word to search",function(result){
+   //If user say "hello world" the result = "hello world"
 });
 ```
 
 ### $$voice.pause();
 
-Приостанавливает работу плагина.
+Suspends the plugin working
 
 ### $$voice.resume();
 
-Возобновляет работу плагина.
+Resumes the plugin working
 
 ### $$voice.refresh();
 
-Перезапускает voiceLink() с текущими параметрами. Используется часто для того чтобы поддерживать актуальное состояние голосвых подсказок.
+Restarts voiceLink() with the current parametrs. Используется часто для того чтобы поддерживать актуальное состояние голосвых подсказок.
 Если кнопка на которую был перестала быть видимой, то фраза исчезает из хелпбара и не работает, если не задан атрибут `data-voice-force-visible` или флаг $$voice.useHidden
 
 
