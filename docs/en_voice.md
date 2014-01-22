@@ -94,15 +94,15 @@ Defines if a device supports the voice recognition function. Returns boolean
 
 ### $$voice.setup(options);
 
-Задает умолчания, в options - хэш настроек
+Defines default option, in options - options hash 
 
 ### $$voice.save();
 
-Сохраняет текущее состояние (контейнер и options) в стек.
+Saves the current condition (container and options) in the stack.
 
 ### $$voice.restore();
 
-Восстанавливает последнее сохраненное состояние в стеке и удаляет его из стека
+Restores the last saved condition fron the stack and then deletes it from the stack
 
 ### $$voice.fromServer(title,callback);
 
