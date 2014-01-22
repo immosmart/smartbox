@@ -127,12 +127,11 @@ Resumes the plugin working
 
 ### $$voice.refresh();
 
-Restarts voiceLink() with the current parametrs. Используется часто для того чтобы поддерживать актуальное состояние голосвых подсказок.
-Если кнопка на которую был перестала быть видимой, то фраза исчезает из хелпбара и не работает, если не задан атрибут `data-voice-force-visible` или флаг $$voice.useHidden
+Restarts voiceLink() with the current parametrs. It is used often to support the actual condition of the voice hints.
+If the active button with the voice hint stops to be visible then this button disappears from the helpbar and doesn't work if the attribute data-voice-force-visible isn't set or a flag $$voice.useHidden.
 
 
-## Важно
+## Important
 
-Событие voice распространяется вверх по DOM дереву, таким образом если вложить одну голосовую ссылку в другую и не вызвать e.preventDefault() при срабатывании дочерней ссылки родительская тоже получит событие.
-
+The event voice spreads out up on the DOM tree, in such a way if one link put into another voice link and doesn't call e.preventDefault() then when subsidiary links is triggered the parent also receives the event.
 
