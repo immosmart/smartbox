@@ -38,14 +38,14 @@
 			readyCallbacks.push(cb);
 		},
 
-        readyForPlatform: function(platform, cb){
-            var self=this;
-            this.ready(function(){
-                if(platform==self.currentPlatform.name){
-                    cb();
-                }
-            });
-        },
+    readyForPlatform: function(platform, cb){
+        var self=this;
+        this.ready(function(){
+            if(platform==self.currentPlatform.name){
+                cb();
+            }
+        });
+    },
 
 		/**
 		 * Applying all ready callbacks
@@ -92,18 +92,12 @@
 		 * all functionality in main.js
 		 */
 		log: {
-			log: function () {
-			},
-			state: function () {
-			},
-			show: function () {
-			},
-			hide: function () {
-			},
-			startProfile: function () {
-			},
-			stopProfile: function () {
-			}
+			log: $.noop,
+			state: $.noop,
+			show: $.noop,
+			hide: $.noop,
+			startProfile: $.noop,
+			stopProfile: $.noop
 		}
 	};
 
@@ -264,43 +258,44 @@
 
 		/**
 		 * Asynchroniosly adding platform files
+     * @param filesArray {Array} array of sources of javascript files
 		 * @param cb {Function} callback on load javascript files
 		 */
-		addExternalJS: function (filesArray ,cb) {
-			var defferedArray = [],
-				$externalJsContainer;
+    addExternalJS: function ( filesArray, cb ) {
+      var $externalJsContainer,
+        loadedScripts = 0,
+        len = filesArray.length,
+        el,
+        scriptEl;
 
-			if ( filesArray.length ) {
+      if ( filesArray.length ) {
 
-				$externalJsContainer = document.createDocumentFragment();
+        $externalJsContainer = document.createDocumentFragment();
+        el = document.createElement('script');
+        el.type = 'text/javascript';
+        el.onload = onloadScript;
 
-				_.each(filesArray, function ( src ) {
+        for ( var i = 0; i < len; i++ ) {
+          scriptEl = el.cloneNode();
+          scriptEl.src = filesArray[i];
+          $externalJsContainer.appendChild(scriptEl);
+        }
 
-					var d = $.Deferred(),
-						el = document.createElement('script');
+        function onloadScript () {
+          loadedScripts++;
 
-					el.onload = function() {
-						d.resolve();
-						el.onload = null;
-					};
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
 
-					el.type = 'text/javascript';
-					el.src = src;
+        document.body.appendChild($externalJsContainer);
+      } else {
 
-					defferedArray.push(d);
-					$externalJsContainer.appendChild(el);
-				});
-
-				document.body.appendChild($externalJsContainer);
-				$.when.apply($, defferedArray).done(function () {
-					cb && cb.call();
-				});
-			} else {
-
-				// if no external js simple call cb
-				cb && cb.call(this);
-			}
-		},
+        // if no external js simple call cb
+        cb && cb.call(this);
+      }
+    },
 
 		addExternalCss: function (filesArray) {
 			var $externalCssContainer;
@@ -589,7 +584,7 @@
 
 			//jump to next input if is set
 			if ( text.length === opt.max &&
-					 opt.next !== undefined &&
+					 opt.next &&
 					 opt.max != 0 ) {
 				this.hideKeyboard();
 				$$nav.current(opt.next);
@@ -1582,8 +1577,8 @@ $(document.body).on('nav_key:tools', function () {
 						if ( (type == 'hbox' && e.keyName == 'left') ||
 								 (type == 'vbox' && e.keyName == 'up') ) {
 							fn = 'prev';
-						} else if ( (type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down') ) {
+						} else if ((type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down')) {
 							fn = 'next';
 						}
 
@@ -1878,9 +1873,6 @@ $(document.body).on('nav_key:tools', function () {
 	nav = window.$$nav = new Navigation();
 
 	$(function () {
-
-		console.log('dasjdlkasjdlkasjdlka');
-
 		// Navigation events handler
 		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),
@@ -2470,11 +2462,9 @@ $(document.body).on('nav_key:tools', function () {
 Player.extend({
     init: function () {
         var self = this;
-        var ww = window.innerWidth;
-        var wh = window.innerHeight;
 
 
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
+        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;"></video>');
         var video = this.$video_container[0];
         $('body').append(this.$video_container);
 
@@ -2764,6 +2754,80 @@ if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
     }());
 
 }
+/**
+ * Samsung platform
+ */
+!(function ( window, undefined ) {
+
+  var platform = new window.SB.Platform('philips'),
+    platformObj;
+
+  platformObj = {
+
+    externalJs: [
+    ],
+
+    $plugins: {},
+
+    detect: function () {
+      var userAgent = navigator.userAgent.toLowerCase();
+      return (userAgent.indexOf('nettv') !== -1);
+    },
+
+    initialise: function () {
+    },
+
+    getNativeDUID: function () {
+    },
+
+    getMac: function () {
+    },
+
+    getSDI: function () {
+    },
+
+    setPlugins: function () {
+      this.setKeys();
+    },
+
+    volumeEnable: function () {
+    },
+
+    setKeys: function () {
+      this.keys = {
+        ENTER: VK_ENTER,
+        PAUSE: VK_PAUSE,
+        LEFT: VK_LEFT,
+        UP: VK_UP,
+        RIGHT: VK_RIGHT,
+        DOWN: VK_DOWN,
+        N0: VK_0,
+        N1: VK_1,
+        N2: VK_2,
+        N3: VK_3,
+        N4: VK_4,
+        N5: VK_5,
+        N6: VK_6,
+        N7: VK_7,
+        N8: VK_8,
+        N9: VK_9,
+        RED: VK_RED,
+        GREEN: VK_GREEN,
+        YELLOW: VK_YELLOW,
+        BLUE: VK_BLUE,
+        RW: VK_REWIND,
+        STOP: VK_STOP,
+        PLAY: VK_PLAY,
+        FF: VK_FAST_FWD,
+        RETURN: VK_BACK,
+        CH_UP: VK_PAGE_UP,
+        CH_DOWN: VK_PAGE_DOWN
+      };
+    }
+  };
+
+  _.extend(platform, platformObj);
+})(this);
 (function () {
 
 	var localStorage = window.localStorage,
@@ -2878,8 +2942,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                     //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
                     self.plugin = document.getElementById('pluginPlayer');
                     $('body').append(self.$plugin);
-
-
                 } else {
                     self.plugin = sf.core.sefplugin('Player');
                 }
@@ -3061,157 +3123,190 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
     }());
 
 }
-
 /**
  * Samsung platform
  */
-!(function ( window, undefined  ) {
+!(function ( window, undefined ) {
 
-	var platform = new window.SB.Platform('samsung'),
-		/**
-		 * Native plugins
-		 * id: clsid (DOM element id : CLSID)
-		 * @type {{object}}
-		 */
-			plugins = {
-			audio: 'SAMSUNG-INFOLINK-AUDIO',
-			pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
-			pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
-			pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-			pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
-		},
-		platformObj,
-		detectResult = false;
+  var platform = new window.SB.Platform('samsung'),
+    /**
+     * Native plugins
+     * id: clsid (DOM element id : CLSID)
+     * @type {{object}}
+     */
+      plugins = {
+        audio: 'SAMSUNG-INFOLINK-AUDIO',
+        pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
+        pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
+        pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
+        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
+      },
+    samsungFiles = [
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
+      '$MANAGER_WIDGET/Common/Define.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+      '$MANAGER_WIDGET/Common/API/Widget.js',
+      '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
+      '$MANAGER_WIDGET/Common/API/Plugin.js',
+      'src/platforms/samsung/localstorage.js'
+    ],
+    platformObj,
+    detectResult = false;
 
-	detectResult = navigator.userAgent.search(/Maple/) > -1;
+  detectResult = navigator.userAgent.search(/Maple/) > -1;
 
-	// non-standart inserting objects in DOM (i'm looking at you 2011 version)
-	// in 2011 samsung smart tv's we can't add objects if document is ready
-	if (detectResult) {
-		var objectsString = '';
-		for ( var id in plugins ) {
-			objectsString += '<object id=' + id +' border=0 classid="clsid:' + plugins[id] +'" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
-		}
-		document.write(objectsString);
-	}
+  // non-standart inserting objects in DOM (i'm looking at you 2011 version)
+  // in 2011 samsung smart tv's we can't add objects if document is ready
+  if ( detectResult ) {
+    var htmlString = '';
+    for ( var i = 0; i < samsungFiles.length; i++ ) {
+      htmlString += '<script type="text/javascript" src="'+ samsungFiles[i] +'"></script>';
+    }
+    for ( var id in plugins ) {
+      htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
+    }
+    document.write(htmlString);
+  }
 
-	platformObj = {
+  platformObj = {
 
-		keys: {
+    keys: {
 
-		},
+    },
 
-		externalJs: [
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
-			'$MANAGER_WIDGET/Common/Define.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
-			'$MANAGER_WIDGET/Common/API/Widget.js',
-			'$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-			'$MANAGER_WIDGET/Common/API/Plugin.js',
-			'src/platforms/samsung/localstorage.js'
-		],
+    externalJs: [
+    ],
 
-		$plugins: {},
+    $plugins: {},
 
-		detect: function () {
-			return detectResult;
-		},
+    detect: function () {
+      return detectResult;
+    },
 
-		initialise: function () {},
+    initialise: function () {
+    },
 
-		getNativeDUID: function () {
-			return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
-		},
+    getNativeDUID: function () {
+      return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
+    },
 
-		getMac: function () {
-			return this.$plugins.pluginObjectNetwork.GetMAC();
-		},
+    getMac: function () {
+      return this.$plugins.pluginObjectNetwork.GetMAC();
+    },
 
-		getSDI: function () {
-			this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
-			return this.SDI;
-		},
+    getSDI: function () {
+      this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+      return this.SDI;
+    },
 
-		/**
-		 * Return hardware version for 2013 samsung only
-		 * @returns {*}
-		 */
-		getHardwareVersion: function () {
-			var version = this.firmware.match(/\d{4}/) || [];
-			if (version[0] === '2013') {
-				this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
-			} else {
-				this.hardwareVersion = null;
-			}
-			return this.hardwareVersion;
-		},
+    /**
+     * Return hardware version for 2013 samsung only
+     * @returns {*}
+     */
+    getHardwareVersion: function () {
+      var version = this.firmware.match(/\d{4}/) || [];
+      if ( version[0] === '2013' ) {
+        this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
+      } else {
+        this.hardwareVersion = null;
+      }
+      return this.hardwareVersion;
+    },
 
-		setPlugins: function () {
-			var self = this;
+    setPlugins: function () {
+      var self = this,
+        tvKey;
 
-			_.each(plugins, function ( clsid, id ) {
-				self.$plugins[id] = document.getElementById(id);
-			});
+      _.each(plugins, function ( clsid, id ) {
+        self.$plugins[id] = document.getElementById(id);
+      });
 
-			this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
-			this.$plugins.tvKey = new Common.API.TVKeyValue();
+      this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
+      this.$plugins.tvKey = new Common.API.TVKeyValue();
 
-			var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
-				TVPlugin = this.$plugins.pluginObjectTV;
+      var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
+        TVPlugin = this.$plugins.pluginObjectTV;
 
-			this.modelCode = NNAVIPlugin.GetModelCode();
-			this.firmware = NNAVIPlugin.GetFirmware();
-			this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
-			this.productCode = TVPlugin.GetProductCode(1);
+      this.modelCode = NNAVIPlugin.GetModelCode();
+      this.firmware = NNAVIPlugin.GetFirmware();
+      this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
+      this.productCode = TVPlugin.GetProductCode(1);
 
-			this.pluginAPI = new Common.API.Plugin();
-			this.widgetAPI = new Common.API.Widget();
+      this.pluginAPI = new Common.API.Plugin();
+      this.widgetAPI = new Common.API.Widget();
 
-			this.productType = TVPlugin.GetProductType();
-			this.setKeys();
+      this.productType = TVPlugin.GetProductType();
 
-			// enable standart volume indicator
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_UP);
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_DOWN);
-			this.pluginAPI.unregistKey(sf.key.KEY_MUTE);
-			NNAVIPlugin.SetBannerState(2);
-		},
+      tvKey = new Common.API.TVKeyValue();
 
-		/**
-		 * Set keys for samsung platform
-		 */
-		setKeys: function () {
-			this.keys = sf.key;
-		},
+      this.setKeys();
 
-		/**
-		 * Start screensaver
-		 * @param time
-		 */
-		enableScreenSaver: function (time) {
-			time = time || false;
-			sf.service.setScreenSaver(true, time);
-		},
+      // enable standart volume indicator
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
+      this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+      this.widgetAPI.sendReadyEvent();
 
-		/**
-		 * Disable screensaver
-		 */
-		disableScreenSaver: function () {
-			sf.service.setScreenSaver(false);
-		},
+      this.volumeEnable();
 
-		exit: function () {
-			sf.core.exit(false);
-		},
+      NNAVIPlugin.SetBannerState(2);
+    },
 
-		blockNavigation: function () {
-			sf.key.preventDefault();
-		}
-	};
+    volumeEnable: function () {
+      sf.service.setVolumeControl(true);
+    },
 
-	_.extend(platform, platformObj);
+    /**
+     * Set keys for samsung platform
+     */
+    setKeys: function () {
+      this.keys = sf.key;
+
+      document.body.onkeydown = function(event){
+        var keyCode = event.keyCode;
+
+        switch (keyCode) {
+          case sf.key.RETURN:
+          case sf.key.EXIT:
+          case 147:
+          case 261:
+            sf.key.preventDefault();
+            break;
+          default:
+            break;
+        }
+      }
+
+    },
+
+    /**
+     * Start screensaver
+     * @param time
+     */
+    enableScreenSaver: function ( time ) {
+      time = time || false;
+      sf.service.setScreenSaver(true, time);
+    },
+
+    /**
+     * Disable screensaver
+     */
+    disableScreenSaver: function () {
+      sf.service.setScreenSaver(false);
+    },
+
+    exit: function () {
+      sf.core.exit(false);
+    },
+
+    blockNavigation: function () {
+      sf.key.preventDefault();
+    }
+  };
+
+  _.extend(platform, platformObj);
 })(this);
 (function ($) {
     "use strict";

@@ -1,11 +1,9 @@
 Player.extend({
     init: function () {
         var self = this;
-        var ww = window.innerWidth;
-        var wh = window.innerHeight;
 
 
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
+        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;"></video>');
         var video = this.$video_container[0];
         $('body').append(this.$video_container);
 

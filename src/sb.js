@@ -38,14 +38,14 @@
 			readyCallbacks.push(cb);
 		},
 
-        readyForPlatform: function(platform, cb){
-            var self=this;
-            this.ready(function(){
-                if(platform==self.currentPlatform.name){
-                    cb();
-                }
-            });
-        },
+    readyForPlatform: function(platform, cb){
+        var self=this;
+        this.ready(function(){
+            if(platform==self.currentPlatform.name){
+                cb();
+            }
+        });
+    },
 
 		/**
 		 * Applying all ready callbacks
@@ -92,18 +92,12 @@
 		 * all functionality in main.js
 		 */
 		log: {
-			log: function () {
-			},
-			state: function () {
-			},
-			show: function () {
-			},
-			hide: function () {
-			},
-			startProfile: function () {
-			},
-			stopProfile: function () {
-			}
+			log: $.noop,
+			state: $.noop,
+			show: $.noop,
+			hide: $.noop,
+			startProfile: $.noop,
+			stopProfile: $.noop
 		}
 	};
 
