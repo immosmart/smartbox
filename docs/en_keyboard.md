@@ -49,8 +49,7 @@ To add multilang layout the array should be defined in the object window.SB.keyb
 
         window.SB.keyboardPresets[multiKeyboardLayout] = ['en', 'ru'];
 
-Для добавления простой раскладки необходимо определить функцию в объекте window.SB.keyboardPresets, которая
-будет возвращать массив
+To add a common layout the function returning the array should be defined in the object window.SB.keyboardPresets
 
         window.SB.keyboardPresets[keyboardLayout] = function(){
             return [
@@ -61,30 +60,30 @@ To add multilang layout the array should be defined in the object window.SB.keyb
             ]
         };
 
-В раскладке необходимо определить следующие клавиши
+Next keys should be defined in the layout: 
 
-- lang{{}}     - клавиша смены раскладки
-- nums{{}}     - клавиша для переключению на цифровую клавиатуру(если в списке раскладок присутствует fullnum)
-- space{{}}    - клавиша пробела
-- complete{{}} - окончание ввода
+- lang{{}}     - the key of layout changing
+- nums{{}}     - the key for swithing to the numeric keyboard (if fullnun exists in the layout list)
+- space{{}}    - the space key
+- complete{{}} - entering finish
 
-Клавиши, которые могут быть определены по желанию
+Keys that can be defined by request 
 
-- shift{{}}     - делает буквы прописными
-- backspace{{}} - генерация события 'backspace'(пр. для удаления одного символа)
-- delall{{}}    - генерация события 'delall'(пр. для очистки строки)
+- shift{{}}     - Capitalise letters 
+- backspace{{}} - event generating 'backspace'(ex. for one symbol deleting)
+- delall{{}}    - event generating 'delall'(ex. for a string erase)
 
-Все клавиши определяются следующим образом
+All keys are defined in the following way:
 
-keyName{{keyText}}, keyText - html или текст внутри контейнера клавиши
+keyName{{keyText}}, keyText - html or a text inside the key's container 
 
-Примеры использования:
+Usage example:
 
         backspace{{<i class="backspace_icon"></i>}}
         lang{{ru}}
         nums{{123}}
 
-Пример полной раскладки
+Full layout example
 
         window.SB.keyboardPresets.en = function () {
             return [
@@ -96,9 +95,9 @@ keyName{{keyText}}, keyText - html или текст внутри контейн
             ];
         };
 
-# События клавиатуры
+# Keyboard events
 
- - 'type' событие ввода клавиши, клавиша определена в свойстве letter события
+ - 'type' key entering event, the key is defined in the attribute: letter event
 
         var typeLetter = function(event) {
             console.log(event.letter);
@@ -108,8 +107,8 @@ keyName{{keyText}}, keyText - html или текст внутри контейн
  - 'delall'
  - 'complete'
 
-# CSS классы
+# CSS classes
 
-.kb-multilang  - имеются несколько языковых раскладок
-.kb-havenums   - имеется цифровая кливиатура
+.kb-multilang  - Some language layouts exist
+.kb-havenums   - Numeric keyboard exists
 
