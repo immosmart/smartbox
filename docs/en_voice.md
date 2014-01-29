@@ -13,7 +13,7 @@ A user says "Back" - the element `#backVoiceLink` sends the event `voice`
 
 html:
 ```
-<div id="backVoiceLink" class="voicelink" data-voice="Назад" data-voice-group="Навигация"></div>
+<div id="backVoiceLink" class="voicelink" data-voice="Back" data-voice-group="Navigation"></div>
 ```
 
 js:
@@ -21,7 +21,7 @@ js:
 SB.ready(function(){
     $('#scene').voiceLink();
     $('#backVoiceLink').bind('voice', function(){
-       //юзер сказал "Назад"
+       //user said "Back"
     });
 });
 ```
