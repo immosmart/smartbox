@@ -1,11 +1,11 @@
-# Обзор
+# Overview
 
-Плагин позволяет отобразить виртуальную клавиатуру на экране.
+The plugin allows to show a virtual keyboard on the screen.
 
-# Инициализация
+# Initialisation
 
-SBKeyboard - jQuery плагин, который может быть вызван на любом jQuery элементе.
-Первичная инициализация плагина произодится следующим образом:
+SBKeyboard - jQuery plugin which can be called on any jQuery element.
+The first plugin initialisation occurs in the following way:
 
         $(el).SBKeyboard(options);
 
@@ -17,11 +17,11 @@ SBKeyboard - jQuery плагин, который может быть вызва�
           firstLayout: 'en'
         }
 
-# Методы плагина
+# Plugin's methods
 
-Метод может быть вызван после инициализации плагина
+The method can be called after plugin has been initialisated. 
 
-- Добавление другой клавиатуры к текущему элементу
+- Adding another keyboard to the current element
 
         $(el).SBKeyboard('addKeyboard', options);
         options = {
@@ -29,23 +29,23 @@ SBKeyboard - jQuery плагин, который может быть вызва�
           firstLayout: 'en'
         }
 
-- Переключение активной клавиатуры(при наличии нескольких) на элементе
+- Switching active keyboard (if some exists) on the element 
 
-        $(el).SBKeyboard('changeKeyboard', type); // type из опций
+        $(el).SBKeyboard('changeKeyboard', type); // type from the options
 
-# Раскладки плагина
+# Plugin layouts
 
-В плагине имеются несколько определенных по умолчанию раскладок:
+The plugin contains some layouts by default:
 
-- en - английская раскладка
-- ru - русская раскладка
-- email - раскладка для набора email - адреса
-- num - раскладка для цифр от 0 до 9
-- fulltext_ru - раскладка английской и русской клавиатуры
+- en - english layout
+- ru - russian layout
+- email - layout to enter email-address
+- num - numeric (0-9) layout
+- fulltext_ru - english and russian keyboard layout
 
-# Добавление своей раскладки
+# Custom layout adding
 
-Для добавление мультиязычной раскладки необходимо определить массив в объекте window.SB.keyboardPresets
+To add multilang layout the array should be defined in the object window.SB.keyboardPresets
 
         window.SB.keyboardPresets[multiKeyboardLayout] = ['en', 'ru'];
 
