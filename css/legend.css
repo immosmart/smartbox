@@ -1,0 +1,130 @@
+.legend {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 32px;
+    padding: 2px 0 0;
+    color: #ffffff;
+    font-size: 16px;
+    z-index: 20;
+    line-height: 28px;
+    width: 100%;
+    display: none;
+}
+
+.legend-wrap {
+    float: right;
+}
+
+.legend-item {
+    float: left;
+    position: relative;
+    padding-left: 30px;
+    padding-right: 10px;
+}
+
+.legend-item {
+    display: none;
+}
+
+.legend-item.legend-item-visible {
+    display: block;
+}
+
+.leg-icon {
+    position: absolute;
+    width: 25px;
+    height: 28px;
+    background: url('img/buttons.png');
+    left: 0;
+    top: 1px;
+}
+
+.legend-clickable {
+    cursor: pointer;
+}
+
+.leg-icon-green {
+    background-position: -24px 0;
+}
+
+.leg-icon-yellow {
+    background-position: -48px 0;
+}
+
+.leg-icon-blue {
+    background-position: -72px 0;
+}
+
+.leg-icon-number {
+    background-position: -480px 0;
+    width: 50px;
+}
+
+.legend-item-number {
+    padding-left: 60px;
+}
+
+.leg-icon-rew {
+    background-position: -431px 0;
+}
+
+.leg-icon-play {
+    background-position: -240px 0;
+}
+
+.leg-icon-pause {
+    background-position: -288px 0;
+}
+
+.leg-icon-stop {
+    background-position: -263px 0;
+}
+
+.leg-icon-ff {
+    background-position: -455px 0;
+}
+
+.leg-icon-tools {
+    background-position: -191px 0;
+}
+
+.leg-icon-left {
+    background-position: -580px 0;
+}
+
+.leg-icon-right {
+    background-position: -603px 0;
+}
+
+.leg-icon-up {
+    background-position: -530px 0;
+}
+
+.leg-icon-down {
+    background-position: -554px 0;
+}
+
+.leg-icon-leftright {
+    background-position: -358px 0;
+}
+
+.leg-icon-updown {
+    background-position: -334px 0;
+}
+
+.leg-icon-move {
+    background-position: -312px 0;
+}
+
+.leg-icon-enter {
+    background-position: -383px 0;
+}
+
+.leg-icon-ret {
+    background-position: -407px 0;
+}
+
+.leg-icon-info {
+    background-position: -168px 0;
+}

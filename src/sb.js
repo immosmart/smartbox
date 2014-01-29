@@ -73,7 +73,11 @@
 			SB.platforms.initialise(function ( currentPlatform ) {
 				self.currentPlatform = currentPlatform;
 				_inited = true;
-				self._onReady();
+
+        //prevent calling before other dom ready callbacks
+        setTimeout(function (  ) {
+          self._onReady();
+        });
 			});
 		}
 	};
@@ -98,7 +102,9 @@
 			hide: $.noop,
 			startProfile: $.noop,
 			stopProfile: $.noop
-		}
+		},
+
+    legend: {}
 	};
 
 	$(function () {

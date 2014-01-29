@@ -62,7 +62,7 @@ module.exports = function ( grunt ) {
 	grunt.registerTask('build', 'Build Smartbox for platform', function ( target ) {
 		var concatTask = 'concat:';
 
-		if (target) {
+		if (target && target !== 'all') {
 			globalConfig.platform = target;
 			concatTask += 'platform';
 		} else {
