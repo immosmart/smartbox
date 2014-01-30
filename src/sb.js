@@ -68,7 +68,7 @@
 			window.$$log = utils.log.log;
 			window.$$error = utils.error;
 
-			$$log('!!!!!!!!!LOG: initialising SB');
+			//$$log('!!!!!!!!!LOG: initialising SB');
 
 			SB.platforms.initialise(function ( currentPlatform ) {
 				self.currentPlatform = currentPlatform;

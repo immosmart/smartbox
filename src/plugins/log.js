@@ -11,11 +11,16 @@
 		Log,
 		LogPanel;
 
+
 	// append log wrapper to body
 	$logWrap = $('<div></div>', {
 		id: 'log'
 	});
-	$logWrap.appendTo(document.body);
+
+    $(function(){
+        $logWrap.appendTo(document.body);
+    });
+
 
 	$logRow = $('<div></div>', {
 		'class': 'log-row'
@@ -141,6 +146,9 @@
 	};
 })(this);
 
-$(document.body).on('nav_key:tools', function () {
-	SB.utils.log.show();
+$(function(){
+    $(document.body).on('nav_key:tools', function () {
+        SB.utils.log.show();
+    });
 });
+
