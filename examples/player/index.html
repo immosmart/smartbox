@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="../bootstrap.min.css"/>
+    <link rel="stylesheet" href="../../css/smartinput.css"/>
+    <link rel="stylesheet" href="../../css/keyboard.css"/>
+    <link rel="stylesheet" href="player.css"/>
+
+
+    <script src="../../src/libs/jquery-1.10.2.min.js"></script>
+    <script src="../../src/libs/lodash.compat.min.js"></script>
+    <script src="../../src/libs/event_emitter.js"></script>
+    <script src="../../dist/smartbox.js"></script>
+    <script src="player.js"></script>
+
+</head>
+<body>
+<div class="page">
+    <input type="text" class="url-input nav-item"/>
+
+    <div class="btn btn-default nav-item"><i class="glyphicon glyphicon-play set_video_url"></i></div>
+
+
+    <div class="bottom_bar">
+        <div class="progress">
+            <div class="progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="duration">00:00</div>
+        <div class="current-time">00:00</div>
+
+        <div class="player_controls">
+            <div class="btn btn-default nav-item button_rw"><i class="glyphicon glyphicon-fast-backward"></i></div>
+            <div class="btn btn-default nav-item button_play_pause"><i class="glyphicon glyphicon-play glyphicon-pause"></i></div>
+            <div class="btn btn-default nav-item button_ff"><i class="glyphicon glyphicon-fast-forward"></i></div>
+        </div>
+
+    </div>
+
+
+</div>
+</body>
+</html>

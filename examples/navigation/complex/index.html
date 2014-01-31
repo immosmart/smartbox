@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../../bootstrap.min.css"/>
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        /*button highlight style*/
+        .btn.focus, .tile.focus {
+            background-color: #006DCC;
+            background-image: linear-gradient(to bottom, #0088CC, #0044CC);
+            background-repeat: repeat-x;
+            border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+            color: #FFFFFF;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .tiles {
+            width: 1000px;
+        }
+        .tile{
+            float: left;
+            width: 100px;
+            height: 150px;
+            margin-left: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #C9C9C9;
+            border-radius: 5px;
+        }
+
+        .nav-tabs .nav-item.focus a {
+            background: #006DCC;
+            color: #fff;
+        }
+
+        .content > div {
+            display: none;
+        }
+
+    </style>
+
+    <script src="../../../src/libs/jquery-1.10.2.min.js"></script>
+    <script src="../../../src/libs/lodash.compat.min.js"></script>
+    <script src="../../../dist/smartbox.js"></script>
+    <script>
+        $(function () {
+
+            $$nav.on();
+
+            //tabs logic
+            var $content = $('.content');
+            $content.children(":first").show();
+            $('.nav-tabs').on('click', '.nav-item', function () {
+                var li = $(this);
+                var index = li.index();
+                $content.children().eq(index).show().siblings().hide();
+                li.addClass("active").siblings(".active").removeClass("active");
+            });
+
+        });
+    </script>
+</head>
+<body>
+<body>
+<ul class="nav nav-tabs" data-nav_type="hbox" data-nav_loop="true">
+    <li class="active nav-item"><a href="#">Menu item 1</a></li>
+    <li class="nav-item"><a href="#">Menu item 2</a></li>
+    <li class="nav-item"><a href="#">Menu item 3</a></li>
+</ul>
+<!-- tab contents -->
+<div class="content">
+    <div>
+        <div class="btn-group-vertical" data-nav_type="vbox">
+            <div class="btn nav-item">Menu item 1</div>
+            <div class="btn nav-item">Menu item 2</div>
+            <div class="btn nav-item">Menu item 3</div>
+            <div class="btn nav-item">Menu item 4</div>
+        </div>
+    </div>
+    <div>
+        <div class="btn-group" data-nav_type="hbox" data-nav_loop="true">
+            <div class="btn nav-item">Menu item 1</div>
+            <div class="btn nav-item">Menu item 2</div>
+            <div class="btn nav-item">Menu item 3</div>
+            <div class="btn nav-item">Menu item 4</div>
+        </div>
+    </div>
+    <div class="tiles">
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+        <div class="tile nav-item"></div>
+    </div>
+</div>
+
+</body>
+</body>
+</html>

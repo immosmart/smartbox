@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../../bootstrap.min.css"/>
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        /*button highlight style*/
+        .btn.focus {
+            background-color: #006DCC;
+            background-image: linear-gradient(to bottom, #0088CC, #0044CC);
+            background-repeat: repeat-x;
+            border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+            color: #FFFFFF;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+        }
+    </style>
+
+    <script src="../../../src/libs/jquery-1.10.2.min.js"></script>
+    <script src="../../../src/libs/lodash.compat.min.js"></script>
+    <script src="../../../dist/smartbox.js"></script>
+    <script>
+        $(function () {
+
+            $$nav.on();
+
+            $('.nav-item').click(function () {
+                alert(this.innerHTML);
+            });
+        });
+    </script>
+</head>
+<body>
+<body>
+<p>Use keyboard, Luke</p>
+
+<div class="nav-item btn">hello</div>
+<div class="nav-item btn">world</div>
+</body>
+</body>
+</html>
