@@ -209,14 +209,17 @@
 		keys: {},
 
 		DUID: '',
+        DUIDSettings: 'real',
+
+        platformUserAgent: 'not found',
 
 		/**
 		 * Detecting current platform
 		 * @returns {boolean} true if running on current platform
 		 */
 		detect: function () {
-			// should be override
-			return false;
+            var userAgent = navigator.userAgent.toLowerCase();
+            return (userAgent.indexOf(this.platformUserAgent) !== -1);
 		},
 
 		/**
@@ -229,7 +232,28 @@
 		 * @return {string} DUID
 		 */
 		getDUID: function () {
-			return '';
+            switch (this.DUIDSettings) {
+                case 'real':
+                    this.DUID = this.getNativeDUID();
+                    break;
+                case 'mac':
+                    this.DUID = this.getMac();
+                    break;
+                case 'random':
+                    this.DUID = this.getRandomDUID();
+                    break;
+                /*case 'local_random':
+                    this.DUID = this.getLocalRandomDUID();
+                    break;*/
+                default:
+                    this.DUID = Config.DUIDSettings;
+                    break;
+            }
+            this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+
+
+            return this.DUID;
 		},
 
 		/**
@@ -239,6 +263,14 @@
 		getRandomDUID: function () {
 			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
 		},
+
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getMac: function () {
+            return '';
+        },
 
 		/**
 		 * Returns native DUID for platform if exist
@@ -2674,7 +2706,7 @@ $(function(){
 
 })(jQuery);
 SB.readyForPlatform('browser', function(){
-    return;
+
     Player.extend({
         init: function () {
             var self = this;
@@ -2916,64 +2948,198 @@ SB.readyForPlatform('browser', function(){
         });
     });
 })(jQuery);
-if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
+SB.readyForPlatform('lg', function () {
+    var updateInterval;
 
+    var isReady = false;
 
-    (function () {
-        var updateInterval;
-
-        var isReady = false;
-
-        Player.extend({
-            updateDelay: 500,
-            init: function () {
-                var self = this;
-                $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 1; position: absolute; left: 0; top: 0;"></object>');
-                this.plugin = $('#pluginPlayer')[0];
-                this.$plugin = $(this.plugin);
-                this.plugin.onPlayStateChange = function () {
-                    self.onEvent.apply(self, arguments);
-                }
-                this.plugin.onBuffering = function () {
-                    self.onBuffering.apply(self, arguments);
-                }
-            },
-            _update: function () {
-                var info = this.plugin.mediaPlayInfo();
-
-                if (info && !isReady) {
-                    //$('#log').append('<div>'+info.duration+'</div>');
-                    isReady = true;
-
-                    this.trigger('ready');
-                    this.videoInfo = {
-                        duration: info.duration/1000
-                    };
-                }
-
-
-                this.trigger('update');
-            },
-            onBuffering: function (isStarted) {
-                this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
-            },
-            _play: function (options) {
-                clearInterval(updateInterval);
-                updateInterval = setInterval(function () {
-
-                    Player._update();
-                }, this.updateDelay);
-                isReady = false;
-                this.plugin.data = options.url;
-                this.plugin.play(1);
-            },
-            _stop: function () {
-                this.plugin.stop();
+    Player.extend({
+        updateDelay: 500,
+        init: function () {
+            var self = this;
+            $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
+            this.plugin = $('#pluginPlayer')[0];
+            this.$plugin = $(this.plugin);
+            this.plugin.onPlayStateChange = function () {
+                self.onEvent.apply(self, arguments);
             }
-        })
-    }());
+            this.plugin.onBuffering = function () {
+                self.onBuffering.apply(self, arguments);
+            }
+        },
+        onEvent: function(){
+            if(this.plugin.playState=='5'){
+                this._state='stop';
+                this.trigger('complete');
+            }
+        },
+        _update: function () {
+            var info = this.plugin.mediaPlayInfo();
 
-}
+            if (info && !isReady) {
+                //$('#log').append('<div>'+info.duration+'</div>');
+                isReady = true;
+
+                this.trigger('ready');
+                this.videoInfo = {
+                    duration: info.duration / 1000
+                };
+            }
+
+
+            this.videoInfo.currentTime=info.currentPosition/1000;
+
+
+            this.trigger('update');
+        },
+        onBuffering: function (isStarted) {
+            this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
+        },
+        _play: function (options) {
+            clearInterval(updateInterval);
+            updateInterval = setInterval(function () {
+
+                Player._update();
+            }, this.updateDelay);
+            isReady = false;
+            this.plugin.data = options.url;
+            this.plugin.play(1);
+        },
+        pause: function(){
+            this.plugin.play(0);
+            this._state="pause";
+        },
+        resume: function(){
+            this.plugin.play(1);
+            this._state="play";
+        },
+        _stop: function () {
+            this.plugin.stop();
+            this._state="stop";
+        },
+        seek: function(time){
+            this.plugin.seek(time*1000);
+        }
+    });
+});
+/**
+ * Samsung platform
+ */
+!(function (window, undefined) {
+
+    var platform = new window.SB.Platform('lg'),
+        platformObj;
+
+    platformObj = {
+
+        externalJs: [
+        ],
+
+        $plugins: {},
+
+        platformUserAgent: 'netcast',
+
+        keys: {
+            ENTER: 13,
+            PAUSE: 19,
+            LEFT: 37,
+            UP: 38,
+            RIGHT: 39,
+            DOWN: 40,
+            N0: 48,
+            N1: 49,
+            N2: 50,
+            N3: 51,
+            N4: 52,
+            N5: 53,
+            N6: 54,
+            N7: 55,
+            N8: 56,
+            N9: 57,
+            RED: 403,
+            GREEN: 404,
+            YELLOW: 405,
+            BLUE: 406,
+            RW: 412,
+            STOP: 413,
+            PLAY: 415,
+            FF: 417,
+            RETURN: 461,
+            CH_UP: 33,
+            CH_DOWN: 34
+        },
+
+        initialise: function () {
+        },
+
+        getNativeDUID: function () {
+            return this.device.serialNumber;
+        },
+
+        getMac: function () {
+            return this.device.net_macAddress.replace(/:/g, '');
+        },
+
+        getSDI: function () {
+
+        },
+
+        setPlugins: function () {
+            //this._listenGestureEvent();
+
+            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+            this.device = $('#device')[0];
+
+            this.modelCode = this.device.version;
+            this.productCode = this.device.platform;
+
+            this.getDUID();
+
+
+            $(function () {
+                //Log.show('default');
+                setInterval(function () {
+                    //Log.show('default');
+                    var usedMemorySize;
+                    if (window.NetCastGetUsedMemorySize) {
+                        usedMemorySize = window.NetCastGetUsedMemorySize();
+                    }
+                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+                }, 5000);
+            });
+
+            if (Player && Player.setPlugin) {
+                Player.setPlugin();
+            }
+        },
+
+        volumeEnable: function () {
+        },
+
+        sendReturn: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastBack();
+        },
+        exit: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastExit();
+        },
+
+        getUsedMemory: function () {
+            return window.NetCastGetUsedMemorySize();
+        },
+        getChildlockPin: function () {
+            return 1234;
+        }
+
+    };
+
+    _.extend(platform, platformObj);
+})(this);
 SB.readyForPlatform('philips', function () {
     var video;
 
@@ -3624,6 +3790,10 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
 
     exit: function () {
       sf.core.exit(false);
+    },
+
+    sendReturn: function(){
+        sf.core.exit(true);
     },
 
     blockNavigation: function () {

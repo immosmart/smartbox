@@ -88,14 +88,17 @@
 		keys: {},
 
 		DUID: '',
+        DUIDSettings: 'real',
+
+        platformUserAgent: 'not found',
 
 		/**
 		 * Detecting current platform
 		 * @returns {boolean} true if running on current platform
 		 */
 		detect: function () {
-			// should be override
-			return false;
+            var userAgent = navigator.userAgent.toLowerCase();
+            return (userAgent.indexOf(this.platformUserAgent) !== -1);
 		},
 
 		/**
@@ -108,7 +111,28 @@
 		 * @return {string} DUID
 		 */
 		getDUID: function () {
-			return '';
+            switch (this.DUIDSettings) {
+                case 'real':
+                    this.DUID = this.getNativeDUID();
+                    break;
+                case 'mac':
+                    this.DUID = this.getMac();
+                    break;
+                case 'random':
+                    this.DUID = this.getRandomDUID();
+                    break;
+                /*case 'local_random':
+                    this.DUID = this.getLocalRandomDUID();
+                    break;*/
+                default:
+                    this.DUID = Config.DUIDSettings;
+                    break;
+            }
+            this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+
+
+            return this.DUID;
 		},
 
 		/**
@@ -118,6 +142,14 @@
 		getRandomDUID: function () {
 			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
 		},
+
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getMac: function () {
+            return '';
+        },
 
 		/**
 		 * Returns native DUID for platform if exist
