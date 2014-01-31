@@ -12,7 +12,7 @@ module.exports = function ( grunt ) {
 
 		jsdoc: {
 			dist : {
-				src: ['src/*.js', 'src/plugins/*.js', 'src/platforms/{,*/}*.js'],
+				src: ['src/*.js', 'src/plugins/*.js'],
 				options: {
 					destination: 'doc'
 				}

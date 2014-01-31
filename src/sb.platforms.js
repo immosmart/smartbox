@@ -71,7 +71,7 @@
 		};
 
 		/**
-		 * Returns key name by key code
+		 * Returns key name by key code.js
 		 * @param keyCode
 		 * @returns {string} key name
 		 */
