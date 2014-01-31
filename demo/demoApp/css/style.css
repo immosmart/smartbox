@@ -28,7 +28,7 @@ h2 {
 .wrap {
     height: 100%;
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
 #smart_player {
