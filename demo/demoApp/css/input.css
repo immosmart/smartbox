@@ -1,0 +1,53 @@
+.smart_input-wrap {
+    padding: 5px 10px;
+    color: #000;
+    font-size: 18px;
+    position: relative;
+    z-index: 1;
+    height: 32px;
+    overflow: hidden;
+    line-height: 32px;
+    border: 1px solid black;
+    border-radius: 5px;
+    background: #fff;
+}
+
+.focus .smart_input-wrap {
+    border-color: #ff6b68;
+}
+
+.smart_input-container {
+    position: relative;
+    display: inline-block;
+    width: 300px;
+    vertical-align: middle;
+}
+
+.smart_input-text {
+    white-space: pre;
+}
+
+.smart_input-cursor {
+    border-right: 2px solid #000000;
+    display: inline-block;
+    height: 22px;
+    margin-left: 1px;
+    vertical-align: middle;
+    white-space: pre;
+}
+
+.smart_input-cursor_hidden {
+    visibility: hidden;
+}
+
+.smart_input-wrap_right .smart_input-text {
+    position: absolute;
+    right: 7px;
+    top: 0;
+}
+
+.smart_input-wrap_right .smart_input-cursor {
+    position: absolute;
+    right: 0px;
+    top: 5px;
+}
