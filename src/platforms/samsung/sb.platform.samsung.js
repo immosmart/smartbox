@@ -176,6 +176,10 @@
       sf.core.exit(false);
     },
 
+    sendReturn: function(){
+        sf.core.exit(true);
+    },
+
     blockNavigation: function () {
       sf.key.preventDefault();
     }
