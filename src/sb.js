@@ -17,14 +17,7 @@
        * ex: browser, samsung, lg
        * @type: {String}
        */
-      defaultPlatform: 'browser',
-
-      /**
-       * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-       *  ex: browser, samsung, lg
-       * @type: {String}
-       */
-      currentPlatform: ''
+      defaultPlatform: 'browser'
     },
 
     isInited: function () {
