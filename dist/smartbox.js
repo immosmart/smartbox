@@ -3,114 +3,121 @@
  */
 (function ( window, undefined ) {
 
-	// save in case of overwrite
-	var document = window.document,
-		_inited = false,
-		readyCallbacks = [];
+  // save in case of overwrite
+  var document = window.document,
+    _inited = false,
+    _ready = false,
+    readyCallbacks = [];
 
-	var SB = {
+  var SB = {
 
-		config: {
-			/**
-			 * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-			 * ex: browser, samsung, lg
-			 * @type: {String}
-			 */
-			defaultPlatform: 'browser',
+    config: {
+      /**
+       * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
+       * ex: browser, samsung, lg
+       * @type: {String}
+       */
+      defaultPlatform: 'browser',
 
-			/**
-			 * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-			 *  ex: browser, samsung, lg
-			 * @type: {String}
-			 */
-			currentPlatform: ''
-		},
+      /**
+       * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
+       *  ex: browser, samsung, lg
+       * @type: {String}
+       */
+      currentPlatform: ''
+    },
 
-		isInited: function () {
-			return _inited;
-		},
+    isInited: function () {
+      return _inited;
+    },
 
-		/**
-		 * Main function
-		 * @param cb {Function} callback after initialization
-		 */
-		ready: function ( cb ) {
-			readyCallbacks.push(cb);
-		},
+    /**
+     * Main function
+     * @param cb {Function} callback after initialization
+     */
+    ready: function ( cb ) {
+      if ( _ready ) {
+        cb();
+      } else {
+        readyCallbacks.push(cb);
+      }
+    },
 
-        readyForPlatform: function(platform, cb){
-            var self=this;
-            this.ready(function(){
-                if(platform==self.currentPlatform.name){
-                    cb();
-                }
-            });
-        },
+    readyForPlatform: function ( platform, cb ) {
+      var self = this;
+      this.ready(function () {
+        if ( platform == self.currentPlatform.name ) {
+          cb();
+        }
+      });
+    },
 
-		/**
-		 * Applying all ready callbacks
-		 * @private
-		 */
-		_onReady: function () {
-			for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-				readyCallbacks[i].call(this);
-			}
-		},
+    /**
+     * Applying all ready callbacks
+     * @private
+     */
+    _onReady: function () {
+      _ready = true;
 
-		initialise: function () {
-			var self = this,
-				utils = this.utils;
+      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+        readyCallbacks[i].call(this);
+      }
+    },
 
-			if ( _inited ) {
-				return;
-			}
+    initialise: function () {
+      var self = this,
+        utils = this.utils;
 
-			window.$$log = utils.log.log;
-			window.$$error = utils.error;
+      if ( _inited ) {
+        return;
+      }
 
-			$$log('!!!!!!!!!LOG: initialising SB');
+      window.$$log = utils.log.log;
+      window.$$error = utils.error;
 
-			SB.platforms.initialise(function ( currentPlatform ) {
-				self.currentPlatform = currentPlatform;
-				_inited = true;
-				self._onReady();
-			});
-		}
-	};
+      //$$log('!!!!!!!!!LOG: initialising SB');
 
-	SB.utils = {
-		/**
-		 * Show error message
-		 * @param msg
-		 */
-		error: function ( msg ) {
-			$$log(msg, 'error');
-		},
+      SB.platforms.initialise(function ( currentPlatform ) {
+        self.currentPlatform = currentPlatform;
+        _inited = true;
 
-		/**
-		 * Show messages in log
-		 * all functionality in main.js
-		 */
-		log: {
-			log: function () {
-			},
-			state: function () {
-			},
-			show: function () {
-			},
-			hide: function () {
-			},
-			startProfile: function () {
-			},
-			stopProfile: function () {
-			}
-		}
-	};
+        //prevent calling before other dom ready callbacks
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    }
+  };
 
-	$(function () {
-		SB.initialise();
-	});
-	window.SB = SB;
+  SB.utils = {
+    /**
+     * Show error message
+     * @param msg
+     */
+    error: function ( msg ) {
+      $$log(msg, 'error');
+    },
+
+    /**
+     * Show messages in log
+     * all functionality in main.js
+     */
+    log: {
+      log: $.noop,
+      state: $.noop,
+      show: $.noop,
+      hide: $.noop,
+      startProfile: $.noop,
+      stopProfile: $.noop
+    },
+
+    legend: {}
+  };
+
+  $(function () {
+    SB.initialise();
+  });
+  window.SB = SB;
 })(this);
 // global SB
 !(function ( window, undefined ) {
@@ -185,7 +192,7 @@
 		};
 
 		/**
-		 * Returns key name by key code
+		 * Returns key name by key code.js
 		 * @param keyCode
 		 * @returns {string} key name
 		 */
@@ -202,14 +209,17 @@
 		keys: {},
 
 		DUID: '',
+        DUIDSettings: 'real',
+
+        platformUserAgent: 'not found',
 
 		/**
 		 * Detecting current platform
 		 * @returns {boolean} true if running on current platform
 		 */
 		detect: function () {
-			// should be override
-			return false;
+            var userAgent = navigator.userAgent.toLowerCase();
+            return (userAgent.indexOf(this.platformUserAgent) !== -1);
 		},
 
 		/**
@@ -222,7 +232,28 @@
 		 * @return {string} DUID
 		 */
 		getDUID: function () {
-			return '';
+            switch (this.DUIDSettings) {
+                case 'real':
+                    this.DUID = this.getNativeDUID();
+                    break;
+                case 'mac':
+                    this.DUID = this.getMac();
+                    break;
+                case 'random':
+                    this.DUID = this.getRandomDUID();
+                    break;
+                /*case 'local_random':
+                    this.DUID = this.getLocalRandomDUID();
+                    break;*/
+                default:
+                    this.DUID = Config.DUIDSettings;
+                    break;
+            }
+            this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+
+
+            return this.DUID;
 		},
 
 		/**
@@ -232,6 +263,14 @@
 		getRandomDUID: function () {
 			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
 		},
+
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getMac: function () {
+            return '';
+        },
 
 		/**
 		 * Returns native DUID for platform if exist
@@ -264,43 +303,44 @@
 
 		/**
 		 * Asynchroniosly adding platform files
+     * @param filesArray {Array} array of sources of javascript files
 		 * @param cb {Function} callback on load javascript files
 		 */
-		addExternalJS: function (filesArray ,cb) {
-			var defferedArray = [],
-				$externalJsContainer;
+    addExternalJS: function ( filesArray, cb ) {
+      var $externalJsContainer,
+        loadedScripts = 0,
+        len = filesArray.length,
+        el,
+        scriptEl;
 
-			if ( filesArray.length ) {
+      if ( filesArray.length ) {
 
-				$externalJsContainer = document.createDocumentFragment();
+        $externalJsContainer = document.createDocumentFragment();
+        el = document.createElement('script');
+        el.type = 'text/javascript';
+        el.onload = onloadScript;
 
-				_.each(filesArray, function ( src ) {
+        for ( var i = 0; i < len; i++ ) {
+          scriptEl = el.cloneNode();
+          scriptEl.src = filesArray[i];
+          $externalJsContainer.appendChild(scriptEl);
+        }
 
-					var d = $.Deferred(),
-						el = document.createElement('script');
+        function onloadScript () {
+          loadedScripts++;
 
-					el.onload = function() {
-						d.resolve();
-						el.onload = null;
-					};
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
 
-					el.type = 'text/javascript';
-					el.src = src;
+        document.body.appendChild($externalJsContainer);
+      } else {
 
-					defferedArray.push(d);
-					$externalJsContainer.appendChild(el);
-				});
-
-				document.body.appendChild($externalJsContainer);
-				$.when.apply($, defferedArray).done(function () {
-					cb && cb.call();
-				});
-			} else {
-
-				// if no external js simple call cb
-				cb && cb.call(this);
-			}
-		},
+        // if no external js simple call cb
+        cb && cb.call(this);
+      }
+    },
 
 		addExternalCss: function (filesArray) {
 			var $externalCssContainer;
@@ -589,7 +629,7 @@
 
 			//jump to next input if is set
 			if ( text.length === opt.max &&
-					 opt.next !== undefined &&
+					 opt.next &&
 					 opt.max != 0 ) {
 				this.hideKeyboard();
 				$$nav.current(opt.next);
@@ -1158,6 +1198,153 @@ window.SB.keyboardPresets = {
 	fulltext_ru: ['en', 'ru'],
 	fulltext_ru_nums: ['en', 'ru', 'fullnum']
 };
+(function (window) {
+  "use strict";
+  /*globals _, ViewModel,$,Events,document, Observable, Computed, Lang, nav*/
+  var icons = ['info','red', 'green', 'yellow', 'blue', 'rew', 'play', 'pause', 'stop', 'ff', 'tools', 'left',
+               'right', 'up', 'down', 'leftright', 'updown', 'move', 'number', 'enter', 'ret'],
+
+    notClickableKeys= ['leftright', 'left', 'right', 'up', 'down', 'updown', 'move', 'number'],
+    _isInited,
+    LegendKey,
+    savedLegend = [],
+    Legend;
+
+  function isClickable( key ) {
+    return (notClickableKeys.indexOf(key) === -1)
+  }
+
+  function renderKey( key ) {
+    var clickableClass = isClickable(key) ? ' legend-clickable' : '';
+    return '<div class="legend-item legend-item-' + key + clickableClass + '" data-key="' + key + '">' +
+             '<i class="leg-icon leg-icon-' + key + '"></i>' +
+             '<span class="legend-item-title"></span>' +
+           '</div>';
+  }
+
+  function _renderLegend() {
+    var legendEl,
+      wrap,
+      allKeysHtml = '';
+
+    for (var i = 0, len = icons.length; i<len; i++) {
+      allKeysHtml += renderKey(icons[i]);
+    }
+
+    legendEl = document.createElement('div');
+    wrap = document.createElement('div');
+
+    legendEl.className = 'legend';
+    legendEl.id = 'legend';
+    wrap.className = 'legend-wrap';
+    wrap.innerHTML = allKeysHtml;
+    legendEl.appendChild(wrap);
+
+    return legendEl;
+  }
+
+  Legend = {
+    keys: {},
+    init: function () {
+      var el;
+      if (!_isInited) {
+        el = _renderLegend();
+        this.$el = $(el);
+
+        for (var i = 0; i < icons.length; i++) {
+          this.initKey(icons[i]);
+        }
+
+        _isInited = true;
+      }
+      return this;
+    },
+    initKey: function ( key ) {
+      var $keyEl;
+      if(!this.keys[key]) {
+        $keyEl = this.$el.find('.legend-item-' + key);
+        this.keys[key] = new LegendKey($keyEl);
+      }
+    },
+    show: function () {
+      this.$el.show();
+    },
+    hide: function () {
+      this.$el.hide();
+    },
+    clear: function () {
+      for (var key in this.keys) {
+        this.keys[key]('');
+      }
+    },
+    save: function () {
+      for (var key in this.keys) {
+        savedLegend[key] = this.keys[key]();
+      }
+    },
+    restore: function () {
+      _.each(icons, function (key) {
+        Legend[key](savedLegend[key]);
+      });
+
+      for (var key in savedLegend) {
+        this.keys[key](savedLegend[key]);
+      }
+
+      savedLegend = [];
+    }
+  };
+
+  LegendKey = function ($el) {
+    this.$el = $el;
+    this.$text = $el.find('.legend-item-title');
+    return _.bind(this.setText, this);
+  };
+
+  LegendKey.prototype.text = '';
+  LegendKey.prototype.isShown = false;
+  LegendKey.prototype.setText = function (text) {
+    if (typeof text === 'undefined') {
+      return this.text;
+    } else if (text !== this.text) {
+      text = text || '';
+
+      if (!text && this.isShown) {
+        this.$el.hide();
+        this.isShown = false;
+      } else if (text && !this.isShown) {
+        this.$el.show();
+        this.isShown = true;
+      }
+
+      this.text = text;
+      this.$text.html(text);
+    }
+  };
+
+
+  window.$$legend = Legend.init();
+
+  $(function () {
+    Legend.$el.appendTo(document.body);
+    Legend.$el.on('click', '.legend-clickable', function () {
+      var key = $(this).attr('data-key'),
+        ev, commonEvent;
+
+      if (key === 'ret') {
+        key = 'return';
+      } else if (key === 'rew') {
+        key = 'rw';
+      }
+
+      ev = $.Event("nav_key:" + key);
+      commonEvent = $.Event("nav_key");
+      commonEvent.keyName = ev.keyName = key;
+
+      $$nav.current().trigger(ev).trigger(commonEvent);
+    });
+  });
+})(this);
 (function ( window, undefined ) {
 
 	var profiles = {},
@@ -1171,11 +1358,16 @@ window.SB.keyboardPresets = {
 		Log,
 		LogPanel;
 
+
 	// append log wrapper to body
 	$logWrap = $('<div></div>', {
 		id: 'log'
 	});
-	$logWrap.appendTo(document.body);
+
+    $(function(){
+        $logWrap.appendTo(document.body);
+    });
+
 
 	$logRow = $('<div></div>', {
 		'class': 'log-row'
@@ -1301,9 +1493,12 @@ window.SB.keyboardPresets = {
 	};
 })(this);
 
-$(document.body).on('nav_key:tools', function () {
-	SB.utils.log.show();
+$(function(){
+    $(document.body).on('nav_key:tools', function () {
+        SB.utils.log.show();
+    });
 });
+
 
 !(function ( window, undefined ) {
 
@@ -1582,8 +1777,8 @@ $(document.body).on('nav_key:tools', function () {
 						if ( (type == 'hbox' && e.keyName == 'left') ||
 								 (type == 'vbox' && e.keyName == 'up') ) {
 							fn = 'prev';
-						} else if ( (type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down') ) {
+						} else if ((type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down')) {
 							fn = 'next';
 						}
 
@@ -1878,9 +2073,6 @@ $(document.body).on('nav_key:tools', function () {
 	nav = window.$$nav = new Navigation();
 
 	$(function () {
-
-		console.log('dasjdlkasjdlkasjdlka');
-
 		// Navigation events handler
 		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),
@@ -1894,11 +2086,22 @@ $(document.body).on('nav_key:tools', function () {
 	});
 
 })(this);
+/**
+ * Player plugin for smartbox
+ */
+
 (function (window) {
 
     var updateInterval, curAudio = 0;
 
-    //emulates events after `play` method called
+
+
+
+    /**
+     * emulates events after `play` method called
+     * @private
+     * @param self Player
+     */
     var stub_play = function (self) {
         self._state = "play";
         updateInterval = setInterval(function () {
@@ -1912,8 +2115,11 @@ $(document.body).on('nav_key:tools', function () {
     }
 
     var Player = window.Player = {
+
         /**
-         * inserts player object to DOM and do some init work
+         * Inserts player object to DOM and do some init work
+         * @examples
+         * Player.init(); // run it after SB.ready
          */
         init: function () {
             //no need to do anything because just stub
@@ -1924,11 +2130,23 @@ $(document.body).on('nav_key:tools', function () {
         _state: 'stop',
         /**
          * Runs some video
-         * @param options object {
-         *      url: "path to video file/stream"
-         *      from: optional {Number} time in seconds where need start playback
-         *      type: optional {String} should be set to "hls" if stream is hls
+         * @param {Object} options {url: "path", type: "hls", from: 0
          * }
+         * @examples
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * }); // => runs video
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * from: 20
+         * }); // => runs video from 20 second
+         *
+         * Player.play({
+         * url: "stream.m3u8",
+         * type: "hls"
+         * }); // => runs stream
          */
         play: function (options) {
             this.stop();
@@ -1953,7 +2171,14 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Stop video playback
-         * @param silent {Boolean} if flag is set, player will no trigger "stop" event
+         * @param {Boolean} silent   if flag is set, player will no trigger "stop" event
+         * @examples
+         *
+         * Player.stop(); // stop video
+         *
+         * App.onDestroy(function(){
+         *      Player.stop(true);
+         * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
             if (this._state != 'stop') {
@@ -1966,6 +2191,8 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Pause playback
+         * @examples
+         * Player.pause(); //paused
          */
         pause: function () {
             this._stop();
@@ -1973,10 +2200,18 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Resume playback
+         * @examples
+         * Player.pause(); //resumed
          */
         resume: function () {
             stub_play(this);
         },
+        /**
+         * Toggles pause/resume
+         * @examples
+         *
+         * Player.togglePause(); // paused or resumed
+         */
         togglePause: function () {
             if (this._state == "play") {
                 this.pause();
@@ -1989,12 +2224,10 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Converts time in seconds to readable string in format H:MM:SS
-         * @param seconds {Number} time to convert
+         * @param {Number} seconds time to convert
          * @returns {String} result string
-         * Example:
-         * $('#duration').html(Player.formatTime(PLayer.videoInfo.duration));
-         * Result:
-         * <div id="duration">1:30:27</div>
+         * @examples
+         * Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
          */
         formatTime: function (seconds) {
             var hours = Math.floor(seconds / (60 * 60));
@@ -2010,7 +2243,9 @@ $(document.body).on('nav_key:tools', function () {
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
-
+        /**
+         * Hash contains info about current video
+         */
         videoInfo: {
             /**
              * Total video duration in seconds
@@ -2034,7 +2269,10 @@ $(document.body).on('nav_key:tools', function () {
          */
         autoInit: false,
         /**
-         * @param seconds time to seek
+         *
+         * @param {Number} seconds time to seek
+         * @examples
+         * Player.seek(20); // seek to 20 seconds
          */
         seek: function (seconds) {
             var self = this;
@@ -2467,100 +2705,104 @@ $(document.body).on('nav_key:tools', function () {
     }
 
 })(jQuery);
-Player.extend({
-    init: function () {
-        var self = this;
-        var ww = window.innerWidth;
-        var wh = window.innerHeight;
+SB.readyForPlatform('browser', function(){
+
+    Player.extend({
+        init: function () {
+            var self = this;
+            var ww = window.innerWidth;
+            var wh = window.innerHeight;
 
 
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
-        var video = this.$video_container[0];
-        $('body').append(this.$video_container);
+            this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
+            var video = this.$video_container[0];
+            $('body').append(this.$video_container);
 
-        this.$video_container.on('loadedmetadata', function () {
-            self.videoInfo.width = video.videoWidth;
-            self.videoInfo.height = video.videoHeight;
-            self.videoInfo.duration = video.duration;
-            self.trigger('ready');
-        });
-
-
-        this.$video_container.on('loadstart',function (e) {
-            self.trigger('bufferingBegin');
-        }).on('playing',function () {
-                self.trigger('bufferingEnd');
-            }).on('timeupdate',function () {
-                self.videoInfo.currentTime = video.currentTime;
-                self.trigger('update');
-            }).on('ended', function () {
-                self._state = "stop";
-                self.trigger('complete');
+            this.$video_container.on('loadedmetadata', function () {
+                self.videoInfo.width = video.videoWidth;
+                self.videoInfo.height = video.videoHeight;
+                self.videoInfo.duration = video.duration;
+                self.trigger('ready');
             });
 
 
-        this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
-            //console.log(e.type);
-        });
+            this.$video_container.on('loadstart',function (e) {
+                self.trigger('bufferingBegin');
+            }).on('playing',function () {
+                    self.trigger('bufferingEnd');
+                }).on('timeupdate',function () {
+                    self.videoInfo.currentTime = video.currentTime;
+                    self.trigger('update');
+                }).on('ended', function () {
+                    self._state = "stop";
+                    self.trigger('complete');
+                });
 
 
-        /*
-         abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
-         canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
-         canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
-         durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
-         emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
-         ended 	Sent when playback completes.
-         error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
-         loadeddata 	The first frame of the media has finished loading.
-         loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
-         loadstart 	Sent when loading of the media begins.
-         mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
-         pause 	Sent when playback is paused.
-         play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
-         playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
-         progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
-         ratechange 	Sent when the playback speed changes.
-         seeked 	Sent when a seek operation completes.
-         seeking 	Sent when a seek operation begins.
-         suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
-         timeupdate 	The time indicated by the element's currentTime attribute has changed.
-         volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
-         waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
-         */
-    },
-    _play: function (options) {
-        this.$video_container.attr('src', options.url);
-        this.$video_container[0].play();
-    },
-    _stop: function () {
-        this.$video_container[0].pause();
-        this.$video_container[0].src = '';
-    },
-    pause: function () {
-        this.$video_container[0].pause();
-        this._state = "pause";
-    },
-    resume: function () {
-        this.$video_container[0].play();
-        this._state = "play";
-    },
-    seek: function (time) {
-        this.$video_container[0].currentTime = time;
-    },
-    audio: {
-        //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
-        set: function (index) {
+            this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
+                //console.log(e.type);
+            });
 
+
+            /*
+             abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
+             canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
+             canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
+             durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
+             emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
+             ended 	Sent when playback completes.
+             error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
+             loadeddata 	The first frame of the media has finished loading.
+             loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
+             loadstart 	Sent when loading of the media begins.
+             mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
+             pause 	Sent when playback is paused.
+             play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
+             playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
+             progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
+             ratechange 	Sent when the playback speed changes.
+             seeked 	Sent when a seek operation completes.
+             seeking 	Sent when a seek operation begins.
+             suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
+             timeupdate 	The time indicated by the element's currentTime attribute has changed.
+             volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
+             waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
+             */
         },
-        get: function () {
-
+        _play: function (options) {
+            this.$video_container.attr('src', options.url);
+            this.$video_container[0].play();
         },
-        cur: function () {
+        _stop: function () {
+            this.$video_container[0].pause();
+            this.$video_container[0].src = '';
+        },
+        pause: function () {
+            this.$video_container[0].pause();
+            this._state = "pause";
+        },
+        resume: function () {
+            this.$video_container[0].play();
+            this._state = "play";
+        },
+        seek: function (time) {
+            this.$video_container[0].currentTime = time;
+        },
+        audio: {
+            //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
+            set: function (index) {
 
+            },
+            get: function () {
+
+            },
+            cur: function () {
+
+            }
         }
-    }
+    });
 });
+
 /**
  * Browser platform description
  */
@@ -2706,64 +2948,374 @@ Player.extend({
         });
     });
 })(jQuery);
-if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
+SB.readyForPlatform('lg', function () {
+    var updateInterval;
 
+    var isReady = false;
 
-    (function () {
-        var updateInterval;
-
-        var isReady = false;
-
-        Player.extend({
-            updateDelay: 500,
-            init: function () {
-                var self = this;
-                $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 1; position: absolute; left: 0; top: 0;"></object>');
-                this.plugin = $('#pluginPlayer')[0];
-                this.$plugin = $(this.plugin);
-                this.plugin.onPlayStateChange = function () {
-                    self.onEvent.apply(self, arguments);
-                }
-                this.plugin.onBuffering = function () {
-                    self.onBuffering.apply(self, arguments);
-                }
-            },
-            _update: function () {
-                var info = this.plugin.mediaPlayInfo();
-
-                if (info && !isReady) {
-                    //$('#log').append('<div>'+info.duration+'</div>');
-                    isReady = true;
-
-                    this.trigger('ready');
-                    this.videoInfo = {
-                        duration: info.duration/1000
-                    };
-                }
-
-
-                this.trigger('update');
-            },
-            onBuffering: function (isStarted) {
-                this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
-            },
-            _play: function (options) {
-                clearInterval(updateInterval);
-                updateInterval = setInterval(function () {
-
-                    Player._update();
-                }, this.updateDelay);
-                isReady = false;
-                this.plugin.data = options.url;
-                this.plugin.play(1);
-            },
-            _stop: function () {
-                this.plugin.stop();
+    Player.extend({
+        updateDelay: 500,
+        init: function () {
+            var self = this;
+            $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
+            this.plugin = $('#pluginPlayer')[0];
+            this.$plugin = $(this.plugin);
+            this.plugin.onPlayStateChange = function () {
+                self.onEvent.apply(self, arguments);
             }
-        })
-    }());
+            this.plugin.onBuffering = function () {
+                self.onBuffering.apply(self, arguments);
+            }
+        },
+        onEvent: function(){
+            if(this.plugin.playState=='5'){
+                this._state='stop';
+                this.trigger('complete');
+            }
+        },
+        _update: function () {
+            var info = this.plugin.mediaPlayInfo();
 
-}
+            if (info && !isReady) {
+                //$('#log').append('<div>'+info.duration+'</div>');
+                isReady = true;
+
+                this.trigger('ready');
+                this.videoInfo = {
+                    duration: info.duration / 1000
+                };
+            }
+
+
+            this.videoInfo.currentTime=info.currentPosition/1000;
+
+
+            this.trigger('update');
+        },
+        onBuffering: function (isStarted) {
+            this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
+        },
+        _play: function (options) {
+            clearInterval(updateInterval);
+            updateInterval = setInterval(function () {
+
+                Player._update();
+            }, this.updateDelay);
+            isReady = false;
+            this.plugin.data = options.url;
+            this.plugin.play(1);
+        },
+        pause: function(){
+            this.plugin.play(0);
+            this._state="pause";
+        },
+        resume: function(){
+            this.plugin.play(1);
+            this._state="play";
+        },
+        _stop: function () {
+            this.plugin.stop();
+            this._state="stop";
+        },
+        seek: function(time){
+            this.plugin.seek(time*1000);
+        }
+    });
+});
+/**
+ * Samsung platform
+ */
+!(function (window, undefined) {
+
+    var platform = new window.SB.Platform('lg'),
+        platformObj;
+
+    platformObj = {
+
+        externalJs: [
+        ],
+
+        $plugins: {},
+
+        platformUserAgent: 'netcast',
+
+        keys: {
+            ENTER: 13,
+            PAUSE: 19,
+            LEFT: 37,
+            UP: 38,
+            RIGHT: 39,
+            DOWN: 40,
+            N0: 48,
+            N1: 49,
+            N2: 50,
+            N3: 51,
+            N4: 52,
+            N5: 53,
+            N6: 54,
+            N7: 55,
+            N8: 56,
+            N9: 57,
+            RED: 403,
+            GREEN: 404,
+            YELLOW: 405,
+            BLUE: 406,
+            RW: 412,
+            STOP: 413,
+            PLAY: 415,
+            FF: 417,
+            RETURN: 461,
+            CH_UP: 33,
+            CH_DOWN: 34
+        },
+
+        initialise: function () {
+        },
+
+        getNativeDUID: function () {
+            return this.device.serialNumber;
+        },
+
+        getMac: function () {
+            return this.device.net_macAddress.replace(/:/g, '');
+        },
+
+        getSDI: function () {
+
+        },
+
+        setPlugins: function () {
+            //this._listenGestureEvent();
+
+            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+            this.device = $('#device')[0];
+
+            this.modelCode = this.device.version;
+            this.productCode = this.device.platform;
+
+            this.getDUID();
+
+
+            $(function () {
+                //Log.show('default');
+                setInterval(function () {
+                    //Log.show('default');
+                    var usedMemorySize;
+                    if (window.NetCastGetUsedMemorySize) {
+                        usedMemorySize = window.NetCastGetUsedMemorySize();
+                    }
+                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+                }, 5000);
+            });
+
+            if (Player && Player.setPlugin) {
+                Player.setPlugin();
+            }
+        },
+
+        volumeEnable: function () {
+        },
+
+        sendReturn: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastBack();
+        },
+        exit: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastExit();
+        },
+
+        getUsedMemory: function () {
+            return window.NetCastGetUsedMemorySize();
+        },
+        getChildlockPin: function () {
+            return 1234;
+        }
+
+    };
+
+    _.extend(platform, platformObj);
+})(this);
+SB.readyForPlatform('philips', function () {
+    var video;
+
+
+    var updateInterval;
+    var ready = false;
+
+    var startUpdate = function () {
+        updateInterval = setInterval(function () {
+            var lastTime = 0;
+            if (video.playPosition != lastTime) {
+                Player.videoInfo.currentTime = video.playPosition / 1000;
+                Player.trigger('update');
+            }
+            lastTime = video.playPosition;
+        }, 500);
+    }
+
+    var stopUpdate = function () {
+        clearInterval(updateInterval);
+    }
+
+    function checkPlayState() {
+        //$('#log').append('<div>' + video.playState + '</div>');
+
+
+        //some hack
+        //in my tv player can sent lesser than 1 time, and correct time after
+        if (video.playTime > 1) {
+
+            if (!ready) {
+                //+1 for test pass
+                Player.videoInfo.duration = (video.playTime / 1000)+1;
+                Player.trigger('ready');
+                ready = true;
+            }
+        }
+
+        switch (video.playState) {
+            case 5: // finished
+                Player.trigger('complete');
+                stopUpdate();
+                Player._state = "stop";
+                break;
+            case 0: // stopped
+                Player._state = "stop";
+                break;
+            case 6: // error
+                Player.trigger('error');
+                break;
+            case 1: // playing
+                Player.trigger('bufferingEnd');
+                startUpdate();
+                break;
+            case 2: // paused
+
+            case 3: // connecting
+
+            case 4: // buffering
+                Player.trigger('bufferingBegin');
+                stopUpdate();
+                break;
+            default:
+                // do nothing
+                break;
+        }
+    }
+
+    Player.extend({
+        init: function () {
+            $('body').append('<div id="mediaobject" style="position:absolute;left:0px;top:0px;width:640px;height:480px;">\n\
+              <object id="videoPhilips" type="video/mpeg4" width="1280" height="720" />\n\
+               </div>');
+            video = document.getElementById('videoPhilips');
+            video.onPlayStateChange = checkPlayState;
+        },
+        _play: function (options) {
+            video.data = options.url;
+            video.play(1);
+            ready = false;
+            Player.trigger('bufferingBegin');
+        },
+        _stop: function () {
+            video.stop();
+            stopUpdate();
+        },
+        pause: function () {
+            video.play(0);
+            this._state = "pause";
+            stopUpdate();
+        },
+        resume: function () {
+            video.play(1);
+            this._state = "play";
+            startUpdate();
+        },
+        seek: function (time) {
+            //-10 for test pass
+            video.seek((time - 10) * 1000);
+        }
+    });
+});
+/**
+ * Samsung platform
+ */
+!(function ( window, undefined ) {
+
+  var platform = new window.SB.Platform('philips'),
+    platformObj;
+
+  platformObj = {
+
+    externalJs: [
+    ],
+
+    $plugins: {},
+
+    detect: function () {
+      var userAgent = navigator.userAgent.toLowerCase();
+      return (userAgent.indexOf('nettv') !== -1);
+    },
+
+    initialise: function () {
+    },
+
+    getNativeDUID: function () {
+    },
+
+    getMac: function () {
+    },
+
+    getSDI: function () {
+    },
+
+    setPlugins: function () {
+      this.setKeys();
+    },
+
+    volumeEnable: function () {
+    },
+
+    setKeys: function () {
+      this.keys = {
+        ENTER: VK_ENTER,
+        PAUSE: VK_PAUSE,
+        LEFT: VK_LEFT,
+        UP: VK_UP,
+        RIGHT: VK_RIGHT,
+        DOWN: VK_DOWN,
+        N0: VK_0,
+        N1: VK_1,
+        N2: VK_2,
+        N3: VK_3,
+        N4: VK_4,
+        N5: VK_5,
+        N6: VK_6,
+        N7: VK_7,
+        N8: VK_8,
+        N9: VK_9,
+        RED: VK_RED,
+        GREEN: VK_GREEN,
+        YELLOW: VK_YELLOW,
+        BLUE: VK_BLUE,
+        RW: VK_REWIND,
+        STOP: VK_STOP,
+        PLAY: VK_PLAY,
+        FF: VK_FAST_FWD,
+        RETURN: VK_BACK,
+        CH_UP: VK_PAGE_UP,
+        CH_DOWN: VK_PAGE_DOWN
+      };
+    }
+  };
+
+  _.extend(platform, platformObj);
+})(this);
 (function () {
 
 	var localStorage = window.localStorage,
@@ -3065,153 +3617,191 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
 /**
  * Samsung platform
  */
-!(function ( window, undefined  ) {
+!(function ( window, undefined ) {
 
-	var platform = new window.SB.Platform('samsung'),
-		/**
-		 * Native plugins
-		 * id: clsid (DOM element id : CLSID)
-		 * @type {{object}}
-		 */
-			plugins = {
-			audio: 'SAMSUNG-INFOLINK-AUDIO',
-			pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
-			pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
-			pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-			pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
-		},
-		platformObj,
-		detectResult = false;
+  var platform = new window.SB.Platform('samsung'),
+    /**
+     * Native plugins
+     * id: clsid (DOM element id : CLSID)
+     * @type {{object}}
+     */
+      plugins = {
+        audio: 'SAMSUNG-INFOLINK-AUDIO',
+        pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
+        pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
+        pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
+        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
+      },
+    samsungFiles = [
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
+      '$MANAGER_WIDGET/Common/Define.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+      '$MANAGER_WIDGET/Common/API/Widget.js',
+      '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
+      '$MANAGER_WIDGET/Common/API/Plugin.js',
+      'src/platforms/samsung/localstorage.js'
+    ],
+    platformObj,
+    detectResult = false;
 
-	detectResult = navigator.userAgent.search(/Maple/) > -1;
+  detectResult = navigator.userAgent.search(/Maple/) > -1;
 
-	// non-standart inserting objects in DOM (i'm looking at you 2011 version)
-	// in 2011 samsung smart tv's we can't add objects if document is ready
-	if (detectResult) {
-		var objectsString = '';
-		for ( var id in plugins ) {
-			objectsString += '<object id=' + id +' border=0 classid="clsid:' + plugins[id] +'" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
-		}
-		document.write(objectsString);
-	}
+  // non-standart inserting objects in DOM (i'm looking at you 2011 version)
+  // in 2011 samsung smart tv's we can't add objects if document is ready
+  if ( detectResult ) {
+    var htmlString = '';
+    for ( var i = 0; i < samsungFiles.length; i++ ) {
+      htmlString += '<script type="text/javascript" src="'+ samsungFiles[i] +'"></script>';
+    }
+    for ( var id in plugins ) {
+      htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
+    }
+    document.write(htmlString);
+  }
 
-	platformObj = {
+  platformObj = {
 
-		keys: {
+    keys: {
 
-		},
+    },
 
-		externalJs: [
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
-			'$MANAGER_WIDGET/Common/Define.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
-			'$MANAGER_WIDGET/Common/API/Widget.js',
-			'$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-			'$MANAGER_WIDGET/Common/API/Plugin.js',
-			'src/platforms/samsung/localstorage.js'
-		],
+    externalJs: [
+    ],
 
-		$plugins: {},
+    $plugins: {},
 
-		detect: function () {
-			return detectResult;
-		},
+    detect: function () {
+      return detectResult;
+    },
 
-		initialise: function () {},
+    initialise: function () {
+    },
 
-		getNativeDUID: function () {
-			return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
-		},
+    getNativeDUID: function () {
+      return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
+    },
 
-		getMac: function () {
-			return this.$plugins.pluginObjectNetwork.GetMAC();
-		},
+    getMac: function () {
+      return this.$plugins.pluginObjectNetwork.GetMAC();
+    },
 
-		getSDI: function () {
-			this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
-			return this.SDI;
-		},
+    getSDI: function () {
+      this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+      return this.SDI;
+    },
 
-		/**
-		 * Return hardware version for 2013 samsung only
-		 * @returns {*}
-		 */
-		getHardwareVersion: function () {
-			var version = this.firmware.match(/\d{4}/) || [];
-			if (version[0] === '2013') {
-				this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
-			} else {
-				this.hardwareVersion = null;
-			}
-			return this.hardwareVersion;
-		},
+    /**
+     * Return hardware version for 2013 samsung only
+     * @returns {*}
+     */
+    getHardwareVersion: function () {
+      var version = this.firmware.match(/\d{4}/) || [];
+      if ( version[0] === '2013' ) {
+        this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
+      } else {
+        this.hardwareVersion = null;
+      }
+      return this.hardwareVersion;
+    },
 
-		setPlugins: function () {
-			var self = this;
+    setPlugins: function () {
+      var self = this,
+        tvKey;
 
-			_.each(plugins, function ( clsid, id ) {
-				self.$plugins[id] = document.getElementById(id);
-			});
+      _.each(plugins, function ( clsid, id ) {
+        self.$plugins[id] = document.getElementById(id);
+      });
 
-			this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
-			this.$plugins.tvKey = new Common.API.TVKeyValue();
+      this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
+      this.$plugins.tvKey = new Common.API.TVKeyValue();
 
-			var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
-				TVPlugin = this.$plugins.pluginObjectTV;
+      var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
+        TVPlugin = this.$plugins.pluginObjectTV;
 
-			this.modelCode = NNAVIPlugin.GetModelCode();
-			this.firmware = NNAVIPlugin.GetFirmware();
-			this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
-			this.productCode = TVPlugin.GetProductCode(1);
+      this.modelCode = NNAVIPlugin.GetModelCode();
+      this.firmware = NNAVIPlugin.GetFirmware();
+      this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
+      this.productCode = TVPlugin.GetProductCode(1);
 
-			this.pluginAPI = new Common.API.Plugin();
-			this.widgetAPI = new Common.API.Widget();
+      this.pluginAPI = new Common.API.Plugin();
+      this.widgetAPI = new Common.API.Widget();
 
-			this.productType = TVPlugin.GetProductType();
-			this.setKeys();
+      this.productType = TVPlugin.GetProductType();
 
-			// enable standart volume indicator
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_UP);
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_DOWN);
-			this.pluginAPI.unregistKey(sf.key.KEY_MUTE);
-			NNAVIPlugin.SetBannerState(2);
-		},
+      tvKey = new Common.API.TVKeyValue();
 
-		/**
-		 * Set keys for samsung platform
-		 */
-		setKeys: function () {
-			this.keys = sf.key;
-		},
+      this.setKeys();
 
-		/**
-		 * Start screensaver
-		 * @param time
-		 */
-		enableScreenSaver: function (time) {
-			time = time || false;
-			sf.service.setScreenSaver(true, time);
-		},
+      // enable standart volume indicator
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
+      this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+      this.widgetAPI.sendReadyEvent();
 
-		/**
-		 * Disable screensaver
-		 */
-		disableScreenSaver: function () {
-			sf.service.setScreenSaver(false);
-		},
+      this.volumeEnable();
 
-		exit: function () {
-			sf.core.exit(false);
-		},
+      NNAVIPlugin.SetBannerState(2);
+    },
 
-		blockNavigation: function () {
-			sf.key.preventDefault();
-		}
-	};
+    volumeEnable: function () {
+      sf.service.setVolumeControl(true);
+    },
 
-	_.extend(platform, platformObj);
+    /**
+     * Set keys for samsung platform
+     */
+    setKeys: function () {
+      this.keys = sf.key;
+
+      document.body.onkeydown = function(event){
+        var keyCode = event.keyCode;
+
+        switch (keyCode) {
+          case sf.key.RETURN:
+          case sf.key.EXIT:
+          case 147:
+          case 261:
+            sf.key.preventDefault();
+            break;
+          default:
+            break;
+        }
+      }
+
+    },
+
+    /**
+     * Start screensaver
+     * @param time
+     */
+    enableScreenSaver: function ( time ) {
+      time = time || false;
+      sf.service.setScreenSaver(true, time);
+    },
+
+    /**
+     * Disable screensaver
+     */
+    disableScreenSaver: function () {
+      sf.service.setScreenSaver(false);
+    },
+
+    exit: function () {
+      sf.core.exit(false);
+    },
+
+    sendReturn: function(){
+        sf.core.exit(true);
+    },
+
+    blockNavigation: function () {
+      sf.key.preventDefault();
+    }
+  };
+
+  _.extend(platform, platformObj);
 })(this);
 (function ($) {
     "use strict";

@@ -275,8 +275,8 @@
 						if ( (type == 'hbox' && e.keyName == 'left') ||
 								 (type == 'vbox' && e.keyName == 'up') ) {
 							fn = 'prev';
-						} else if ( (type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down') ) {
+						} else if ((type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down')) {
 							fn = 'next';
 						}
 
@@ -571,9 +571,6 @@
 	nav = window.$$nav = new Navigation();
 
 	$(function () {
-
-		console.log('dasjdlkasjdlkasjdlka');
-
 		// Navigation events handler
 		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
 			var cur = nav.current(),

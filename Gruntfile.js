@@ -9,16 +9,16 @@ module.exports = function ( grunt ) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		globalConfig : globalConfig,
-
+/*
 		jsdoc: {
 			dist : {
-				src: ['src/*.js', 'src/plugins/*.js', 'src/platforms/{,*/}*.js'],
+				src: ['src/*.js', 'src/plugins/*.js'],
 				options: {
 					destination: 'doc'
 				}
 			}
 		},
-
+*/
 		jshint: {
 			options: {
 				jshintrc: '.jshintrc',
@@ -30,7 +30,7 @@ module.exports = function ( grunt ) {
 		},
 
 		clean: {
-			build: ['doc', 'dist']
+			build: ['dist']
 		},
 
 		concat: {
@@ -53,16 +53,23 @@ module.exports = function ( grunt ) {
 					'dist/smartbox.min.js' : 'dist/smartbox.js'
 				}
 			}
-		}
+		},
+
+        watch: {
+            all: {
+                files: ['src/*.js', 'src/platforms/{,*/}*.js', 'src/plugins/*.js' ],
+                tasks: ['build']
+            }
+        }
 	});
 
 	require('load-grunt-tasks')(grunt);
 
-	grunt.registerTask('default', ['clean','jsdoc']);
+	grunt.registerTask('default', ['clean']);
 	grunt.registerTask('build', 'Build Smartbox for platform', function ( target ) {
 		var concatTask = 'concat:';
 
-		if (target) {
+		if (target && target !== 'all') {
 			globalConfig.platform = target;
 			concatTask += 'platform';
 		} else {

@@ -258,7 +258,7 @@
 
 			//jump to next input if is set
 			if ( text.length === opt.max &&
-					 opt.next !== undefined &&
+					 opt.next &&
 					 opt.max != 0 ) {
 				this.hideKeyboard();
 				$$nav.current(opt.next);
