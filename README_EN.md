@@ -1,27 +1,71 @@
-The english READ ME is under construction
+# Overview
 
-smartbox
-========
+A smartbox library allows to start one application on a few smartTV platforms. 
 
-SmartTV Framework
+Currently supported platforms: 
+- Samsung SmartTv 2011+
+- Lg SmartTv
+- Philips 2012+
 
-## Platforms
+To add your own platform please see the platform documentation
 
-- The defining of the current platform and files uploading for the platform
-- Platform's files are in the folder with the name tv.[platform's name]
-- Platform's modules (mediaplayer, voice) are named as tv.[platform's name].[module's name]
+# Инициализация
 
+Smartbox имеет три зависимости:
+- jQuery(1.8.1+)
+- Underscore(или lodash)
+- Event Emitter( Backbone или Frontbone ) для плагина плеера
 
-## Functional 
+Собранная версия библиотеки находится в папке /dist
 
+# Плагины библиотеки
 
-## Plugins
+- Виртуальная клавиатура
+- Инпут
+- Плагин легенды(иконки внизу экрана)
+- Навигация
+- Плеер
+- Лог (для вывода сообщений из кода на экран телевизора)
+- Голосовое управление
 
+# Как пользоваться библиотекой
 
+Для использования всех плагинов и функций библиотеки необходимо оборачивать код как callback SB.ready
 
-## Views
+        SB.ready(function(){
+            // your code
+        });
 
+SB.ready будет выполнен после всех коллбеков jQuery.ready, $(function(){}), $.ready(function(){});
 
+# Методы бибилиотеки
 
-## Features
+- isInited() проверка инициализации библиотеки. Возвращает true или false
 
+        SB.isInited();
+
+- ready(func) выполняет код функции func после инициализации библиотеки
+
+        SB.ready(function(){
+            // your code
+        });
+
+- readyForPlatform(platform, cb) выполняет код функции func после инициализации библиотеки,
+если текущая платформа - platform
+
+        SB.readyforPlatform('samsung', function(){
+            // code for samsung
+        });
+
+# Конфигурирование библиотеки
+
+Все конфигурации библиотеки находятся в объекте SB.platform
+
+            SB.config = {
+              /**
+               * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
+               * ex: browser, samsung, lg
+               * @type: {String}
+               */
+              defaultPlatform: 'browser'
+            }
