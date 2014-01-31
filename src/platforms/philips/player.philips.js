@@ -21,7 +21,7 @@ SB.readyForPlatform('philips', function () {
     }
 
     function checkPlayState() {
-        $('#log').append('<div>' + video.playState + '</div>');
+        //$('#log').append('<div>' + video.playState + '</div>');
 
 
         //some hack

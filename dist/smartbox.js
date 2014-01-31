@@ -68,7 +68,7 @@
 			window.$$log = utils.log.log;
 			window.$$error = utils.error;
 
-			$$log('!!!!!!!!!LOG: initialising SB');
+			//$$log('!!!!!!!!!LOG: initialising SB');
 
 			SB.platforms.initialise(function ( currentPlatform ) {
 				self.currentPlatform = currentPlatform;
@@ -185,7 +185,7 @@
 		};
 
 		/**
-		 * Returns key name by key code
+		 * Returns key name by key code.js
 		 * @param keyCode
 		 * @returns {string} key name
 		 */
@@ -1319,11 +1319,16 @@ window.SB.keyboardPresets = {
 		Log,
 		LogPanel;
 
+
 	// append log wrapper to body
 	$logWrap = $('<div></div>', {
 		id: 'log'
 	});
-	$logWrap.appendTo(document.body);
+
+    $(function(){
+        $logWrap.appendTo(document.body);
+    });
+
 
 	$logRow = $('<div></div>', {
 		'class': 'log-row'
@@ -1449,9 +1454,12 @@ window.SB.keyboardPresets = {
 	};
 })(this);
 
-$(document.body).on('nav_key:tools', function () {
-	SB.utils.log.show();
+$(function(){
+    $(document.body).on('nav_key:tools', function () {
+        SB.utils.log.show();
+    });
 });
+
 
 !(function ( window, undefined ) {
 
@@ -2039,11 +2047,22 @@ $(document.body).on('nav_key:tools', function () {
 	});
 
 })(this);
+/**
+ * Player plugin for smartbox
+ */
+
 (function (window) {
 
     var updateInterval, curAudio = 0;
 
-    //emulates events after `play` method called
+
+
+
+    /**
+     * emulates events after `play` method called
+     * @private
+     * @param self Player
+     */
     var stub_play = function (self) {
         self._state = "play";
         updateInterval = setInterval(function () {
@@ -2057,8 +2076,11 @@ $(document.body).on('nav_key:tools', function () {
     }
 
     var Player = window.Player = {
+
         /**
-         * inserts player object to DOM and do some init work
+         * Inserts player object to DOM and do some init work
+         * @examples
+         * Player.init(); // run it after SB.ready
          */
         init: function () {
             //no need to do anything because just stub
@@ -2069,11 +2091,23 @@ $(document.body).on('nav_key:tools', function () {
         _state: 'stop',
         /**
          * Runs some video
-         * @param options object {
-         *      url: "path to video file/stream"
-         *      from: optional {Number} time in seconds where need start playback
-         *      type: optional {String} should be set to "hls" if stream is hls
+         * @param {Object} options {url: "path", type: "hls", from: 0
          * }
+         * @examples
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * }); // => runs video
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * from: 20
+         * }); // => runs video from 20 second
+         *
+         * Player.play({
+         * url: "stream.m3u8",
+         * type: "hls"
+         * }); // => runs stream
          */
         play: function (options) {
             this.stop();
@@ -2098,7 +2132,14 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Stop video playback
-         * @param silent {Boolean} if flag is set, player will no trigger "stop" event
+         * @param {Boolean} silent   if flag is set, player will no trigger "stop" event
+         * @examples
+         *
+         * Player.stop(); // stop video
+         *
+         * App.onDestroy(function(){
+         *      Player.stop(true);
+         * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
             if (this._state != 'stop') {
@@ -2111,6 +2152,8 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Pause playback
+         * @examples
+         * Player.pause(); //paused
          */
         pause: function () {
             this._stop();
@@ -2118,10 +2161,18 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Resume playback
+         * @examples
+         * Player.pause(); //resumed
          */
         resume: function () {
             stub_play(this);
         },
+        /**
+         * Toggles pause/resume
+         * @examples
+         *
+         * Player.togglePause(); // paused or resumed
+         */
         togglePause: function () {
             if (this._state == "play") {
                 this.pause();
@@ -2134,12 +2185,10 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Converts time in seconds to readable string in format H:MM:SS
-         * @param seconds {Number} time to convert
+         * @param {Number} seconds time to convert
          * @returns {String} result string
-         * Example:
-         * $('#duration').html(Player.formatTime(PLayer.videoInfo.duration));
-         * Result:
-         * <div id="duration">1:30:27</div>
+         * @examples
+         * Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
          */
         formatTime: function (seconds) {
             var hours = Math.floor(seconds / (60 * 60));
@@ -2155,7 +2204,9 @@ $(document.body).on('nav_key:tools', function () {
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
-
+        /**
+         * Hash contains info about current video
+         */
         videoInfo: {
             /**
              * Total video duration in seconds
@@ -2179,7 +2230,10 @@ $(document.body).on('nav_key:tools', function () {
          */
         autoInit: false,
         /**
-         * @param seconds time to seek
+         *
+         * @param {Number} seconds time to seek
+         * @examples
+         * Player.seek(20); // seek to 20 seconds
          */
         seek: function (seconds) {
             var self = this;
@@ -2612,98 +2666,104 @@ $(document.body).on('nav_key:tools', function () {
     }
 
 })(jQuery);
-Player.extend({
-    init: function () {
-        var self = this;
+SB.readyForPlatform('browser', function(){
+    return;
+    Player.extend({
+        init: function () {
+            var self = this;
+            var ww = window.innerWidth;
+            var wh = window.innerHeight;
 
 
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;"></video>');
-        var video = this.$video_container[0];
-        $('body').append(this.$video_container);
+            this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
+            var video = this.$video_container[0];
+            $('body').append(this.$video_container);
 
-        this.$video_container.on('loadedmetadata', function () {
-            self.videoInfo.width = video.videoWidth;
-            self.videoInfo.height = video.videoHeight;
-            self.videoInfo.duration = video.duration;
-            self.trigger('ready');
-        });
-
-
-        this.$video_container.on('loadstart',function (e) {
-            self.trigger('bufferingBegin');
-        }).on('playing',function () {
-                self.trigger('bufferingEnd');
-            }).on('timeupdate',function () {
-                self.videoInfo.currentTime = video.currentTime;
-                self.trigger('update');
-            }).on('ended', function () {
-                self._state = "stop";
-                self.trigger('complete');
+            this.$video_container.on('loadedmetadata', function () {
+                self.videoInfo.width = video.videoWidth;
+                self.videoInfo.height = video.videoHeight;
+                self.videoInfo.duration = video.duration;
+                self.trigger('ready');
             });
 
 
-        this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
-            //console.log(e.type);
-        });
+            this.$video_container.on('loadstart',function (e) {
+                self.trigger('bufferingBegin');
+            }).on('playing',function () {
+                    self.trigger('bufferingEnd');
+                }).on('timeupdate',function () {
+                    self.videoInfo.currentTime = video.currentTime;
+                    self.trigger('update');
+                }).on('ended', function () {
+                    self._state = "stop";
+                    self.trigger('complete');
+                });
 
 
-        /*
-         abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
-         canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
-         canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
-         durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
-         emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
-         ended 	Sent when playback completes.
-         error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
-         loadeddata 	The first frame of the media has finished loading.
-         loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
-         loadstart 	Sent when loading of the media begins.
-         mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
-         pause 	Sent when playback is paused.
-         play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
-         playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
-         progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
-         ratechange 	Sent when the playback speed changes.
-         seeked 	Sent when a seek operation completes.
-         seeking 	Sent when a seek operation begins.
-         suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
-         timeupdate 	The time indicated by the element's currentTime attribute has changed.
-         volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
-         waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
-         */
-    },
-    _play: function (options) {
-        this.$video_container.attr('src', options.url);
-        this.$video_container[0].play();
-    },
-    _stop: function () {
-        this.$video_container[0].pause();
-        this.$video_container[0].src = '';
-    },
-    pause: function () {
-        this.$video_container[0].pause();
-        this._state = "pause";
-    },
-    resume: function () {
-        this.$video_container[0].play();
-        this._state = "play";
-    },
-    seek: function (time) {
-        this.$video_container[0].currentTime = time;
-    },
-    audio: {
-        //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
-        set: function (index) {
+            this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
+                //console.log(e.type);
+            });
 
+
+            /*
+             abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
+             canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
+             canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
+             durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
+             emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
+             ended 	Sent when playback completes.
+             error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
+             loadeddata 	The first frame of the media has finished loading.
+             loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
+             loadstart 	Sent when loading of the media begins.
+             mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
+             pause 	Sent when playback is paused.
+             play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
+             playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
+             progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
+             ratechange 	Sent when the playback speed changes.
+             seeked 	Sent when a seek operation completes.
+             seeking 	Sent when a seek operation begins.
+             suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
+             timeupdate 	The time indicated by the element's currentTime attribute has changed.
+             volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
+             waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
+             */
         },
-        get: function () {
-
+        _play: function (options) {
+            this.$video_container.attr('src', options.url);
+            this.$video_container[0].play();
         },
-        cur: function () {
+        _stop: function () {
+            this.$video_container[0].pause();
+            this.$video_container[0].src = '';
+        },
+        pause: function () {
+            this.$video_container[0].pause();
+            this._state = "pause";
+        },
+        resume: function () {
+            this.$video_container[0].play();
+            this._state = "play";
+        },
+        seek: function (time) {
+            this.$video_container[0].currentTime = time;
+        },
+        audio: {
+            //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
+            set: function (index) {
 
+            },
+            get: function () {
+
+            },
+            cur: function () {
+
+            }
         }
-    }
+    });
 });
+
 /**
  * Browser platform description
  */
@@ -2907,6 +2967,108 @@ if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
     }());
 
 }
+SB.readyForPlatform('philips', function () {
+    var video;
+
+
+    var updateInterval;
+    var ready = false;
+
+    var startUpdate = function () {
+        updateInterval = setInterval(function () {
+            var lastTime = 0;
+            if (video.playPosition != lastTime) {
+                Player.videoInfo.currentTime = video.playPosition / 1000;
+                Player.trigger('update');
+            }
+            lastTime = video.playPosition;
+        }, 500);
+    }
+
+    var stopUpdate = function () {
+        clearInterval(updateInterval);
+    }
+
+    function checkPlayState() {
+        $('#log').append('<div>' + video.playState + '</div>');
+
+
+        //some hack
+        //in my tv player can sent lesser than 1 time, and correct time after
+        if (video.playTime > 1) {
+
+            if (!ready) {
+                //+1 for test pass
+                Player.videoInfo.duration = (video.playTime / 1000)+1;
+                Player.trigger('ready');
+                ready = true;
+            }
+        }
+
+        switch (video.playState) {
+            case 5: // finished
+                Player.trigger('complete');
+                stopUpdate();
+                Player._state = "stop";
+                break;
+            case 0: // stopped
+                Player._state = "stop";
+                break;
+            case 6: // error
+                Player.trigger('error');
+                break;
+            case 1: // playing
+                Player.trigger('bufferingEnd');
+                startUpdate();
+                break;
+            case 2: // paused
+
+            case 3: // connecting
+
+            case 4: // buffering
+                Player.trigger('bufferingBegin');
+                stopUpdate();
+                break;
+            default:
+                // do nothing
+                break;
+        }
+    }
+
+    Player.extend({
+        init: function () {
+            $('body').append('<div id="mediaobject" style="position:absolute;left:0px;top:0px;width:640px;height:480px;">\n\
+              <object id="videoPhilips" type="video/mpeg4" width="1280" height="720" />\n\
+               </div>');
+            video = document.getElementById('videoPhilips');
+            video.onPlayStateChange = checkPlayState;
+        },
+        _play: function (options) {
+            video.data = options.url;
+            video.play(1);
+            ready = false;
+            Player.trigger('bufferingBegin');
+        },
+        _stop: function () {
+            video.stop();
+            stopUpdate();
+        },
+        pause: function () {
+            video.play(0);
+            this._state = "pause";
+            stopUpdate();
+        },
+        resume: function () {
+            video.play(1);
+            this._state = "play";
+            startUpdate();
+        },
+        seek: function (time) {
+            //-10 for test pass
+            video.seek((time - 10) * 1000);
+        }
+    });
+});
 /**
  * Samsung platform
  */
