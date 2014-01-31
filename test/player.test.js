@@ -6,11 +6,23 @@ describe('Player', function () {
 
     describe('basic support', function () {
 
+
+
         it('init shall not fail', function () {
-            expect(function () {
-                Player.init();
-            }).not.toThrow()
-            expect(Player._state).toBe("stop");
+
+            var spy=jasmine.createSpy('SB ready spy');
+            SB.ready(spy);
+            waitsFor(function(){
+                return spy.calls.length>0
+            }, 'SB ready triggered', 1000);
+
+            runs(function(){
+                expect(function () {
+                    Player.init();
+                }).not.toThrow()
+                expect(Player._state).toBe("stop");
+            });
+
         });
 
         it('supports ready', function () {
@@ -188,7 +200,7 @@ describe('Player', function () {
 
             var update = jasmine.createSpy('update handler');
 
-            var timeToWait = 10;
+            var timeToWait = 5;
 
             runs(function () {
                 Player.seek(Player.videoInfo.duration - timeToWait);
