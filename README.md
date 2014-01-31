@@ -1,31 +1,36 @@
 # Обзор
 
-Библиотека smartbox позволяет запускать одно приложение на нескольких smartTv платформах.
+Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
 На данный момент поддерживаются платформы
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
 
-Для добавления своей платформы смотрите документацию по платформам
+Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
 
 # Инициализация
 
 Smartbox имеет три зависимости:
-- jQuery(1.8.1+)
-- Underscore(или lodash)
-- Event Emitter( Backbone или Frontbone ) для плагина плеера
+- <a href="https://github.com/jquery/jquery/tree/1.8-stable">jQuery(1.8.1+)</a>
+- <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
+- Event Emitter( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
 
-Собранная версия библиотеки находится в папке /dist
+Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
 
 # Плагины библиотеки
 
-- Виртуальная клавиатура
-- Инпут
-- Плагин легенды(иконки внизу экрана)
-- Навигация
-- Плеер
-- Лог (для вывода сообщений из кода на экран телевизора)
-- Голосовое управление
+
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">Методы отдельных платформ</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_log.md">Консоль Лог</a>
+* Навигация
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav.md">Инициализация и методы</a>
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_alg.md">Алгоритм</a>
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_extended.md">Продвинутое использование</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_input.md">Поля ввода</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
+* Легенда @todo_doc
+* Плеер @todo_doc
 
 # Как пользоваться библиотекой
 
@@ -68,3 +73,10 @@ SB.ready будет выполнен после всех коллбеков jQue
                */
               defaultPlatform: 'browser'
             }
+
+# Автотесты
+<a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
+
+# Демо
+* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
+
