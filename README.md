@@ -1,3 +1,6 @@
+# Демо
+* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
+
 # Обзор
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
@@ -76,7 +79,4 @@ SB.ready будет выполнен после всех коллбеков jQue
 
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
-
-# Демо
-* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
 
