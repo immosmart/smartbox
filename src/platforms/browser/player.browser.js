@@ -1,5 +1,5 @@
 SB.readyForPlatform('browser', function(){
-    return;
+
     Player.extend({
         init: function () {
             var self = this;
