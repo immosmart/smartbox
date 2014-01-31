@@ -1193,7 +1193,7 @@ window.SB.keyboardPresets = {
     }
 
     legendEl = document.createElement('div');
-    wrap = legendEl.cloneNode();
+    wrap = document.createElement('div');
 
     legendEl.className = 'legend';
     legendEl.id = 'legend';
@@ -1305,7 +1305,7 @@ window.SB.keyboardPresets = {
       $$nav.current().trigger(ev).trigger(commonEvent);
     });
   });
-}(window));
+})(this);
 (function ( window, undefined ) {
 
 	var profiles = {},

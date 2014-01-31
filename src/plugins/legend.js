@@ -32,7 +32,7 @@
     }
 
     legendEl = document.createElement('div');
-    wrap = legendEl.cloneNode();
+    wrap = document.createElement('div');
 
     legendEl.className = 'legend';
     legendEl.id = 'legend';
@@ -144,4 +144,4 @@
       $$nav.current().trigger(ev).trigger(commonEvent);
     });
   });
-}(window));
+})(this);
