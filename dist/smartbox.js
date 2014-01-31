@@ -17,14 +17,7 @@
        * ex: browser, samsung, lg
        * @type: {String}
        */
-      defaultPlatform: 'browser',
-
-      /**
-       * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-       *  ex: browser, samsung, lg
-       * @type: {String}
-       */
-      currentPlatform: ''
+      defaultPlatform: 'browser'
     },
 
     isInited: function () {
@@ -313,6 +306,14 @@
         el,
         scriptEl;
 
+      function onloadScript () {
+        loadedScripts++;
+
+        if ( loadedScripts === len ) {
+          cb && cb.call();
+        }
+      }
+
       if ( filesArray.length ) {
 
         $externalJsContainer = document.createDocumentFragment();
@@ -324,14 +325,6 @@
           scriptEl = el.cloneNode();
           scriptEl.src = filesArray[i];
           $externalJsContainer.appendChild(scriptEl);
-        }
-
-        function onloadScript () {
-          loadedScripts++;
-
-          if ( loadedScripts === len ) {
-            cb && cb.call();
-          }
         }
 
         document.body.appendChild($externalJsContainer);

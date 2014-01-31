@@ -192,6 +192,14 @@
         el,
         scriptEl;
 
+      function onloadScript () {
+        loadedScripts++;
+
+        if ( loadedScripts === len ) {
+          cb && cb.call();
+        }
+      }
+
       if ( filesArray.length ) {
 
         $externalJsContainer = document.createDocumentFragment();
@@ -203,14 +211,6 @@
           scriptEl = el.cloneNode();
           scriptEl.src = filesArray[i];
           $externalJsContainer.appendChild(scriptEl);
-        }
-
-        function onloadScript () {
-          loadedScripts++;
-
-          if ( loadedScripts === len ) {
-            cb && cb.call();
-          }
         }
 
         document.body.appendChild($externalJsContainer);
