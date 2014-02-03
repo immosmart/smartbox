@@ -1,9 +1,38 @@
 # Плеер
 
 
-## Публичные события
+###Оглавление
 
-### <a id="event_ready"></a> `ready`
+<a href="#Публичные-события">`Публичные события`</a>
+* <a href="#ready">`ready`</a>
+* <a href="#bufferingbegin-bufferingend">`bufferingBegin, bufferingEnd`</a>
+* <a href="#stop">`stop`</a>
+* <a href="#complete">`complete`</a>
+
+<a href="#Публичные-свойства">`Публичные свойства`</a>
+* <a href="#playerstate">`Player.state`</a>
+* <a href="#playervideoinfoduration">`Player.videoInfo.duration`</a>
+* <a href="#playervideoinfocurrenttime">`Player.videoInfo.currentTime`</a>
+* <a href="#playervideoinfowidth">`Player.videoInfo.width`</a>
+* <a href="#playervideoinfoheight">`Player.videoInfo.height`</a>
+* <a href="#useplayerobject">`Player.usePlayerObject`</a>
+
+<a href="#публичные-методы">`Публичные методы`</a>
+* <a href="#playerplayoptions">`Player.play(options)`</a>
+* <a href="#playerstopsilent">`Player.stop([silent])`</a>
+* <a href="#playerpause">`Player.pause()`</a>
+* <a href="#playerresume">`Player.resume()`</a>
+* <a href="#playertogglepause">`Player.togglePause()`</a>
+* <a href="#playerformattimeseconds">`Player.formatTime(seconds)`</a>
+* <a href="#playerseekseconds">`Player.seek(seconds)`</a>
+* <a href="#playeraudioget">`Player.audio.get()`</a>
+* <a href="#playeraudiosetindex">`Player.audio.set(index)`</a>
+* <a href="#playeraudiocur">`Player.audio.cur()`</a>
+
+
+##Публичные события
+
+###`ready`
 
 Отправляется когда плеер получает информацию о потоке(duration, resolution, etc) и начинает воспроизведение.
 
@@ -18,7 +47,7 @@ Player.on('ready', function(){
 * * *
 
 
-### <a id="event_buffering"></a> `bufferingBegin, bufferingEnd`
+###`bufferingBegin, bufferingEnd`
 
 События отправляются когда начинается и заканчивается буферизация видео, при слабом коннекте или после перемотки.
 
@@ -38,7 +67,7 @@ Player.on('bufferingEnd', function(){
 * * *
 
 
-### <a id="event_stop"></a> `stop`
+###`stop`
 
 Отправляется когда было остановлено воспроизведение.
 
@@ -50,7 +79,9 @@ Player.on('stop', function(){
 });
 ```
 
-### <a id="event_complete"></a> `complete`
+* * *
+
+###`complete`
 
 Отправляется когда видео файл доиграл до конца и остановился.
 
@@ -65,9 +96,9 @@ Player.on('complete', function(){
 * * *
 
 
-## Публичные свойства
+##Публичные свойства
 
-### <a id="state"></a> `Player.state`
+###`Player.state`
 
 *String*: Текущее состояние плеера:
 
@@ -78,25 +109,25 @@ Player.on('complete', function(){
 * * *
 
 
-### <a id="videoInfo_duration"></a> `Player.videoInfo.duration`
+###`Player.videoInfo.duration`
 
 *Number*: продолжительность видео файла в секундах
 
 * * *
 
-### <a id="videoInfo_currentTime"></a> `Player.videoInfo.currentTime`
+###`Player.videoInfo.currentTime`
 
 *Number*: текущее время воспроизведения в секундах
 
 * * *
 
-### <a id="videoInfo_width"></a> `Player.videoInfo.width`
+###`Player.videoInfo.width`
 
 *Number*: ширина потока видео в пикселях
 
 * * *
 
-### <a id="videoInfo_height"></a> `Player.videoInfo.height`
+###`Player.videoInfo.height`
 
 *Number*: высота потока видео в пикселях
 
