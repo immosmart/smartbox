@@ -2717,8 +2717,8 @@ SB.readyForPlatform('browser', function(){
     Player.extend({
         _init: function () {
             var self = this;
-            var ww = window.innerWidth;
-            var wh = window.innerHeight;
+            var ww = 1280;
+            var wh = 720;
 
 
             this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');

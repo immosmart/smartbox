@@ -9,7 +9,6 @@
     initialize: function () {
       this.$wrap = $('.wrap');
 
-      Player.init();
       $$legend.show();
 
       this.setEvents();
