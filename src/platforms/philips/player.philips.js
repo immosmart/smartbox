@@ -40,10 +40,10 @@ SB.readyForPlatform('philips', function () {
             case 5: // finished
                 Player.trigger('complete');
                 stopUpdate();
-                Player._state = "stop";
+                Player.state = "stop";
                 break;
             case 0: // stopped
-                Player._state = "stop";
+                Player.state = "stop";
                 break;
             case 6: // error
                 Player.trigger('error');
@@ -86,12 +86,12 @@ SB.readyForPlatform('philips', function () {
         },
         pause: function () {
             video.play(0);
-            this._state = "pause";
+            this.state = "pause";
             stopUpdate();
         },
         resume: function () {
             video.play(1);
-            this._state = "play";
+            this.state = "play";
             startUpdate();
         },
         seek: function (time) {

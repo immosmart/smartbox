@@ -19,7 +19,7 @@ SB.readyForPlatform('lg', function () {
         },
         onEvent: function(){
             if(this.plugin.playState=='5'){
-                this._state='stop';
+                this.state='stop';
                 this.trigger('complete');
             }
         },
@@ -57,15 +57,15 @@ SB.readyForPlatform('lg', function () {
         },
         pause: function(){
             this.plugin.play(0);
-            this._state="pause";
+            this.state="pause";
         },
         resume: function(){
             this.plugin.play(1);
-            this._state="play";
+            this.state="play";
         },
         _stop: function () {
             this.plugin.stop();
-            this._state="stop";
+            this.state="stop";
         },
         seek: function(time){
             this.plugin.seek(time*1000);

@@ -157,7 +157,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 this.trigger('bufferingEnd');
             },
             OnCurrentPlayTime: function (millisec) {
-                if (this._state == 'play') {
+                if (this.state == 'play') {
                     alert(millisec / 1000);
                     this.videoInfo.currentTime = millisec / 1000;
                     this.trigger('update');

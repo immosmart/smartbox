@@ -15,7 +15,7 @@
      * @param self Player
      */
     var stub_play = function (self) {
-        self._state = "play";
+        self.state = "play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -42,7 +42,7 @@
         /**
          * current player state ["play", "stop", "pause"]
          */
-        _state: 'stop',
+        state: 'stop',
         /**
          * Runs some video
          * @param {Object} options {url: "path", type: "hls", from: 0
@@ -76,7 +76,7 @@
             }
 
             this.stop();
-            this._state = 'play';
+            this.state = 'play';
             this._play(options);
         },
         _play: function () {
@@ -107,13 +107,13 @@
          * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
-            if (this._state != 'stop') {
+            if (this.state != 'stop') {
                 this._stop();
                 if (!silent) {
                     this.trigger('stop');
                 }
             }
-            this._state = 'stop';
+            this.state = 'stop';
         },
         /**
          * Pause playback
@@ -122,7 +122,7 @@
          */
         pause: function () {
             this._stop();
-            this._state = "pause";
+            this.state = "pause";
         },
         /**
          * Resume playback
@@ -139,7 +139,7 @@
          * Player.togglePause(); // paused or resumed
          */
         togglePause: function () {
-            if (this._state == "play") {
+            if (this.state == "play") {
                 this.pause();
             } else {
                 this.resume();
@@ -190,10 +190,7 @@
              */
             currentTime: 0
         },
-        /**
-         * If set to true Player.init() calls after DOM ready
-         */
-        autoInit: false,
+
         /**
          *
          * @param {Number} seconds time to seek
@@ -266,14 +263,6 @@
 
     Player.extend(eventProto);
 
-
-    $(function () {
-        if (Player.autoInit) {
-            $('body').on('load', function () {
-                Player.init();
-            });
-        }
-    });
 
 
 }(this));

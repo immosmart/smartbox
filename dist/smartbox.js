@@ -2096,7 +2096,7 @@ $(function(){
      * @param self Player
      */
     var stub_play = function (self) {
-        self._state = "play";
+        self.state = "play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -2123,7 +2123,7 @@ $(function(){
         /**
          * current player state ["play", "stop", "pause"]
          */
-        _state: 'stop',
+        state: 'stop',
         /**
          * Runs some video
          * @param {Object} options {url: "path", type: "hls", from: 0
@@ -2157,7 +2157,7 @@ $(function(){
             }
 
             this.stop();
-            this._state = 'play';
+            this.state = 'play';
             this._play(options);
         },
         _play: function () {
@@ -2188,13 +2188,13 @@ $(function(){
          * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
-            if (this._state != 'stop') {
+            if (this.state != 'stop') {
                 this._stop();
                 if (!silent) {
                     this.trigger('stop');
                 }
             }
-            this._state = 'stop';
+            this.state = 'stop';
         },
         /**
          * Pause playback
@@ -2203,7 +2203,7 @@ $(function(){
          */
         pause: function () {
             this._stop();
-            this._state = "pause";
+            this.state = "pause";
         },
         /**
          * Resume playback
@@ -2220,7 +2220,7 @@ $(function(){
          * Player.togglePause(); // paused or resumed
          */
         togglePause: function () {
-            if (this._state == "play") {
+            if (this.state == "play") {
                 this.pause();
             } else {
                 this.resume();
@@ -2271,10 +2271,7 @@ $(function(){
              */
             currentTime: 0
         },
-        /**
-         * If set to true Player.init() calls after DOM ready
-         */
-        autoInit: false,
+
         /**
          *
          * @param {Number} seconds time to seek
@@ -2347,14 +2344,6 @@ $(function(){
 
     Player.extend(eventProto);
 
-
-    $(function () {
-        if (Player.autoInit) {
-            $('body').on('load', function () {
-                Player.init();
-            });
-        }
-    });
 
 
 }(this));
@@ -2741,7 +2730,7 @@ SB.readyForPlatform('browser', function(){
                     self.videoInfo.currentTime = video.currentTime;
                     self.trigger('update');
                 }).on('ended', function () {
-                    self._state = "stop";
+                    self.state = "stop";
                     self.trigger('complete');
                 });
 
@@ -2786,11 +2775,11 @@ SB.readyForPlatform('browser', function(){
         },
         pause: function () {
             this.$video_container[0].pause();
-            this._state = "pause";
+            this.state = "pause";
         },
         resume: function () {
             this.$video_container[0].play();
-            this._state = "play";
+            this.state = "play";
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
@@ -2976,7 +2965,7 @@ SB.readyForPlatform('lg', function () {
         },
         onEvent: function(){
             if(this.plugin.playState=='5'){
-                this._state='stop';
+                this.state='stop';
                 this.trigger('complete');
             }
         },
@@ -3014,15 +3003,15 @@ SB.readyForPlatform('lg', function () {
         },
         pause: function(){
             this.plugin.play(0);
-            this._state="pause";
+            this.state="pause";
         },
         resume: function(){
             this.plugin.play(1);
-            this._state="play";
+            this.state="play";
         },
         _stop: function () {
             this.plugin.stop();
-            this._state="stop";
+            this.state="stop";
         },
         seek: function(time){
             this.plugin.seek(time*1000);
@@ -3189,10 +3178,10 @@ SB.readyForPlatform('philips', function () {
             case 5: // finished
                 Player.trigger('complete');
                 stopUpdate();
-                Player._state = "stop";
+                Player.state = "stop";
                 break;
             case 0: // stopped
-                Player._state = "stop";
+                Player.state = "stop";
                 break;
             case 6: // error
                 Player.trigger('error');
@@ -3235,12 +3224,12 @@ SB.readyForPlatform('philips', function () {
         },
         pause: function () {
             video.play(0);
-            this._state = "pause";
+            this.state = "pause";
             stopUpdate();
         },
         resume: function () {
             video.play(1);
-            this._state = "play";
+            this.state = "play";
             startUpdate();
         },
         seek: function (time) {
@@ -3551,7 +3540,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 this.trigger('bufferingEnd');
             },
             OnCurrentPlayTime: function (millisec) {
-                if (this._state == 'play') {
+                if (this.state == 'play') {
                     alert(millisec / 1000);
                     this.videoInfo.currentTime = millisec / 1000;
                     this.trigger('update');

@@ -24,7 +24,7 @@ describe('Player', function () {
             }, 'ready have been triggered', 2000);
 
             runs(function () {
-                expect(Player._state).toBe("play");
+                expect(Player.state).toBe("play");
             });
         });
 
@@ -46,7 +46,7 @@ describe('Player', function () {
 
             runs(function(){
                 Player.pause();
-                expect(Player._state).toBe("pause");
+                expect(Player.state).toBe("pause");
             });
 
             waits(1000);
@@ -59,7 +59,7 @@ describe('Player', function () {
 
                 expect(Player.videoInfo.currentTime).toBe(time);
                 Player.resume();
-                expect(Player._state).toBe("play");
+                expect(Player.state).toBe("play");
             });
             waits(1000);
             runs(function () {
@@ -76,7 +76,7 @@ describe('Player', function () {
                 Player.on('stop', spyStop);
                 Player.stop();
                 expect(spyStop).toHaveBeenCalled();
-                expect(Player._state).toBe("stop");
+                expect(Player.state).toBe("stop");
             });
 
             waits(1000);
@@ -102,7 +102,7 @@ describe('Player', function () {
                 url: Config.movie
             });
 
-            expect(Player._state).toBe("play");
+            expect(Player.state).toBe("play");
 
             waitsFor(function () {
                 return begin.calls.length == 1
@@ -196,7 +196,7 @@ describe('Player', function () {
             }, 'onComplete was called', 15000 + timeToWait * 1000);
 
             runs(function () {
-                expect(Player._state).toBe("stop");
+                expect(Player.state).toBe("stop");
             });
         });
 

@@ -27,7 +27,7 @@ SB.readyForPlatform('browser', function(){
                     self.videoInfo.currentTime = video.currentTime;
                     self.trigger('update');
                 }).on('ended', function () {
-                    self._state = "stop";
+                    self.state = "stop";
                     self.trigger('complete');
                 });
 
@@ -72,11 +72,11 @@ SB.readyForPlatform('browser', function(){
         },
         pause: function () {
             this.$video_container[0].pause();
-            this._state = "pause";
+            this.state = "pause";
         },
         resume: function () {
             this.$video_container[0].play();
-            this._state = "play";
+            this.state = "play";
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
