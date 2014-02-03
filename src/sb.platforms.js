@@ -128,8 +128,8 @@
                     this.DUID = Config.DUIDSettings;
                     break;
             }
-            this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
 
 
             return this.DUID;

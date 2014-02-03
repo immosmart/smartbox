@@ -30,7 +30,7 @@
      */
     ready: function ( cb ) {
       if ( _ready ) {
-        cb();
+        cb.call(this);
       } else {
         readyCallbacks.push(cb);
       }
@@ -40,7 +40,7 @@
       var self = this;
       this.ready(function () {
         if ( platform == self.currentPlatform.name ) {
-          cb();
+          cb.call(self);
         }
       });
     },
@@ -76,6 +76,8 @@
 
         //prevent calling before other dom ready callbacks
         setTimeout(function () {
+
+            $('#log').appendChild('<div>ready</div>')
           self._onReady();
         });
       });
