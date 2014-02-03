@@ -68,6 +68,13 @@
                 this._init();
                 inited=true;
             }
+
+            if(typeof options=="string"){
+                options={
+                    url: options
+                }
+            }
+
             this.stop();
             this._state = 'play';
             this._play(options);
