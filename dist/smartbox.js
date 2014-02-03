@@ -30,7 +30,7 @@
      */
     ready: function ( cb ) {
       if ( _ready ) {
-        cb();
+        cb.call(this);
       } else {
         readyCallbacks.push(cb);
       }
@@ -40,7 +40,7 @@
       var self = this;
       this.ready(function () {
         if ( platform == self.currentPlatform.name ) {
-          cb();
+          cb.call(self);
         }
       });
     },
@@ -185,7 +185,7 @@
 		};
 
 		/**
-		 * Returns key name by key code.js
+		 * Returns key name by key code
 		 * @param keyCode
 		 * @returns {string} key name
 		 */
@@ -242,8 +242,8 @@
                     this.DUID = Config.DUIDSettings;
                     break;
             }
-            this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
 
 
             return this.DUID;
@@ -3249,11 +3249,7 @@ SB.readyForPlatform('philips', function () {
     ],
 
     $plugins: {},
-
-    detect: function () {
-      var userAgent = navigator.userAgent.toLowerCase();
-      return (userAgent.indexOf('nettv') !== -1);
-    },
+      platformUserAgent: 'netcast',
 
     initialise: function () {
     },

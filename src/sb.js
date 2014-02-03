@@ -76,8 +76,6 @@
 
         //prevent calling before other dom ready callbacks
         setTimeout(function () {
-
-            $('#log').appendChild('<div>ready</div>')
           self._onReady();
         });
       });
