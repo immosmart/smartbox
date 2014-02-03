@@ -133,7 +133,7 @@ Player.on('complete', function(){
 
 * * *
 
-### <a id="usePlayerObject"></a> `Player.usePlayerObject`
+###`Player.usePlayerObject`
 
 *Boolean*: определяет будет использоваться <object> или sef плагин.
 
@@ -145,7 +145,7 @@ Player.on('complete', function(){
 
 ## Публичные методы
 
-### <a id="play"></a> `Player.play(options)`
+###`Player.play(options)`
 
 Начинает воспроизведение видео.
 
@@ -172,7 +172,7 @@ Player.play({
 
 * * *
 
-### <a id="stop"></a> `Player.stop([silent])`
+###`Player.stop([silent])`
 
 Останавливает воспроизведение видео.
 
@@ -191,7 +191,7 @@ App.onDestroy(function(){
 
 * * *
 
-### <a id="pause"></a> `Player.pause()`
+###`Player.pause()`
 
 Приостанавливает воспроизведение видео.
 
@@ -204,7 +204,7 @@ Player.pause();
 
 * * *
 
-### <a id="resume"></a> `Player.resume()`
+###`Player.resume()`
 
 Возобновляет воспроизведение видео после паузы.
 
@@ -216,7 +216,7 @@ Player.resume();
 
 * * *
 
-### <a id="togglePause"></a> `Player.togglePause()`
+###`Player.togglePause()`
 
 Переключает pause/resume в зависимости от текущего состояния.
 
@@ -227,7 +227,7 @@ Player.togglePause();
 
 * * *
 
-### <a id="formatTime"></a> `Player.formatTime(seconds)`
+###`Player.formatTime(seconds)`
 
 Конвертирует время в секундах в строку вида H:MM:SS
 
@@ -246,7 +246,7 @@ Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
 * * *
 
 
-### <a id="seek"></a> `Player.seek(seconds)`
+###`Player.seek(seconds)`
 
 Переход на заданное время в секундах.
 
@@ -264,7 +264,7 @@ Player.seek(Player.videoInfo.currentTime + 10);//прыжок на 10 секун
 * * *
 
 
-### <a id="audio_get"></a> `Player.audio.get()`
+###`Player.audio.get()`
 
 Возвращает массив с кодами языков звуковых дорожек.   
 
@@ -287,7 +287,7 @@ var currentLangString=Strings[currentLang];//=> "Russian"
 * * *
 
 
-### <a id="audio_get"></a> `Player.audio.set(index)`
+###`Player.audio.set(index)`
 
 Задает звуковую дорожку согласно индексу. 
 
@@ -305,7 +305,7 @@ Player.audio.set(0);
 
 * * *
 
-### <a id="audio_get"></a> `Player.audio.cur()`
+###`Player.audio.cur()`
 
 Задает звуковую дорожку согласно индексу. 
 
@@ -321,6 +321,10 @@ Player.audio.cur(); //=> 1
 ```
 
 * * *
+
+
+
+
 
 
 
