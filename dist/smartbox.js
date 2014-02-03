@@ -2107,14 +2107,17 @@ $(function(){
         }, 500);
     }
 
+    var inited=false;
+
     var Player = window.Player = {
 
         /**
          * Inserts player object to DOM and do some init work
          * @examples
-         * Player.init(); // run it after SB.ready
+         * Player._init(); // run it after SB.ready
          */
-        init: function () {
+        _init: function () {
+
             //no need to do anything because just stub
         },
         /**
@@ -2142,6 +2145,10 @@ $(function(){
          * }); // => runs stream
          */
         play: function (options) {
+            if(!inited){
+                this._init();
+                inited=true;
+            }
             this.stop();
             this._state = 'play';
             this._play(options);
@@ -2701,7 +2708,7 @@ $(function(){
 SB.readyForPlatform('browser', function(){
 
     Player.extend({
-        init: function () {
+        _init: function () {
             var self = this;
             var ww = window.innerWidth;
             var wh = window.innerHeight;
@@ -2948,7 +2955,7 @@ SB.readyForPlatform('lg', function () {
 
     Player.extend({
         updateDelay: 500,
-        init: function () {
+        _init: function () {
             var self = this;
             $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
             this.plugin = $('#pluginPlayer')[0];
@@ -3202,7 +3209,7 @@ SB.readyForPlatform('philips', function () {
     }
 
     Player.extend({
-        init: function () {
+        _init: function () {
             $('body').append('<div id="mediaobject" style="position:absolute;left:0px;top:0px;width:640px;height:480px;">\n\
               <object id="videoPhilips" type="video/mpeg4" width="1280" height="720" />\n\
                </div>');
@@ -3412,7 +3419,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         }
         Player.extend({
             usePlayerObject: false,
-            init: function () {
+            _init: function () {
                 var self = this;
                 //document.body.onload=function(){
                 if (self.usePlayerObject) {

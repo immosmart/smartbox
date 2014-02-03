@@ -67,7 +67,7 @@ SB.readyForPlatform('philips', function () {
     }
 
     Player.extend({
-        init: function () {
+        _init: function () {
             $('body').append('<div id="mediaobject" style="position:absolute;left:0px;top:0px;width:640px;height:480px;">\n\
               <object id="videoPhilips" type="video/mpeg4" width="1280" height="720" />\n\
                </div>');

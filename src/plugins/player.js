@@ -26,14 +26,17 @@
         }, 500);
     }
 
+    var inited=false;
+
     var Player = window.Player = {
 
         /**
          * Inserts player object to DOM and do some init work
          * @examples
-         * Player.init(); // run it after SB.ready
+         * Player._init(); // run it after SB.ready
          */
-        init: function () {
+        _init: function () {
+
             //no need to do anything because just stub
         },
         /**
@@ -61,6 +64,10 @@
          * }); // => runs stream
          */
         play: function (options) {
+            if(!inited){
+                this._init();
+                inited=true;
+            }
             this.stop();
             this._state = 'play';
             this._play(options);

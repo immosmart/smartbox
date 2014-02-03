@@ -5,7 +5,7 @@ SB.readyForPlatform('lg', function () {
 
     Player.extend({
         updateDelay: 500,
-        init: function () {
+        _init: function () {
             var self = this;
             $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
             this.plugin = $('#pluginPlayer')[0];

@@ -1,7 +1,7 @@
 SB.readyForPlatform('browser', function(){
 
     Player.extend({
-        init: function () {
+        _init: function () {
             var self = this;
             var ww = window.innerWidth;
             var wh = window.innerHeight;

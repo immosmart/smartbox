@@ -32,7 +32,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         }
         Player.extend({
             usePlayerObject: false,
-            init: function () {
+            _init: function () {
                 var self = this;
                 //document.body.onload=function(){
                 if (self.usePlayerObject) {
