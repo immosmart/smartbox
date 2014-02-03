@@ -10,11 +10,13 @@ describe('Player', function () {
 
         it('init shall not fail', function () {
 
-            var spy=jasmine.createSpy('SB ready spy');
-            SB.ready(spy);
+            /*var spy=jasmine.createSpy('SB ready spy');
+
             waitsFor(function(){
                 return spy.calls.length>0
             }, 'SB ready triggered', 1000);
+
+            SB.ready(spy);*/
 
             runs(function(){
                 expect(function () {

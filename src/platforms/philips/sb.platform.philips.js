@@ -12,11 +12,7 @@
     ],
 
     $plugins: {},
-
-    detect: function () {
-      var userAgent = navigator.userAgent.toLowerCase();
-      return (userAgent.indexOf('nettv') !== -1);
-    },
+      platformUserAgent: 'netcast',
 
     initialise: function () {
     },

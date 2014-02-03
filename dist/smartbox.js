@@ -17,14 +17,7 @@
        * ex: browser, samsung, lg
        * @type: {String}
        */
-      defaultPlatform: 'browser',
-
-      /**
-       * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-       *  ex: browser, samsung, lg
-       * @type: {String}
-       */
-      currentPlatform: ''
+      defaultPlatform: 'browser'
     },
 
     isInited: function () {
@@ -37,7 +30,7 @@
      */
     ready: function ( cb ) {
       if ( _ready ) {
-        cb();
+        cb.call(this);
       } else {
         readyCallbacks.push(cb);
       }
@@ -47,7 +40,7 @@
       var self = this;
       this.ready(function () {
         if ( platform == self.currentPlatform.name ) {
-          cb();
+          cb.call(self);
         }
       });
     },
@@ -192,7 +185,7 @@
 		};
 
 		/**
-		 * Returns key name by key code.js
+		 * Returns key name by key code
 		 * @param keyCode
 		 * @returns {string} key name
 		 */
@@ -249,8 +242,8 @@
                     this.DUID = Config.DUIDSettings;
                     break;
             }
-            this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
 
 
             return this.DUID;
@@ -313,6 +306,14 @@
         el,
         scriptEl;
 
+      function onloadScript () {
+        loadedScripts++;
+
+        if ( loadedScripts === len ) {
+          cb && cb.call();
+        }
+      }
+
       if ( filesArray.length ) {
 
         $externalJsContainer = document.createDocumentFragment();
@@ -324,14 +325,6 @@
           scriptEl = el.cloneNode();
           scriptEl.src = filesArray[i];
           $externalJsContainer.appendChild(scriptEl);
-        }
-
-        function onloadScript () {
-          loadedScripts++;
-
-          if ( loadedScripts === len ) {
-            cb && cb.call();
-          }
         }
 
         document.body.appendChild($externalJsContainer);
@@ -3256,11 +3249,7 @@ SB.readyForPlatform('philips', function () {
     ],
 
     $plugins: {},
-
-    detect: function () {
-      var userAgent = navigator.userAgent.toLowerCase();
-      return (userAgent.indexOf('nettv') !== -1);
-    },
+      platformUserAgent: 'netcast',
 
     initialise: function () {
     },
