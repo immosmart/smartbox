@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Smartbox demo</title>
+    <link rel="stylesheet" href="css/input.css"/>
+    <link rel="stylesheet" href="css/keyboard.css"/>
+    <link rel="stylesheet" href="css/legend.css"/>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!--for better view in browser-->
+<div class="bg"></div>
+
+<div class="wrap">
+
+    <div class="menu">
+
+        <div class="logo"></div>
+
+        <ul class="menu-items" data-nav_type="vbox" data-nav_loop="true">
+            <li data-content='video' class="menu-item menu-item_green nav-item">Videos</li>
+            <li data-content='input' class="menu-item menu-item_blue nav-item">Inputs</li>
+            <li data-content='navigation' class="menu-item menu-item_red nav-item">Navigation</li>
+        </ul>
+    </div>
+
+    <div class="scenes-wrapper">
+        <div class="scene scene_video js-scene-video" data-nav_type="vbox" data-nav_loop="true"></div>
+        <div class="scene scene_input js-scene-input">
+            <div class="input-example">
+                <h2>Standart input</h2>
+                <input class="input-item js-input-1 nav-item"/>
+                <div class="input-val">
+                    Input value: <span class="js-input-1-val"></span>
+                </div>
+            </div>
+            <div class="input-example">
+                <h2>Input with email keyboard</h2>
+                <input class="input-item js-input-2 nav-item"/>
+            </div>
+            <div class="input-example">
+                <h2>Input with num keyboard and maximum 4 signs</h2>
+                <input class="input-item js-input-3 nav-item"/>
+            </div>
+        </div>
+        <div class="scene js-scene-navigation">
+            <ul class="navigation-items">
+                <li class="navigation-item nav-item">1</li>
+                <li class="navigation-item nav-item">2</li>
+                <li class="navigation-item nav-item">3</li>
+                <li class="navigation-item nav-item">4</li>
+                <li class="navigation-item nav-item">5</li>
+                <li class="navigation-item nav-item">6</li>
+                <li class="navigation-item nav-item">7</li>
+                <li class="navigation-item nav-item">8</li>
+            </ul>
+            <p class="navigation-info"></p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../../src/libs/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../../src/libs/lodash.compat.min.js"></script>
+<script type="text/javascript" src="../../src/libs/event_emitter.js"></script>
+<script type="text/javascript" src="../../dist/smartbox.js"></script>
+<script type="text/javascript" src="js/app.js"></script>
+<script type="text/javascript" src="videos.js"></script>
+<script type="text/javascript" src="js/scenes/videos.js"></script>
+<script type="text/javascript" src="js/scenes/navigation.js"></script>
+<script type="text/javascript" src="js/scenes/input.js"></script>
+<script type="text/javascript" src="js/legendTriggers.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+body {
+    padding: 20px;
+}
+
+.page {
+    z-index: 1;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+
+.bottom_bar {
+    background: rgba(255, 255, 255, 0.86);
+    position: absolute;
+    left: 0;
+    width: 100%;
+    bottom: 0;
+    padding: 20px;
+    height: 120px;
+    color: #6a6a6a;
+}
+
+.player_controls {
+    position: absolute;
+    left: 0;
+    top: 54px;
+    width: 100%;
+    text-align: center;
+}
+
+/*button highlight style*/
+.btn.focus, .tile.focus {
+    background-color: #006DCC;
+    background-image: linear-gradient(to bottom, #0088CC, #0044CC);
+    background-repeat: repeat-x;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    color: #FFFFFF;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.tiles {
+    width: 1000px;
+}
+
+.tile {
+    float: left;
+    width: 100px;
+    height: 150px;
+    margin-left: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #C9C9C9;
+    border-radius: 5px;
+}
+
+.nav-tabs .nav-item.focus a {
+    background: #006DCC;
+    color: #fff;
+}
+
+.content > div {
+    display: none;
+}
+
+.current-time, .duration {
+    position: absolute;
+    top: 54px;
+    font-size: 18px;
+}
+
+.current-time{
+    left: 20px;
+}
+
+.duration{
+    right: 20px;
+}
+
+.progress-bar {
+    transition: none;
+}
+
+.btn {
+    padding: 15px 20px;
+}

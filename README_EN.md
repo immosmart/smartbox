@@ -1,12 +1,13 @@
-# Обзор
+# Overview
 
-Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
-На данный момент поддерживаются платформы
+A smartbox library allows to start one application on a few smartTV platforms. 
+
+Currently supported platforms: 
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
 
-Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
+To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
 
 # Инициализация
 
