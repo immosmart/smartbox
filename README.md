@@ -1,3 +1,6 @@
+# Демо
+* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
+
 # Обзор
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
@@ -13,7 +16,7 @@
 Smartbox имеет три зависимости:
 - <a href="https://github.com/jquery/jquery/tree/1.8-stable">jQuery(1.8.1+)</a>
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
-- Event Emitter( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
+- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
 
 Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
 
@@ -76,7 +79,4 @@ SB.ready будет выполнен после всех коллбеков jQue
 
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
-
-# Демо
-* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
 
