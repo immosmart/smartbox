@@ -60,7 +60,7 @@ SB.ready будет выполнен после всех коллбеков jQue
 - readyForPlatform(platform, cb) выполняет код функции func после инициализации библиотеки,
 если текущая платформа - platform
 
-        SB.readyforPlatform('samsung', function(){
+        SB.readyForPlatform('samsung', function(){
             // code for samsung
         });
 
