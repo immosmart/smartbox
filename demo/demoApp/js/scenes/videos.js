@@ -1,8 +1,9 @@
 (function () {
   "use strict";
   var _inited;
+    _.templateSettings.interpolate = /\{\{([\s\S]+?)\}\}/g;
 
-  var itemHtml = '<div data-url="{{url}}" class="video-item nav-item">{{title}}</div>';
+  var itemHtml = _.template('<div data-url="{{url}}" data-type="{{type}}" class="video-item nav-item">{{title}}</div>');
 
   window.App.scenes.video = {
 
@@ -32,7 +33,8 @@
     onItemClick: function (e) {
       var url = e.currentTarget.getAttribute('data-url');
       Player.play({
-        url: url
+        url: url,
+        type: e.currentTarget.getAttribute('data-type')
       });
     },
 
@@ -40,17 +42,15 @@
     renderItems: function (items) {
       var html = '';
 
+       // console.log(items, itemHtml.toString())
       for ( var i = 0, len = items.length; i < len; i++ ) {
-        html += this.generateItemHtml(items[i]);
+        html += itemHtml(items[i]);
       }
 
       this.$el
         .empty()
         .html(html);
-    },
-
-    generateItemHtml: function (item) {
-      return itemHtml.replace('{{url}}', item.url).replace('{{title}}', item.title);
     }
+
   }
 })();

@@ -3414,7 +3414,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
             }
         }
         Player.extend({
-            usePlayerObject: false,
+            usePlayerObject: true,
             _init: function () {
                 var self = this;
                 //document.body.onload=function(){
@@ -3622,7 +3622,8 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
         pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
         pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
+        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
+        pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
       },
     samsungFiles = [
       '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
