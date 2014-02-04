@@ -1,3 +1,6 @@
+# Demo
+* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Full demo with plugins</a>
+
 # Overview
 
 A smartbox library allows to start one application on a few smartTV platforms. 
@@ -9,12 +12,12 @@ Currently supported platforms:
 
 To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
 
-# Инициализация
+# Initialisation
 
-Smartbox имеет три зависимости:
+Smartbox has three dependencies:
 - <a href="https://github.com/jquery/jquery/tree/1.8-stable">jQuery(1.8.1+)</a>
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
-- Event Emitter( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
+- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
 
 Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
 
@@ -31,7 +34,7 @@ Smartbox имеет три зависимости:
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
 * Легенда @todo_doc
-* Плеер @todo_doc
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_player.md">Плеер</a>
 
 # Как пользоваться библиотекой
 
@@ -58,7 +61,7 @@ SB.ready будет выполнен после всех коллбеков jQue
 - readyForPlatform(platform, cb) выполняет код функции func после инициализации библиотеки,
 если текущая платформа - platform
 
-        SB.readyforPlatform('samsung', function(){
+        SB.readyForPlatform('samsung', function(){
             // code for samsung
         });
 
@@ -78,6 +81,5 @@ SB.ready будет выполнен после всех коллбеков jQue
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
 
-# Демо
-* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
+
 
