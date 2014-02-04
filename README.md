@@ -33,7 +33,7 @@ Smartbox имеет три зависимости:
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
 * Легенда @todo_doc
-* Плеер @todo_doc
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_player.md">Плеер</a>
 
 # Как пользоваться библиотекой
 
