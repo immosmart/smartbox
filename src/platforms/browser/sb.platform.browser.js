@@ -49,7 +49,7 @@
 
 		detect: function () {
 			// always true for browser platform
-			return true;
+			return false;
 		},
 
 		initialise: function () {},

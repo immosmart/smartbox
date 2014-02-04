@@ -229,11 +229,14 @@
 
 				this.$container = container ? $(container) : $body;
 
-				this.$container.on('mouseenter.nav', this.area_selector, function ( e ) {
-					if ( !$(this).is(self.phantom_selector) ) {
-						self.current(this, 'mouseenter');
-					}
-				});
+                if (SB.currentPlatform.name != 'philips') {
+                    this.$container.on('mouseenter.nav', this.area_selector, function (e) {
+                        if (!$(this).is(self.phantom_selector)) {
+                            self.current(this, 'mouseenter');
+                        }
+                    });
+                }
+
 
 
 				$navTypeEls = this.$container.find('[data-nav_type]');

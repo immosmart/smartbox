@@ -22,8 +22,9 @@ describe('Platform', function () {
         });
     });
 
-    xit('Should detect samsung', function () {
-        expect(SB.platforms.getCurrentPlatform().name).toBe('samsung');
+    it('Should detect platform', function () {
+        $('body').prepend('<div style="color: #ffffff; background: #000000">'+navigator.userAgent+'</div>')
+        expect(SB.currentPlatform.name).toBe('philips');
     });
 
     describe('Local storage', function () {
@@ -49,7 +50,7 @@ describe('Platform', function () {
     });
 
 
-    describe('external files methods', function () {
+    xdescribe('external files methods', function () {
 
         it('addExternalJS load and execute script', function () {
             expect(window.nonExists).not.toBeDefined();

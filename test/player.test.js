@@ -1,4 +1,4 @@
-describe('Player', function () {
+xdescribe('Player', function () {
 
     var currentURL = Config.trailer;
     var currentType = '';
@@ -6,6 +6,7 @@ describe('Player', function () {
 
     describe('basic support', function () {
 
+        $()
 
 
 

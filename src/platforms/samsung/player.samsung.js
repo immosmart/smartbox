@@ -31,7 +31,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
             }
         }
         Player.extend({
-            usePlayerObject: false,
+            usePlayerObject: true,
             _init: function () {
                 var self = this;
                 //document.body.onload=function(){
