@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+
   window.App = {
     currentScene: null,
     scenes: {},
