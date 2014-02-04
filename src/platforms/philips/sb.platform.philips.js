@@ -12,7 +12,7 @@
     ],
 
     $plugins: {},
-      platformUserAgent: 'netcast',
+    platformUserAgent: 'nettv',
 
     initialise: function () {
     },
