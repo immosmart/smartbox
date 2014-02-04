@@ -275,8 +275,8 @@
 						if ( (type == 'hbox' && e.keyName == 'left') ||
 								 (type == 'vbox' && e.keyName == 'up') ) {
 							fn = 'prev';
-						} else if ( (type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down') ) {
+						} else if ((type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down')) {
 							fn = 'next';
 						}
 

@@ -88,14 +88,17 @@
 		keys: {},
 
 		DUID: '',
+        DUIDSettings: 'real',
+
+        platformUserAgent: 'not found',
 
 		/**
 		 * Detecting current platform
 		 * @returns {boolean} true if running on current platform
 		 */
 		detect: function () {
-			// should be override
-			return false;
+            var userAgent = navigator.userAgent.toLowerCase();
+            return (userAgent.indexOf(this.platformUserAgent) !== -1);
 		},
 
 		/**
@@ -108,7 +111,28 @@
 		 * @return {string} DUID
 		 */
 		getDUID: function () {
-			return '';
+            switch (this.DUIDSettings) {
+                case 'real':
+                    this.DUID = this.getNativeDUID();
+                    break;
+                case 'mac':
+                    this.DUID = this.getMac();
+                    break;
+                case 'random':
+                    this.DUID = this.getRandomDUID();
+                    break;
+                /*case 'local_random':
+                    this.DUID = this.getLocalRandomDUID();
+                    break;*/
+                default:
+                    this.DUID = Config.DUIDSettings;
+                    break;
+            }
+            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+
+
+            return this.DUID;
 		},
 
 		/**
@@ -118,6 +142,14 @@
 		getRandomDUID: function () {
 			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
 		},
+
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getMac: function () {
+            return '';
+        },
 
 		/**
 		 * Returns native DUID for platform if exist
@@ -150,43 +182,44 @@
 
 		/**
 		 * Asynchroniosly adding platform files
+     * @param filesArray {Array} array of sources of javascript files
 		 * @param cb {Function} callback on load javascript files
 		 */
-		addExternalJS: function (filesArray ,cb) {
-			var defferedArray = [],
-				$externalJsContainer;
+    addExternalJS: function ( filesArray, cb ) {
+      var $externalJsContainer,
+        loadedScripts = 0,
+        len = filesArray.length,
+        el,
+        scriptEl;
 
-			if ( filesArray.length ) {
+      function onloadScript () {
+        loadedScripts++;
 
-				$externalJsContainer = document.createDocumentFragment();
+        if ( loadedScripts === len ) {
+          cb && cb.call();
+        }
+      }
 
-				_.each(filesArray, function ( src ) {
+      if ( filesArray.length ) {
 
-					var d = $.Deferred(),
-						el = document.createElement('script');
+        $externalJsContainer = document.createDocumentFragment();
+        el = document.createElement('script');
+        el.type = 'text/javascript';
+        el.onload = onloadScript;
 
-					el.onload = function() {
-						d.resolve();
-						el.onload = null;
-					};
+        for ( var i = 0; i < len; i++ ) {
+          scriptEl = el.cloneNode();
+          scriptEl.src = filesArray[i];
+          $externalJsContainer.appendChild(scriptEl);
+        }
 
-					el.type = 'text/javascript';
-					el.src = src;
+        document.body.appendChild($externalJsContainer);
+      } else {
 
-					defferedArray.push(d);
-					$externalJsContainer.appendChild(el);
-				});
-
-				document.body.appendChild($externalJsContainer);
-				$.when.apply($, defferedArray).done(function () {
-					cb && cb.call();
-				});
-			} else {
-
-				// if no external js simple call cb
-				cb && cb.call(this);
-			}
-		},
+        // if no external js simple call cb
+        cb && cb.call(this);
+      }
+    },
 
 		addExternalCss: function (filesArray) {
 			var $externalCssContainer;

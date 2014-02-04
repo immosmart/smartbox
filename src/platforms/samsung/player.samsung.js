@@ -32,7 +32,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         }
         Player.extend({
             usePlayerObject: false,
-            init: function () {
+            _init: function () {
                 var self = this;
                 //document.body.onload=function(){
                 if (self.usePlayerObject) {
@@ -157,7 +157,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 this.trigger('bufferingEnd');
             },
             OnCurrentPlayTime: function (millisec) {
-                if (this._state == 'play') {
+                if (this.state == 'play') {
                     alert(millisec / 1000);
                     this.videoInfo.currentTime = millisec / 1000;
                     this.trigger('update');

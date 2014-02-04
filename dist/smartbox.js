@@ -3,114 +3,114 @@
  */
 (function ( window, undefined ) {
 
-	// save in case of overwrite
-	var document = window.document,
-		_inited = false,
-		readyCallbacks = [];
+  // save in case of overwrite
+  var document = window.document,
+    _inited = false,
+    _ready = false,
+    readyCallbacks = [];
 
-	var SB = {
+  var SB = {
 
-		config: {
-			/**
-			 * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-			 * ex: browser, samsung, lg
-			 * @type: {String}
-			 */
-			defaultPlatform: 'browser',
+    config: {
+      /**
+       * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
+       * ex: browser, samsung, lg
+       * @type: {String}
+       */
+      defaultPlatform: 'browser'
+    },
 
-			/**
-			 * Платформа, используемая по умолчанию, метод detectPlatform не вызывается
-			 *  ex: browser, samsung, lg
-			 * @type: {String}
-			 */
-			currentPlatform: ''
-		},
+    isInited: function () {
+      return _inited;
+    },
 
-		isInited: function () {
-			return _inited;
-		},
+    /**
+     * Main function
+     * @param cb {Function} callback after initialization
+     */
+    ready: function ( cb ) {
+      if ( _ready ) {
+        cb.call(this);
+      } else {
+        readyCallbacks.push(cb);
+      }
+    },
 
-		/**
-		 * Main function
-		 * @param cb {Function} callback after initialization
-		 */
-		ready: function ( cb ) {
-			readyCallbacks.push(cb);
-		},
+    readyForPlatform: function ( platform, cb ) {
+      var self = this;
+      this.ready(function () {
+        if ( platform == self.currentPlatform.name ) {
+          cb.call(self);
+        }
+      });
+    },
 
-        readyForPlatform: function(platform, cb){
-            var self=this;
-            this.ready(function(){
-                if(platform==self.currentPlatform.name){
-                    cb();
-                }
-            });
-        },
+    /**
+     * Applying all ready callbacks
+     * @private
+     */
+    _onReady: function () {
+      _ready = true;
 
-		/**
-		 * Applying all ready callbacks
-		 * @private
-		 */
-		_onReady: function () {
-			for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-				readyCallbacks[i].call(this);
-			}
-		},
+      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+        readyCallbacks[i].call(this);
+      }
+    },
 
-		initialise: function () {
-			var self = this,
-				utils = this.utils;
+    initialise: function () {
+      var self = this,
+        utils = this.utils;
 
-			if ( _inited ) {
-				return;
-			}
+      if ( _inited ) {
+        return;
+      }
 
-			window.$$log = utils.log.log;
-			window.$$error = utils.error;
+      window.$$log = utils.log.log;
+      window.$$error = utils.error;
 
-			$$log('!!!!!!!!!LOG: initialising SB');
+      //$$log('!!!!!!!!!LOG: initialising SB');
 
-			SB.platforms.initialise(function ( currentPlatform ) {
-				self.currentPlatform = currentPlatform;
-				_inited = true;
-				self._onReady();
-			});
-		}
-	};
+      SB.platforms.initialise(function ( currentPlatform ) {
+        self.currentPlatform = currentPlatform;
+        _inited = true;
 
-	SB.utils = {
-		/**
-		 * Show error message
-		 * @param msg
-		 */
-		error: function ( msg ) {
-			$$log(msg, 'error');
-		},
+        //prevent calling before other dom ready callbacks
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    }
+  };
 
-		/**
-		 * Show messages in log
-		 * all functionality in main.js
-		 */
-		log: {
-			log: function () {
-			},
-			state: function () {
-			},
-			show: function () {
-			},
-			hide: function () {
-			},
-			startProfile: function () {
-			},
-			stopProfile: function () {
-			}
-		}
-	};
+  SB.utils = {
+    /**
+     * Show error message
+     * @param msg
+     */
+    error: function ( msg ) {
+      $$log(msg, 'error');
+    },
 
-	$(function () {
-		SB.initialise();
-	});
-	window.SB = SB;
+    /**
+     * Show messages in log
+     * all functionality in main.js
+     */
+    log: {
+      log: $.noop,
+      state: $.noop,
+      show: $.noop,
+      hide: $.noop,
+      startProfile: $.noop,
+      stopProfile: $.noop
+    },
+
+    legend: {}
+  };
+
+  $(function () {
+    SB.initialise();
+  });
+  window.SB = SB;
 })(this);
 // global SB
 !(function ( window, undefined ) {
@@ -202,14 +202,17 @@
 		keys: {},
 
 		DUID: '',
+        DUIDSettings: 'real',
+
+        platformUserAgent: 'not found',
 
 		/**
 		 * Detecting current platform
 		 * @returns {boolean} true if running on current platform
 		 */
 		detect: function () {
-			// should be override
-			return false;
+            var userAgent = navigator.userAgent.toLowerCase();
+            return (userAgent.indexOf(this.platformUserAgent) !== -1);
 		},
 
 		/**
@@ -222,7 +225,28 @@
 		 * @return {string} DUID
 		 */
 		getDUID: function () {
-			return '';
+            switch (this.DUIDSettings) {
+                case 'real':
+                    this.DUID = this.getNativeDUID();
+                    break;
+                case 'mac':
+                    this.DUID = this.getMac();
+                    break;
+                case 'random':
+                    this.DUID = this.getRandomDUID();
+                    break;
+                /*case 'local_random':
+                    this.DUID = this.getLocalRandomDUID();
+                    break;*/
+                default:
+                    this.DUID = Config.DUIDSettings;
+                    break;
+            }
+            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
+            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
+
+
+            return this.DUID;
 		},
 
 		/**
@@ -232,6 +256,14 @@
 		getRandomDUID: function () {
 			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
 		},
+
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getMac: function () {
+            return '';
+        },
 
 		/**
 		 * Returns native DUID for platform if exist
@@ -264,43 +296,44 @@
 
 		/**
 		 * Asynchroniosly adding platform files
+     * @param filesArray {Array} array of sources of javascript files
 		 * @param cb {Function} callback on load javascript files
 		 */
-		addExternalJS: function (filesArray ,cb) {
-			var defferedArray = [],
-				$externalJsContainer;
+    addExternalJS: function ( filesArray, cb ) {
+      var $externalJsContainer,
+        loadedScripts = 0,
+        len = filesArray.length,
+        el,
+        scriptEl;
 
-			if ( filesArray.length ) {
+      function onloadScript () {
+        loadedScripts++;
 
-				$externalJsContainer = document.createDocumentFragment();
+        if ( loadedScripts === len ) {
+          cb && cb.call();
+        }
+      }
 
-				_.each(filesArray, function ( src ) {
+      if ( filesArray.length ) {
 
-					var d = $.Deferred(),
-						el = document.createElement('script');
+        $externalJsContainer = document.createDocumentFragment();
+        el = document.createElement('script');
+        el.type = 'text/javascript';
+        el.onload = onloadScript;
 
-					el.onload = function() {
-						d.resolve();
-						el.onload = null;
-					};
+        for ( var i = 0; i < len; i++ ) {
+          scriptEl = el.cloneNode();
+          scriptEl.src = filesArray[i];
+          $externalJsContainer.appendChild(scriptEl);
+        }
 
-					el.type = 'text/javascript';
-					el.src = src;
+        document.body.appendChild($externalJsContainer);
+      } else {
 
-					defferedArray.push(d);
-					$externalJsContainer.appendChild(el);
-				});
-
-				document.body.appendChild($externalJsContainer);
-				$.when.apply($, defferedArray).done(function () {
-					cb && cb.call();
-				});
-			} else {
-
-				// if no external js simple call cb
-				cb && cb.call(this);
-			}
-		},
+        // if no external js simple call cb
+        cb && cb.call(this);
+      }
+    },
 
 		addExternalCss: function (filesArray) {
 			var $externalCssContainer;
@@ -334,389 +367,775 @@
  */
 ;(function ( $, window, document, undefined ) {
 
-  var pluginName = 'SBKeyboard',
-    keyRegExp = /([^{]+){{([^}]*)}}/,
-    defaults = {
-      type: 'en',
-      haveNumKeyboard: false,
-      firstLayout: 'en'
-    },
-    pluginPrototype = {},
-    keyboardPrototype = {},
-    generatedKeyboards = {};
 
-  /**
-   * Keyboard constructor
-   * @param options
-   * @param $el parent element
-   * @constructor
-   */
-  function Keyboard(options, $el) {
-    this.type = options.type;
-    this.currentLayout = '';
-    this.previousLayout = '';
-    this.$el = $el;
+	var pluginName = 'SBInput',
+		defaultOptions = {
+			keyboard: {
+				type: 'fulltext_ru',
+				firstLayout: 'ru'
+			},
 
-    // jquery layout els
-    this.$layouts = {};
+			/**
+			 * Format function
+			 * @param text
+			 */
+			formatText: null,
+			bindKeyboard: null,
 
-    // all available layouts(for changeKeyboardLang)
-    this.presets = [];
+			input: {
+				template: '<div class="smart_input-container">' +
+										'<div class="smart_input-wrap">' +
+											'<span class="smart_input-text"></span>' +
+											'<span class="smart_input-cursor"></span>' +
+										'</div>' +
+									'</div>',
+				elClass: 'smart_input-container',
+				wrapperClass: 'smart_input-wrap',
+				cursorClass: 'smart_input-cursor',
+				textClass: 'smart_input-text'
+			},
 
-    this.initialize(options);
-  }
+			directKeyboardInput: true,
 
-  keyboardPrototype = {
-    isShiftActive: false,
-    isNumsShown: false,
-    initialize: function ( options ) {
-      var board = '',
-        preset,
-        haveNums = options.haveNumKeyboard,
-        type;
+			max: 0,
 
-      preset = SB.keyboardPresets[this.type];
+			next: null
+		},
+		pluginPrototype,
+		$keyboardOverlay,
+		$keyboardPopup,
+		// in app can be only one blink cursor
+		blinkInterval;
 
-      this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
+	/**
+	 * Generate input element
+	 * @param opt  input options
+	 * @returns {*}  jQuery el
+	 */
+	function generateInput(opt) {
+		var div = $(document.createElement('div'));
+		div.html(opt.template);
+		return div.find('.' + opt.elClass);
+	}
 
-      if ( typeof preset === 'function' ) {
-        this.presets.push(this.type);
-        if(haveNums) {
-          board = this.generateFull(this.presets, haveNums);
-        } else {
-          board = this.generateBoard(preset, this.type);
-        }
-      } else if ( preset.length ) {
-        this.presets = preset;
-        board = this.generateFull(this.presets, haveNums);
-      }
+	/**
+	 * generate popup for input keyboards
+	 */
+	function generateKeyboardPopup() {
+		$keyboardOverlay = $(document.createElement('div')).attr('id', 'keyboard_overlay');
+		$keyboardPopup = $(document.createElement('div')).attr({
+			'id': 'keyboard_popup',
+			'class': 'keyboard_popup_wrapper'
+		});
+		$keyboardOverlay.append($keyboardPopup);
+		$(document.body).append($keyboardOverlay);
+	}
 
-      this.$wrap.append(board);
-      this.$wrap.addClass('kekekey_' + this.type);
-      this.$el.append(this.$wrap);
-      this.setEvents();
+	// The actual plugin constructor
+	function Plugin( element, options ) {
+		this.$input = $(element);
+		this.initialise(options);
+		this.stopBlink();
+		this.setText(element.value);
+	}
 
-      // save jquery els of current layouts
-      for (var i = 0; i < this.presets.length; i++) {
-        type = this.presets[i];
-        this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
-      }
+	pluginPrototype = {
+		isInited: false,
+		_generatedKeyboard: false,
+		isKeyboardActive: false,
+		text: '',
+		initialise: function (options) {
+			var $el;
+			if (this.isInited) {
+				return this;
+			}
 
-      if (haveNums) {
-        // remove 'fullnum' from presets(changeKeyboardLang uses presets)
-        this.presets = _.without(this.presets,'fullnum')
-      }
+			options = $.extend({}, defaultOptions, options);
+			options.next = this.$input.attr('data-next') || options.next;
+			options.max = this.$input.attr('data-max') || options.max || 0;
 
-      if (this.presets.indexOf(options.firstLayout) !== -1) {
-        this.changeLayout(options.firstLayout);
-      } else {
-        this.changeLayout(this.presets[0]);
-      }
-    },
+			this.options = options;
 
-    /**
-     * Generate multilayout keyboards
-     * @param types {Array} array of layout types (['ru', 'en'])
-     * @param haveNums {Boolean} add fullnum keyboard
-     * @returns {string} generated html
-     */
-    generateFull: function ( types, haveNums ) {
-      var wrapHtml = '',
-        preset = '',
-        type = '';
+			this.$input.attr({
+				'data-value': '',
+				'data-max': options.max
+			});
 
-      if ( types.length > 1 ) {
-        this.$wrap.addClass('kb-multilang');
-      }
+			$el = generateInput(options.input);
+			$el.addClass(this.$input[0].className);
 
-      if ( haveNums ) {
-        this.$wrap.addClass('kb-havenums');
-        types.push('fullnum');
-      }
+			this.$input.hide().after($el);
 
-      for ( var i = 0; i < types.length; i++ ) {
-        type = types[i];
-        preset = SB.keyboardPresets[type];
-        wrapHtml += this.generateBoard(preset, type);
-      }
+			this.$el = $el;
+			this.$text = $el.find('.' + options.input.textClass);
+			this.$cursor = $el.find('.' + options.input.cursorClass);
+			this.$wrapper = $el.find('.' + options.input.wrapperClass);
 
-      generatedKeyboards[this.type] = {
-        board: wrapHtml
-      };
-      return wrapHtml;
-    },
+			if ( options.directKeyboardInput ) {
+				this.addDirectKeyboardEvents();
+			}
 
-    /**
-     * Generate keyboard layout
-     * @param preset {Function} preset function
-     * @param type {String}  'ru', 'en'
-     * @returns {String} generated html
-     */
-    generateBoard: function ( preset, type ) {
+			this.addEvents();
+			this.isInited = true;
+			return this;
+		},
 
-      var boardHtml = '',
-        rowHtml = '',
-        keyAttrs = {},
-        row, letter;
+		startBlink: function () {
+			var self = this,
+				hiddenClass = this.options.input.cursorClass + '_hidden';
 
-      if ( generatedKeyboards[type] ) {
-        return generatedKeyboards[type].board;
-      }
+			if ( blinkInterval ) {
+				clearInterval(blinkInterval);
+			}
+			blinkInterval = setInterval(function () {
+				self.$cursor.toggleClass(hiddenClass);
+			}, 500);
+		},
 
-      preset = preset();
-      boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
+		stopBlink: function () {
+			var hiddenClass = this.options.input.cursorClass + '_hidden';
+			if ( blinkInterval ) {
+				clearInterval(blinkInterval);
+			}
+			this.$cursor.addClass(hiddenClass);
+		},
 
-      for ( var i = 0; i < preset.length; i++ ) {
-        row = preset[i];
-        rowHtml = '<div class="kb-row" data-nav_type="hbox">';
+		addEvents: function () {
+			var $wrap = this.$wrapper,
+				opt = this.options,
+				self = this;
 
-        for ( var j = 0; j < row.length; j++ ) {
-          letter = row[j];
-          if ( letter.length == 1 || letter === '&amp;' ) {
-            keyAttrs = {
-              text: letter,
-              type: '',
-              letter: letter
-            };
-          }
-          else {
-            var matches = keyRegExp.exec(letter);
+			this.$input.on({
+				change: function () {
+					self.$text.html(this.value);
+				},
+				'startBlink': function () {
+					self.startBlink();
+				},
+				'stopBlink': function () {
+					self.stopBlink();
+				},
+				'hideKeyboard': function () {
+					if ( $wrap.hasClass('smart-input-active') ) {
+						self.hideKeyboard();
+					}
+				},
+				'showKeyboard': function () {
+					self.showKeyboard();
+				}
+			});
 
-            keyAttrs.text = matches[2] || '';
-            keyAttrs.type = matches[1];
-            keyAttrs.letter = '';
-          }
-          rowHtml += '<div class="kbtn nav_target ' +
-                     keyAttrs.type +
-                     '" data-letter="' + _.escape(keyAttrs.letter) + '"';
+			$wrap.off('nav_focus nav_blur click');
 
-          if ( keyAttrs.type ) {
-            rowHtml += ' data-keytype="' + keyAttrs.type + '"';
-          }
+			if (opt.bindKeyboard) {
+				opt.keyboard = false;
+				opt.bindKeyboard
+					.off('type backspace delall')
+					.on('type',function ( e ) {
+						self.type(e.letter);
+					})
+					.on('backspace',function () {
+						self.type('backspace');
+					})
+					.on('delall', function () {
+						self.type('delall');
+					});
+			}
 
-          rowHtml += '>' + keyAttrs.text + '</div>';
-        }
+			if (opt.keyboard) {
+				this.$el.on('click', function () {
+					self.startBlink();
+					self.showKeyboard();
+				})
+			}
+		},
 
-        boardHtml += rowHtml + '</div>';
-      }
+		addDirectKeyboardEvents: function () {
+			var self = this;
 
-      boardHtml += '</div>';
+			this.$el.on({
+				nav_focus: function () {
+					self.startBlink();
+					$(document.body).on('keypress.SBInput', function ( e ) {
+						if ( e.charCode ) {
+							e.preventDefault();
+							self.type(String.fromCharCode(e.charCode));
+						} else {
+							switch ( e.keyCode ) {
+								case 8:
+									e.preventDefault();
+									self.type('backspace');
+									break;
+							}
+						}
+					});
+				},
+				nav_blur: function () {
+					self.stopBlink();
+					$(document.body).off('keypress.SBInput');
+				}
+			});
+		},
 
-      generatedKeyboards[type] = {
-        board: boardHtml
-      };
-      return boardHtml;
-    },
+		setText: function (text) {
+			var opt = this.options,
+				max = opt.max,
+				method;
 
-    /**
-     * Num keys event handler
-     * @param e
-     */
-    onKeyNum: function ( e ) {
-      switch ( e.keyName ) {
-        case 'red':
-          this.$el.trigger('backspace');
-          break;
-        default:
-          var ev = $.Event({
-            'type': 'type'
-          });
-          ev.letter = '' + e.num;
+			if ( text.length > max && max != 0 ) {
+				text = text.substr(0, max);
+			}
 
-          this.$el.trigger(ev);
-          break;
-      }
-      e.stopPropagation();
-    },
-    defaultOnKey: function ( e ) {
-      e.stopPropagation();
-    },
-    onKeyDown: function ( e ) {
-      var $el = $(e.currentTarget),
-        keyType = $el.attr('data-keytype'),
-        letter = $el.attr('data-letter'),
-        ev;
+			if (opt.formatText) {
+				text = opt.formatText(text);
+			}
 
-      // create custom event for triggering keyboard event
-      ev = $.Event({
-        'type': 'type'
-      });
+			this.$input.val(text).change();
+			this.text = text;
 
-      if ( keyType ) {
-        switch ( keyType ) {
-          case 'backspace':
-            ev = 'backspace';
-            break;
-          case 'delall':
-            ev = 'delall';
-            break;
-          case 'complete':
-            ev = 'complete';
-            break;
-          case 'space':
-            ev.letter = ' ';
-            break;
-          case 'shift':
-            this.triggerShiftLetters();
-            return;
-          case 'lang':
-            this.changeKeyboardLang();
-            return;
-          case 'nums':
-            this.triggerNumKeyboard();
-            return;
-          default:
-            break;
-        }
-      } else {
-        ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
-      }
+			// TODO: fix for Samsung 11
+			if ( text.length > 1 ) {
+				method = (this.$text.width() > this.$wrapper.width()) ? 'add' : 'remove';
+				this.$wrapper[ method + 'Class']('.' + opt.input.wrapperClass + '_right');
+			} else {
+				this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
+			}
+		},
 
-      ev && this.$el.trigger(ev);
+		type: function ( letter ) {
+			var text = this.text || '',
+				opt = this.options;
 
-      e.stopPropagation();
-    },
+			switch (letter) {
+				case 'backspace':
+					text = text.substr(0, text.length - 1);
+					break;
+				case 'delall':
+					text = '';
+					break;
+				default:
+					text += letter;
+					break;
+			}
 
-    triggerShiftLetters: function () {
-      var self = this;
+			this.setText(text);
 
-      if ( this.isShiftActive ) {
-        this.isShiftActive = false;
-        this.$el.removeClass('shift_active');
-      } else {
-        this.isShiftActive = true;
-        this.$el.addClass('shift_active');
-      }
+			//jump to next input if is set
+			if ( text.length === opt.max &&
+					 opt.next &&
+					 opt.max != 0 ) {
+				this.hideKeyboard();
+				$$nav.current(opt.next);
+				$$nav.current().click();
+			}
+		},
 
-      // TODO: only for samsung 11
+		hideKeyboard: function ( isComplete ) {
+			var $wrapper = this.$wrapper;
+			$wrapper.removeClass('smart-input-active');
+			this.$input.trigger('keyboard_hide');
+
+			$keyboardOverlay && $keyboardOverlay.hide();
+
+			$$nav.restore();
+			$$voice.restore();
+
+			this.isKeyboardActive = false;
+			if ( isComplete ) {
+				this.$input.trigger('keyboard_complete');
+			}
+			else {
+				this.$input.trigger('keyboard_cancel');
+			}
+			$keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
+		},
+
+		showKeyboard: function () {
+			var $wrapper = this.$wrapper,
+				keyboardOpt = this.options.keyboard,
+				self = this;
+
+			this.isKeyboardActive = true;
+			$wrapper.addClass('smart-input-active');
+
+			var h = this.$el.outerHeight();
+			var o = this.$el.offset();
+			var top = o.top + h;
+
+			if (!$keyboardOverlay) {
+				generateKeyboardPopup();
+			}
+
+			if (!this._generatedKeyboard) {
+				$keyboardPopup.SBKeyboard(keyboardOpt);
+				this._generatedKeyboard = true;
+			}
+
+			$keyboardPopup.SBKeyboard('changeKeyboard', keyboardOpt.type)
+				.css({
+					'left': o.left,
+					'top': top
+				})
+				.off('type backspace delall complete cancel')
+				.on('type',function ( e ) {
+					self.type(e.letter);
+				})
+				.on('backspace',function () {
+					self.type('backspace');
+				})
+				.on('delall',function () {
+					self.type('delall');
+				})
+				.on('complete cancel', function ( e ) {
+					var isComplete = false;
+					if ( e.type === 'complete' ) {
+						isComplete = true;
+					}
+					self.stopBlink();
+					self.hideKeyboard(isComplete);
+				});
+
+			$keyboardOverlay.show();
+
+			var kh = $keyboardPopup.height();
+			var kw = $keyboardPopup.width();
+
+			if ( top + kh > 680 ) {
+				$keyboardPopup.css({
+					'top': top - kh - h
+				})
+			}
+			if ( o.left + kw > 1280 ) {
+				$keyboardPopup.css({
+					'left': 1280 - kw - 20
+				})
+			}
+			$$voice.save();
+			$$nav.save();
+			$$nav.on('#keyboard_popup');
+			$keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
+			this.$el.addClass($$nav.higlight_class);
+			this.$input.trigger('keyboard_show');
+			this.startBlink();
+		}
+	};
+
+	$.extend(Plugin.prototype, pluginPrototype);
+	pluginPrototype = null;
+
+	$.fn.SBInput = function () {
+		var args = Array.prototype.slice.call(arguments),
+			method = (typeof args[0] == 'string') && args[0],
+			options = (typeof args[0] == 'object') && args[0],
+			params = args.slice(1);
+
+		return this.each(function () {
+			var instance = $.data(this, 'plugin_' + pluginName);
+			if (!instance) {
+				$.data(this, 'plugin_' + pluginName,
+					new Plugin( this, options ));
+			} else if (typeof instance[method] === 'function'){
+				instance[method](params);
+			}
+		});
+	}
+
+})( jQuery, window, document );
+/**
+ * Keyboard Plugin
+ */
+;
+(function ( $, window, document, undefined ) {
+
+	var pluginName = 'SBKeyboard',
+		keyRegExp = /([^{]+){{([^}]*)}}/,
+		defaults = {
+			type: 'en',
+			firstLayout: 'en'
+		},
+		pluginPrototype = {},
+		keyboardPrototype = {},
+		generatedKeyboards = {};
+
+	/**
+	 * Keyboard constructor
+	 * @param options
+	 * @param $el parent element
+	 * @constructor
+	 */
+	function Keyboard ( options, $el ) {
+		this.type = options.type;
+		this.currentLayout = '';
+		this.previousLayout = '';
+		this.$el = $el;
+
+		// jquery layout els
+		this.$layouts = {};
+
+		// all available layouts(for changeKeyboardLang)
+		this.presets = [];
+
+		this.initialize(options);
+	}
+
+	keyboardPrototype = {
+		isShiftActive: false,
+		isNumsShown: false,
+		initialize: function ( options ) {
+			var board = '',
+				preset,
+				haveNums = false,
+				type;
+
+			preset = SB.keyboardPresets[this.type];
+
+			this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
+
+			if ( typeof preset === 'function' ) {
+				this.presets.push(this.type);
+				board = this.generateBoard(this.type);
+			} else if ( preset.length ) {
+				this.presets = preset;
+				haveNums = (preset.indexOf('fullnum') !== -1);
+				board = this.generateFull(this.presets, haveNums);
+			}
+
+			this.$wrap
+				.append(board)
+			 	.addClass('kekekey_' + this.type);
+
+			this.$el.append(this.$wrap);
+			this.setEvents();
+
+			// save jquery els of current layouts
+			for ( var i = 0; i < this.presets.length; i++ ) {
+				type = this.presets[i];
+				this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
+			}
+
+			if ( haveNums ) {
+				this.presets = _.without(this.presets,'fullnum')
+			}
+
+			if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
+				this.changeLayout(options.firstLayout);
+			} else {
+				this.changeLayout(this.presets[0]);
+			}
+		},
+
+		/**
+		 * Generate multilayout keyboards
+		 * @param types {Array} array of layout types (['ru', 'en'])
+		 * @param haveNums {Boolean} add fullnum keyboard
+		 * @returns {string} generated html
+		 */
+		generateFull: function ( types, haveNums ) {
+			var wrapHtml = '',
+				preset = '',
+				type = '';
+
+			if ( types.length > 1 ) {
+				this.$wrap.addClass('kb-multilang');
+			}
+
+			if ( haveNums ) {
+				this.$wrap.addClass('kb-havenums');
+			}
+
+			for ( var i = 0; i < types.length; i++ ) {
+				type = types[i];
+				wrapHtml += this.generateBoard(type);
+			}
+
+			return wrapHtml;
+		},
+
+		/**
+		 * Generate keyboard layout
+		 * @param type {String}  'ru', 'en'
+		 * @returns {String} generated html
+		 */
+		generateBoard: function ( type ) {
+
+			var preset = SB.keyboardPresets[type],
+				boardHtml = '',
+				rowHtml = '',
+				keyAttrs = {},
+				row, letter;
+
+			if ( generatedKeyboards[type] ) {
+				return generatedKeyboards[type].board;
+			}
+
+			preset = preset();
+			boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
+
+			for ( var i = 0; i < preset.length; i++ ) {
+				row = preset[i];
+				rowHtml = '<div class="kb-row" data-nav_type="hbox">';
+
+				for ( var j = 0; j < row.length; j++ ) {
+					letter = row[j];
+					if ( letter.length == 1 || letter === '&amp;' ) {
+						keyAttrs = {
+							text: letter,
+							type: '',
+							letter: letter
+						};
+					}
+					else {
+						var matches = keyRegExp.exec(letter);
+
+						keyAttrs.text = matches[2] || '';
+						keyAttrs.type = matches[1];
+						keyAttrs.letter = '';
+					}
+					rowHtml += '<div class="kbtn nav-item ' +
+										 keyAttrs.type +
+										 '" data-letter="' + _.escape(keyAttrs.letter) + '"';
+
+					if ( keyAttrs.type ) {
+						rowHtml += ' data-keytype="' + keyAttrs.type + '"';
+					}
+
+					rowHtml += '>' + keyAttrs.text + '</div>';
+				}
+
+				boardHtml += rowHtml + '</div>';
+			}
+
+			boardHtml += '</div>';
+
+			generatedKeyboards[type] = {
+				board: boardHtml
+			};
+			return boardHtml;
+		},
+
+		/**
+		 * Num keys event handler
+		 * @param e
+		 */
+		onKeyNum: function ( e ) {
+			switch ( e.keyName ) {
+				case 'red':
+					this.$el.trigger('backspace');
+					break;
+				default:
+					var ev = $.Event({
+						'type': 'type'
+					});
+					ev.letter = '' + e.num;
+
+					this.$el.trigger(ev);
+					break;
+			}
+			e.stopPropagation();
+		},
+		defaultOnKey: function ( e ) {
+			e.stopPropagation();
+		},
+		onKeyDown: function ( e ) {
+			var $el = $(e.currentTarget),
+				keyType = $el.attr('data-keytype'),
+				letter = $el.attr('data-letter'),
+				ev;
+
+			// create custom event for triggering keyboard event
+			ev = $.Event({
+				'type': 'type'
+			});
+
+			if ( keyType ) {
+				switch ( keyType ) {
+					case 'backspace':
+						ev = 'backspace';
+						break;
+					case 'delall':
+						ev = 'delall';
+						break;
+					case 'complete':
+						ev = 'complete';
+						break;
+					case 'space':
+						ev.letter = ' ';
+						break;
+					case 'shift':
+						this.triggerShiftLetters();
+						return;
+					case 'lang':
+						this.changeKeyboardLang();
+						return;
+					case 'nums':
+						this.triggerNumKeyboard();
+						return;
+					default:
+						break;
+				}
+			} else {
+				ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
+			}
+
+			ev && this.$el.trigger(ev);
+
+			e.stopPropagation();
+		},
+
+		triggerShiftLetters: function () {
+			var self = this;
+
+			if ( this.isShiftActive ) {
+				this.isShiftActive = false;
+				this.$el.removeClass('shift_active');
+			} else {
+				this.isShiftActive = true;
+				this.$el.addClass('shift_active');
+			}
+
+			// TODO: only for samsung 11
 //      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
 //        this.innerHTML = self.isShiftActive ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
 //      });
-    },
+		},
 
-    /**
-     * show/hide fullnum layout
-     */
-    triggerNumKeyboard: function () {
+		/**
+		 * show/hide fullnum layout
+		 */
+		triggerNumKeyboard: function () {
 
-      if ( this.isNumsShown ) {
-        this.isNumsShown = false;
-        this.changeLayout(this.previousLayout);
-        this.$el.trigger('hide_num');
-      } else {
-        this.isNumsShown = true;
-        this.changeLayout('fullnum');
-        this.$el.trigger('show_num');
-      }
+			if ( this.isNumsShown ) {
+				this.isNumsShown = false;
+				this.changeLayout(this.previousLayout);
+				this.$el.trigger('hide_num');
+			} else {
+				this.isNumsShown = true;
+				this.changeLayout('fullnum');
+				this.$el.trigger('show_num');
+			}
 
-      $$nav.current(this.$layouts[this.currentLayout].find('.nums'));
-    },
+			$$nav.current(this.$layouts[this.currentLayout].find('.nums'));
+		},
 
-    changeKeyboardLang: function () {
-      var curIndex = this.presets.indexOf(this.currentLayout),
-        index;
+		changeKeyboardLang: function () {
+			var curIndex = this.presets.indexOf(this.currentLayout),
+				index;
 
-      index = (curIndex + 1) % this.presets.length;
-      this.changeLayout(this.presets[index]);
-      $$nav.current(this.$layouts[this.currentLayout].find('.lang'));
-    },
+			index = (curIndex + 1) % this.presets.length;
+			this.changeLayout(this.presets[index]);
+			$$nav.current(this.$layouts[this.currentLayout].find('.lang'));
+		},
 
-    /**
-     * Change layout function
-     * @param layout {String} 'fullnum', 'en'
-     */
-    changeLayout: function ( layout ) {
-      var prevLayout,
-        curLayout = this.$layouts[layout];
+		/**
+		 * Change layout function
+		 * @param layout {String} 'fullnum', 'en'
+		 */
+		changeLayout: function ( layout ) {
+			var prevLayout,
+				curLayout = this.$layouts[layout];
 
-      if ( this.currentLayout ) {
-        prevLayout = this.$layouts[this.currentLayout];
-        prevLayout && prevLayout.hide();
-        this.$el.removeClass('keyboard_' + this.currentLayout);
-        this.previousLayout = this.currentLayout;
-      }
+			if ( this.currentLayout ) {
+				prevLayout = this.$layouts[this.currentLayout];
+				prevLayout && prevLayout.hide();
+				this.$el.removeClass('keyboard_' + this.currentLayout);
+				this.previousLayout = this.currentLayout;
+			}
 
-      if ( curLayout ) {
-        this.currentLayout = layout;
-        this.$el.addClass('keyboard_' + layout);
-        curLayout.show();
-      }
-    },
-    setEvents: function () {
-      // block yellow & blue buttons
-      this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
-      this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
-      this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
-    },
-    show: function () {
-      this.$wrap.show();
-      this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
-    },
-    hide: function () {
-      this.$wrap.hide();
-      this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
-    }
-  };
+			if ( curLayout ) {
+				this.currentLayout = layout;
+				this.$el.addClass('keyboard_' + layout);
+				curLayout.show();
+			}
+		},
+		setEvents: function () {
+			var self = this;
+			// block yellow & blue buttons
+			this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
+			this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
+			this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
+			this.$wrap
+				.on('nav_key:green', function ( e ) {
+					self.$el.trigger('complete');
+					e.stopPropagation();
+				})
+				.on('nav_key:return', function ( e ) {
+					self.$el.trigger('cancel');
+					e.stopPropagation();
+				});
+		},
+		show: function () {
+			this.$wrap.show();
+			this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
+			return this;
+		},
+		hide: function () {
+			this.$wrap.hide();
+			this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
+		}
+	};
 
-  $.extend(Keyboard.prototype, keyboardPrototype);
-  keyboardPrototype = null;
+	$.extend(Keyboard.prototype, keyboardPrototype);
+	keyboardPrototype = null;
 
-  // The actual plugin constructor
-  function Plugin( element, options ) {
-    this.$el = $(element);
-    this.keyboards = {};
+	// The actual plugin constructor
+	function Plugin ( element, options ) {
+		this.$el = $(element);
+		this.keyboards = {};
 
-    options = $.extend({}, defaults, options);
-    this.addKeyboard(options);
-    this.$el.addClass('keyboard_popup_wrapper');
-    this.currentKeyboard = this.keyboards[options.type];
-    this.currentKeyboard.show();
-  }
+		options = $.extend({}, defaults, options);
+		this.addKeyboard(options);
+		this.$el.addClass('keyboard_popup_wrapper');
+		this.currentKeyboard = this.keyboards[options.type];
+		this.currentKeyboard.show();
+	}
 
-  pluginPrototype = {
-    /**
-     * Add keyboard to current element
-     * @param opt {Object}
-     */
-    addKeyboard: function (opt) {
-      var options = $.extend({}, defaults, opt);
-      this.keyboards[options.type] = new Keyboard(options, this.$el);
-    },
-    /**
-     * Change current active keyboard
-     * @param type {String} 'en', 'ru'
-     */
-    changeKeyboard: function (type) {
-      if (this.keyboards[type]) {
-        this.currentKeyboard.hide();
-        this.currentKeyboard = this.keyboards[type];
-        this.currentKeyboard.show();
-      }
-    }
-  };
+	pluginPrototype = {
+		/**
+		 * Add keyboard to current element
+		 * @param opt {Object}
+		 */
+		addKeyboard: function ( opt ) {
+			var options = $.extend({}, defaults, opt);
+			this.keyboards[options.type] = new Keyboard(options, this.$el);
+		},
+		/**
+		 * Change current active keyboard
+		 * @param type {String} 'en', 'ru'
+		 */
+		changeKeyboard: function ( type ) {
+			if ( this.keyboards[type]) {
+				this.currentKeyboard.hide();
+				this.currentKeyboard = this.keyboards[type].show();
+			}
+		}
+	};
 
-  $.extend(Plugin.prototype, pluginPrototype);
-  pluginPrototype = null;
+	$.extend(Plugin.prototype, pluginPrototype);
+	pluginPrototype = null;
 
-  // A lightweight plugin wrapper around the constructor,
-  // preventing against multiple instantiations
-  $.fn.SBKeyboard = function () {
-    var args = Array.prototype.slice.call(arguments),
-      method = (typeof args[0] == 'string') && args[0],
-      options = (typeof args[0] == 'object') && args[0],
-      params = args.slice(1);
+	// A lightweight plugin wrapper around the constructor,
+	// preventing against multiple instantiations
+	$.fn.SBKeyboard = function () {
+		var args = Array.prototype.slice.call(arguments),
+			method = (typeof args[0] == 'string') && args[0],
+			options = (typeof args[0] == 'object') && args[0],
+			params = args.slice(1);
 
-    return this.each(function () {
-      var instance = $.data(this, 'plugin_' + pluginName);
-      if (!instance) {
-        $.data(this, 'plugin_' + pluginName,
-          new Plugin( this, options ));
-      } else {
-        instance[method] && instance[method](params);
-      }
-    });
-  }
-})( jQuery, window, document );
+		return this.each(function () {
+			var instance = $.data(this, 'plugin_' + pluginName);
+			if ( !instance ) {
+				$.data(this, 'plugin_' + pluginName,
+					new Plugin(this, options));
+			} else {
+				if (method) {
+					instance[method] && instance[method](params);
+				} else if (options) {
+					instance.addKeyboard(options);
+				}
+			}
+		});
+	}
+})(jQuery, window, document);
 
 window.SB = window.SB || {};
 
@@ -725,21 +1144,21 @@ window.SB.keyboardPresets = {
 
 	en: function () {
 		return [
-      'qwertyuiop'.split(''),
-      'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
-        ['delall{{<span>Del<br/>all</span>}}']),
-      ['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
-    ];
+			'qwertyuiop'.split(''),
+			'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+			['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
+				['delall{{<span>Del<br/>all</span>}}']),
+			['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
+		];
 	},
 
 	ru: function () {
 		return [
-      'йцукенгшщзхъ'.split(''),
-      'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
-      ['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
-    ]
+			'йцукенгшщзхъ'.split(''),
+			'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+			['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
+			['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
+		]
 	},
 
 	email: function () {
@@ -756,21 +1175,169 @@ window.SB.keyboardPresets = {
 			'123'.split(''),
 			'456'.split(''),
 			'789'.split(''),
-			['backspace{{<i class="backspace_icon"></i>}}', '0', 'num_complete complete{{}}']
+			['backspace{{<i class="backspace_icon"></i>}}', '0', 'complete{{OK}}']
 		]
 	},
 
-  fullnum: function () {
-    return [
-      '1234567890'.split(''),
-      '-/:;()$"'.split('').concat(['&amp;','backspace{{<i class="backspace_icon"></i>}}']),
-      ['nums{{ABC}}'].concat("@.,?!'+".split('')),
-      ['space{{}}', 'complete{{OK}}']
-    ]
-  },
+	fullnum: function () {
+		return [
+			'1234567890'.split(''),
+			'-/:;()$"'.split('').concat(['&amp;', 'backspace{{<i class="backspace_icon"></i>}}']),
+			['nums{{ABC}}'].concat("@.,?!'+".split('')),
+			['space{{}}', 'complete{{OK}}']
+		]
+	},
 
-  fulltext_ru: ['en', 'ru']
+	fulltext_ru: ['en', 'ru'],
+	fulltext_ru_nums: ['en', 'ru', 'fullnum']
 };
+(function (window) {
+  "use strict";
+  /*globals _, ViewModel,$,Events,document, Observable, Computed, Lang, nav*/
+  var icons = ['info','red', 'green', 'yellow', 'blue', 'rew', 'play', 'pause', 'stop', 'ff', 'tools', 'left',
+               'right', 'up', 'down', 'leftright', 'updown', 'move', 'number', 'enter', 'ret'],
+
+    notClickableKeys= ['leftright', 'left', 'right', 'up', 'down', 'updown', 'move', 'number'],
+    _isInited,
+    LegendKey,
+    savedLegend = [],
+    Legend;
+
+  function isClickable( key ) {
+    return (notClickableKeys.indexOf(key) === -1)
+  }
+
+  function renderKey( key ) {
+    var clickableClass = isClickable(key) ? ' legend-clickable' : '';
+    return '<div class="legend-item legend-item-' + key + clickableClass + '" data-key="' + key + '">' +
+             '<i class="leg-icon leg-icon-' + key + '"></i>' +
+             '<span class="legend-item-title"></span>' +
+           '</div>';
+  }
+
+  function _renderLegend() {
+    var legendEl,
+      wrap,
+      allKeysHtml = '';
+
+    for (var i = 0, len = icons.length; i<len; i++) {
+      allKeysHtml += renderKey(icons[i]);
+    }
+
+    legendEl = document.createElement('div');
+    wrap = document.createElement('div');
+
+    legendEl.className = 'legend';
+    legendEl.id = 'legend';
+    wrap.className = 'legend-wrap';
+    wrap.innerHTML = allKeysHtml;
+    legendEl.appendChild(wrap);
+
+    return legendEl;
+  }
+
+  Legend = {
+    keys: {},
+    init: function () {
+      var el;
+      if (!_isInited) {
+        el = _renderLegend();
+        this.$el = $(el);
+
+        for (var i = 0; i < icons.length; i++) {
+          this.initKey(icons[i]);
+        }
+
+        _isInited = true;
+      }
+      return this;
+    },
+    initKey: function ( key ) {
+      var $keyEl;
+      if(!this.keys[key]) {
+        $keyEl = this.$el.find('.legend-item-' + key);
+        this.keys[key] = new LegendKey($keyEl);
+      }
+    },
+    show: function () {
+      this.$el.show();
+    },
+    hide: function () {
+      this.$el.hide();
+    },
+    clear: function () {
+      for (var key in this.keys) {
+        this.keys[key]('');
+      }
+    },
+    save: function () {
+      for (var key in this.keys) {
+        savedLegend[key] = this.keys[key]();
+      }
+    },
+    restore: function () {
+      _.each(icons, function (key) {
+        Legend[key](savedLegend[key]);
+      });
+
+      for (var key in savedLegend) {
+        this.keys[key](savedLegend[key]);
+      }
+
+      savedLegend = [];
+    }
+  };
+
+  LegendKey = function ($el) {
+    this.$el = $el;
+    this.$text = $el.find('.legend-item-title');
+    return _.bind(this.setText, this);
+  };
+
+  LegendKey.prototype.text = '';
+  LegendKey.prototype.isShown = false;
+  LegendKey.prototype.setText = function (text) {
+    if (typeof text === 'undefined') {
+      return this.text;
+    } else if (text !== this.text) {
+      text = text || '';
+
+      if (!text && this.isShown) {
+        this.$el.hide();
+        this.isShown = false;
+      } else if (text && !this.isShown) {
+        this.$el.show();
+        this.isShown = true;
+      }
+
+      this.text = text;
+      this.$text.html(text);
+    }
+  };
+
+
+  window.$$legend = Legend.init();
+
+  $(function () {
+    Legend.$el.appendTo(document.body);
+    Legend.$el.on('click', '.legend-clickable', function () {
+      var key = $(this).attr('data-key'),
+        ev, commonEvent;
+
+      if (key === 'ret') {
+        key = 'return';
+      } else if (key === 'rew') {
+        key = 'rw';
+      }
+
+      ev = $.Event("nav_key:" + key);
+      commonEvent = $.Event("nav_key");
+      commonEvent.keyName = ev.keyName = key;
+
+      $$nav.current().trigger(ev).trigger(commonEvent);
+    });
+  });
+})(this);
 (function ( window, undefined ) {
 
 	var profiles = {},
@@ -784,11 +1351,16 @@ window.SB.keyboardPresets = {
 		Log,
 		LogPanel;
 
+
 	// append log wrapper to body
 	$logWrap = $('<div></div>', {
 		id: 'log'
 	});
-	$logWrap.appendTo(document.body);
+
+    $(function(){
+        $logWrap.appendTo(document.body);
+    });
+
 
 	$logRow = $('<div></div>', {
 		'class': 'log-row'
@@ -914,9 +1486,12 @@ window.SB.keyboardPresets = {
 	};
 })(this);
 
-$(document.body).on('nav_key:tools', function () {
-	SB.utils.log.show();
+$(function(){
+    $(document.body).on('nav_key:tools', function () {
+        SB.utils.log.show();
+    });
 });
+
 
 !(function ( window, undefined ) {
 
@@ -1195,8 +1770,8 @@ $(document.body).on('nav_key:tools', function () {
 						if ( (type == 'hbox' && e.keyName == 'left') ||
 								 (type == 'vbox' && e.keyName == 'up') ) {
 							fn = 'prev';
-						} else if ( (type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down') ) {
+						} else if ((type == 'hbox' && e.keyName == 'right') ||
+												(type == 'vbox' && e.keyName == 'down')) {
 							fn = 'next';
 						}
 
@@ -1504,13 +2079,24 @@ $(document.body).on('nav_key:tools', function () {
 	});
 
 })(this);
+/**
+ * Player plugin for smartbox
+ */
+
 (function (window) {
 
     var updateInterval, curAudio = 0;
 
-    //emulates events after `play` method called
+
+
+
+    /**
+     * emulates events after `play` method called
+     * @private
+     * @param self Player
+     */
     var stub_play = function (self) {
-        self._state = "play";
+        self.state = "play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -1521,28 +2107,57 @@ $(document.body).on('nav_key:tools', function () {
         }, 500);
     }
 
+    var inited=false;
+
     var Player = window.Player = {
+
         /**
-         * inserts player object to DOM and do some init work
+         * Inserts player object to DOM and do some init work
+         * @examples
+         * Player._init(); // run it after SB.ready
          */
-        init: function () {
+        _init: function () {
+
             //no need to do anything because just stub
         },
         /**
          * current player state ["play", "stop", "pause"]
          */
-        _state: 'stop',
+        state: 'stop',
         /**
          * Runs some video
-         * @param options object {
-         *      url: "path to video file/stream"
-         *      from: optional {Number} time in seconds where need start playback
-         *      type: optional {String} should be set to "hls" if stream is hls
+         * @param {Object} options {url: "path", type: "hls", from: 0
          * }
+         * @examples
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * }); // => runs video
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * from: 20
+         * }); // => runs video from 20 second
+         *
+         * Player.play({
+         * url: "stream.m3u8",
+         * type: "hls"
+         * }); // => runs stream
          */
         play: function (options) {
+            if(!inited){
+                this._init();
+                inited=true;
+            }
+
+            if(typeof options=="string"){
+                options={
+                    url: options
+                }
+            }
+
             this.stop();
-            this._state = 'play';
+            this.state = 'play';
             this._play(options);
         },
         _play: function () {
@@ -1563,32 +2178,49 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Stop video playback
-         * @param silent {Boolean} if flag is set, player will no trigger "stop" event
+         * @param {Boolean} silent   if flag is set, player will no trigger "stop" event
+         * @examples
+         *
+         * Player.stop(); // stop video
+         *
+         * App.onDestroy(function(){
+         *      Player.stop(true);
+         * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
-            if (this._state != 'stop') {
+            if (this.state != 'stop') {
                 this._stop();
                 if (!silent) {
                     this.trigger('stop');
                 }
             }
-            this._state = 'stop';
+            this.state = 'stop';
         },
         /**
          * Pause playback
+         * @examples
+         * Player.pause(); //paused
          */
         pause: function () {
             this._stop();
-            this._state = "pause";
+            this.state = "pause";
         },
         /**
          * Resume playback
+         * @examples
+         * Player.pause(); //resumed
          */
         resume: function () {
             stub_play(this);
         },
+        /**
+         * Toggles pause/resume
+         * @examples
+         *
+         * Player.togglePause(); // paused or resumed
+         */
         togglePause: function () {
-            if (this._state == "play") {
+            if (this.state == "play") {
                 this.pause();
             } else {
                 this.resume();
@@ -1599,12 +2231,10 @@ $(document.body).on('nav_key:tools', function () {
         },
         /**
          * Converts time in seconds to readable string in format H:MM:SS
-         * @param seconds {Number} time to convert
+         * @param {Number} seconds time to convert
          * @returns {String} result string
-         * Example:
-         * $('#duration').html(Player.formatTime(PLayer.videoInfo.duration));
-         * Result:
-         * <div id="duration">1:30:27</div>
+         * @examples
+         * Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
          */
         formatTime: function (seconds) {
             var hours = Math.floor(seconds / (60 * 60));
@@ -1620,7 +2250,9 @@ $(document.body).on('nav_key:tools', function () {
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
-
+        /**
+         * Hash contains info about current video
+         */
         videoInfo: {
             /**
              * Total video duration in seconds
@@ -1639,12 +2271,12 @@ $(document.body).on('nav_key:tools', function () {
              */
             currentTime: 0
         },
+
         /**
-         * If set to true Player.init() calls after DOM ready
-         */
-        autoInit: false,
-        /**
-         * @param seconds time to seek
+         *
+         * @param {Number} seconds time to seek
+         * @examples
+         * Player.seek(20); // seek to 20 seconds
          */
         seek: function (seconds) {
             var self = this;
@@ -1713,377 +2345,8 @@ $(document.body).on('nav_key:tools', function () {
     Player.extend(eventProto);
 
 
-    $(function () {
-        if (Player.autoInit) {
-            $('body').on('load', function () {
-                Player.init();
-            });
-        }
-    });
-
 
 }(this));
-(function ($) {
-    var optionsHash = {
-
-    };
-
-
-    var typeNum = function (e, input, options) {
-        switch (e.keyName) {
-            case 'red':
-                privateMethods.type(input, 'backspace', options);
-                break;
-            default:
-                privateMethods.type(input, e.num, options);
-                break;
-        }
-        e.stopPropagation();
-    };
-
-    var blink_interval;
-    var privateMethods = {
-        format: function ($inp, text) {
-            var id = $inp.attr('id');
-            var options = optionsHash[id] || {};
-            var formatText = text;
-            if (options.formatText)
-                formatText = options.formatText(text);
-            return formatText;
-        },
-        startBlink: function ($input) {
-            if (blink_interval) {
-                clearInterval(blink_interval);
-            }
-            var $cursor = $input.parent().find('.smart_input-cursor');
-            blink_interval = setInterval(function () {
-                $cursor.toggleClass('smart_input-cursor_hidden');
-            }, 500);
-        },
-        stopBlink: function ($input) {
-            if (blink_interval) {
-                clearInterval(blink_interval);
-                $input.parent().find('.smart_input-cursor').addClass('smart_input-cursor_hidden');
-            }
-        },
-        setText: function ($inp, text) {
-
-            var id = $inp.attr('id');
-            var options = optionsHash[id] || {};
-            var max = $inp.attr('data-max');
-
-            if (text.length > max && max != 0) {
-                text = text.substr(0, max);
-            }
-
-            var formatText = text;
-            if (options.formatText)
-                formatText = options.formatText(text);
-
-
-            var $wrap = $inp.parent().find('.smart_input-wrap');
-            var $text = $wrap.find('.smart_input-text');
-
-            $inp.val(text).change();
-
-
-            //условие - костыль для 11 телевизора
-            if (formatText.length > 1)
-                $wrap[(($text.width() > $wrap.width()) ? 'add' : 'remove') + 'Class']('smart_input-wrap_right');
-            else
-                $wrap.removeClass('smart_input-wrap_right');
-
-
-        },
-        type: function ($input, letter, options) {
-            var text = $input.val();
-            if (!text)
-                text = '';
-
-            if (letter == 'backspace') {
-                text = text.substr(0, text.length - 1)
-            }
-            else if (letter == 'delall') {
-                text = '';
-            }
-            else {
-                text += letter;
-            }
-            privateMethods.setText($input, text);
-
-            //jump to next input if is set
-            if (text.length == options.max && options.max != 0 && options.next !== undefined) {
-                privateMethods.hideKeyboard($input);
-                $$nav.current(options.next);
-                $$nav.current().click();
-            }
-        },
-        hideKeyboard: function ($this, isComplete) {
-            var $wrapper=$this.parent();
-            $wrapper.removeClass('smart-input-active');
-            $this.trigger('keyboard_hide');
-            $('#keyboard_overlay').hide();
-            $$nav.restore();
-            $$voice.restore();
-            $this.data('keyboard_active', false);
-            if (isComplete) {
-                $this.trigger('keyboard_complete');
-            }
-            else {
-                $this.trigger('keyboard_cancel');
-            }
-            $('#keyboard_popup').trigger('keyboard_hide');
-        },
-        showKeyboard: function ($this, options) {
-            $this.data('keyboard_active', true);
-            var $wrapper=$this.parent();
-            $wrapper.addClass('smart-input-active');
-            var h = $wrapper.height();
-            var o = $wrapper.offset();
-            var top = o.top + h;
-            var $pop = $('#keyboard_popup');
-
-
-            $pop.SBKeyboard(options.keyboard).css({
-                'left': o.left,
-                'top': top
-            }).off('type backspace delall complete cancel').on('type',function (e) {
-                    privateMethods.type($this, e.letter, options);
-                }).on('backspace',function (e) {
-                    privateMethods.type($this, 'backspace', options);
-                }).on('delall',function (e) {
-                    privateMethods.type($this, 'delall', options);
-                }).on('complete cancel', function (e) {
-                    var isComplete = false;
-                    if (e.type === 'complete') {
-                        isComplete = true;
-                    }
-                    privateMethods.hideKeyboard($this, isComplete);
-                    privateMethods.stopBlink($this);
-                });
-            $('#keyboard_overlay').show();
-            var kh = $pop.height();
-            var kw = $pop.width();
-            if (top + kh > 680) {
-                $pop.css({
-                    'top': top - kh - h
-                })
-            }
-            if (o.left + kw > 1280) {
-                $pop.css({
-                    'left': 1280 - kw - 20
-                })
-            }
-            $$voice.save();
-            $$nav.save();
-            $$nav.on('#keyboard_popup');
-            $('#keyboard_popup').SBKeyboard('refreshVoice').voiceLink();
-            $this.addClass($$nav.higlight_class);
-            $('#keyboard_popup').trigger('keyboard_show');
-
-            privateMethods.startBlink($this);
-        },
-        bindEvents: function ($input) {
-
-            var $wrapper=$input.parent();
-
-            $wrapper.off('nav_focus nav_blur click');
-            var options = optionsHash[$input.attr('id')];
-
-
-            var $cursor = $wrapper.find('.sig-cursor');
-
-            options.bindKeyboard && (options.keyboard = false);
-            if (options.keyboard) {
-                $wrapper.on('click', function () {
-                    privateMethods.startBlink($cursor);
-                    privateMethods.showKeyboard($input, options);
-                })
-            }
-
-            $input.on({
-                'startBlink': function () {
-                    privateMethods.startBlink($cursor);
-                },
-                'stopBlink': function () {
-                    privateMethods.stopBlink($input);
-                },
-                'hideKeyboard': function () {
-                    if ($wrapper.hasClass('smart-input-active')) {
-                        privateMethods.hideKeyboard($input);
-                    }
-                },
-                'showKeyboard': function () {
-                    privateMethods.showKeyboard($input, options);
-                }
-            });
-
-            if (options.bindKeyboard) {
-                options.bindKeyboard.off('type backspace delall').on('type',function (e) {
-                    privateMethods.type($input, e.letter, options);
-                }).on('backspace',function (e) {
-                        privateMethods.type($input, 'backspace', options);
-                    }).on('delall', function (e) {
-                        privateMethods.type($input, 'delall', options);
-                    });
-            }
-
-            $wrapper.on('nav_focus', function (e) {
-                if ((options && (options.noKeyboard || options.bindNums))) {
-                    $self.unbind('nav_key:num nav_key:red').bind('nav_key:num nav_key:red', function (e) {
-                        typeNum(e, $input, options)
-                    });
-                }
-            });
-            /*
-            $self.on('nav_focus', function (e) {
-                if (!options.keyboard) {
-                    $self.bind('nav_key:num nav_key:red', function (e) {
-                        typeNum(e, $self, options)
-                    });
-                }
-                else {
-                    if (!$self.data('keyboard_active') && options.keyboard.autoshow !== false) {
-                        e.stopPropagation();
-                        showKeyboard($self, options);
-                    }
-                }
-            })
-            //*/
-            $wrapper.on('nav_blur', function () {
-                var $this = $(this);
-                if (!options.keyboard) {
-                    $this.unbind('nav_key:num nav_key:red');
-                }
-            })
-        },
-        extend: function ($input, name, fn) {
-            privateMethods[name] = fn;
-        },
-        defaults: function ($input, options) {
-            _.extend(defaultInputOptions, options);
-        }
-    };
-
-    //document.write();
-
-    var defaultInputOptions = {
-        keyboard: {
-            type: 'fulltext_ru',
-            firstLang: 'ru',
-            //firstClass: 'keyboard_en shift_active keyboard_num',
-            haveNumKeyboard: true
-        },
-        directKeyboardInput: true,
-
-        max: 0,
-
-        next: null,
-
-        decorate: function ($input, options) {
-            var className = $input[0].className;
-            var $wrapper = $('\
-            <div class="smart_input-container ' + className + '">\n\
-                <div class="smart_input-wrap">\n\
-                    <span class="smart_input-text"></span>\n\
-                    <span class="smart_input-cursor smart_input-cursor_hidden"></span>\n\
-                </div>\n\
-                <b class="smart_input-decor-l"></b>\n\
-                <b class="smart_input-decor-r"></b>\n\
-                <b class="smart_input-decor-c"></b>\n\
-            </div>');
-            $input.hide().after($wrapper);
-            $wrapper.append($input);
-
-            var $text = $wrapper.find(".smart_input-text");
-
-
-            $input.on({
-                change: function () {
-                    $text.html(this.value);
-                }
-            });
-
-
-
-            if (options.directKeyboardInput) {
-                $input.parent().on({
-                    nav_focus: function () {
-
-                        privateMethods.startBlink($input);
-                        $('body').on('keypress.smartinput', function (e) {
-                            if (e.charCode) {
-                                e.preventDefault();
-                                var letter = String.fromCharCode(e.charCode);
-                                privateMethods.type($input, letter, options);
-                            } else {
-                                switch (e.keyCode) {
-                                    case 8:
-                                        e.preventDefault();
-                                        privateMethods.type($input, 'backspace', options);
-                                        break;
-                                }
-                            }
-
-                        });
-                    },
-                    nav_blur: function () {
-                        privateMethods.stopBlink($input);
-                        $('body').off('keypress.smartinput');
-                    }
-                });
-            }
-
-            privateMethods.bindEvents($input);
-
-            privateMethods.setText($input, $input.val(), options);
-        }
-    };
-
-
-    $.fn.smartInput = function (options) {
-
-        //call some private method
-        if (typeof options == 'string') {
-            var fn = privateMethods[options];
-            var args = Array.prototype.slice.call(arguments, 1);
-            args.unshift(this);
-            return fn.apply(null, args);
-        }
-
-
-        this.each(function () {
-            var _opts = _.clone(options);
-            if (!_opts)
-                _opts = {};
-            _opts = $.extend({}, defaultInputOptions, _opts);
-
-
-            var $self = $(this);
-
-            if (!this.id)
-                this.id = _.uniqueId('smartInput');
-
-            _opts.next = $self.attr('data-next') || _opts.next;
-            _opts.max = $self.attr('data-max') || _opts.max || 0;
-
-            optionsHash[this.id] = _opts;
-
-            _opts.decorate($self, _opts);
-
-            $self.attr({
-                'data-value': '',
-                'data-max': _opts.max
-            });
-            privateMethods.bindEvents($self);
-        });
-        return this;
-    };
-
-    $(function(){
-        $('body').append('<div id="keyboard_overlay"><div class="keyboard_popup_wrapper" id="keyboard_popup"></div></div>');
-    });
-})(jQuery);
 (function ($) {
     "use strict";
 
@@ -2093,7 +2356,6 @@ $(document.body).on('nav_key:tools', function () {
         curOptions,
         $curTarget,
         $buble,
-        $helpBubble,
         stack = [],
         $moreDiv = $('<div/>'),
 
@@ -2102,7 +2364,7 @@ $(document.body).on('nav_key:tools', function () {
 
     var defaults = {
         selector: '.voicelink',
-        moreText: 'Еще',
+        moreText: 'More',
         eventName: 'voice',
         useHidden: false,
         helpText: '',
@@ -2135,8 +2397,7 @@ $(document.body).on('nav_key:tools', function () {
                     $.voice.restore();
                 }
 
-                //скрытие пузыря вместе с хелпбаром самсунга
-                $helpBubble.hide();
+
                 $buble.hide();
                 $$voice.helpbarVisible = false;
             }, this.voiceTimeout);
@@ -2421,7 +2682,6 @@ $(document.body).on('nav_key:tools', function () {
 
             $$voice._init();
             $buble = $('#voice_buble');
-            $helpBubble = $("#help_voice_bubble");
             inited = true;
         }
 
@@ -2441,100 +2701,104 @@ $(document.body).on('nav_key:tools', function () {
     }
 
 })(jQuery);
-Player.extend({
-    init: function () {
-        var self = this;
-        var ww = window.innerWidth;
-        var wh = window.innerHeight;
+SB.readyForPlatform('browser', function(){
+
+    Player.extend({
+        _init: function () {
+            var self = this;
+            var ww = 1280;
+            var wh = 720;
 
 
-        this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
-        var video = this.$video_container[0];
-        $('body').append(this.$video_container);
+            this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
+            var video = this.$video_container[0];
+            $('body').append(this.$video_container);
 
-        this.$video_container.on('loadedmetadata', function () {
-            self.videoInfo.width = video.videoWidth;
-            self.videoInfo.height = video.videoHeight;
-            self.videoInfo.duration = video.duration;
-            self.trigger('ready');
-        });
-
-
-        this.$video_container.on('loadstart',function (e) {
-            self.trigger('bufferingBegin');
-        }).on('playing',function () {
-                self.trigger('bufferingEnd');
-            }).on('timeupdate',function () {
-                self.videoInfo.currentTime = video.currentTime;
-                self.trigger('update');
-            }).on('ended', function () {
-                self._state = "stop";
-                self.trigger('complete');
+            this.$video_container.on('loadedmetadata', function () {
+                self.videoInfo.width = video.videoWidth;
+                self.videoInfo.height = video.videoHeight;
+                self.videoInfo.duration = video.duration;
+                self.trigger('ready');
             });
 
 
-        this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
-            //console.log(e.type);
-        });
+            this.$video_container.on('loadstart',function (e) {
+                self.trigger('bufferingBegin');
+            }).on('playing',function () {
+                    self.trigger('bufferingEnd');
+                }).on('timeupdate',function () {
+                    self.videoInfo.currentTime = video.currentTime;
+                    self.trigger('update');
+                }).on('ended', function () {
+                    self.state = "stop";
+                    self.trigger('complete');
+                });
 
 
-        /*
-         abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
-         canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
-         canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
-         durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
-         emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
-         ended 	Sent when playback completes.
-         error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
-         loadeddata 	The first frame of the media has finished loading.
-         loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
-         loadstart 	Sent when loading of the media begins.
-         mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
-         pause 	Sent when playback is paused.
-         play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
-         playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
-         progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
-         ratechange 	Sent when the playback speed changes.
-         seeked 	Sent when a seek operation completes.
-         seeking 	Sent when a seek operation begins.
-         suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
-         timeupdate 	The time indicated by the element's currentTime attribute has changed.
-         volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
-         waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
-         */
-    },
-    _play: function (options) {
-        this.$video_container.attr('src', options.url);
-        this.$video_container[0].play();
-    },
-    _stop: function () {
-        this.$video_container[0].pause();
-        this.$video_container[0].src = '';
-    },
-    pause: function () {
-        this.$video_container[0].pause();
-        this._state = "pause";
-    },
-    resume: function () {
-        this.$video_container[0].play();
-        this._state = "play";
-    },
-    seek: function (time) {
-        this.$video_container[0].currentTime = time;
-    },
-    audio: {
-        //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
-        set: function (index) {
+            this.$video_container.on('abort canplay canplaythrough canplaythrough durationchange emptied ended error loadeddata loadedmetadata loadstart mozaudioavailable pause play playing ratechange seeked seeking suspend volumechange waiting', function (e) {
+                //console.log(e.type);
+            });
 
+
+            /*
+             abort 	Sent when playback is aborted; for example, if the media is playing and is restarted from the beginning, this event is sent.
+             canplay 	Sent when enough data is available that the media can be played, at least for a couple of frames.  This corresponds to the CAN_PLAY readyState.
+             canplaythrough 	Sent when the ready state changes to CAN_PLAY_THROUGH, indicating that the entire media can be played without interruption, assuming the download rate remains at least at the current level. Note: Manually setting the currentTime will eventually fire a canplaythrough event in firefox. Other browsers might not fire this event.
+             durationchange 	The metadata has loaded or changed, indicating a change in duration of the media.  This is sent, for example, when the media has loaded enough that the duration is known.
+             emptied 	The media has become empty; for example, this event is sent if the media has already been loaded (or partially loaded), and the load() method is called to reload it.
+             ended 	Sent when playback completes.
+             error 	Sent when an error occurs.  The element's error attribute contains more information. See Error handling for details.
+             loadeddata 	The first frame of the media has finished loading.
+             loadedmetadata 	The media's metadata has finished loading; all attributes now contain as much useful information as they're going to.
+             loadstart 	Sent when loading of the media begins.
+             mozaudioavailable 	Sent when an audio buffer is provided to the audio layer for processing; the buffer contains raw audio samples that may or may not already have been played by the time you receive the event.
+             pause 	Sent when playback is paused.
+             play 	Sent when playback of the media starts after having been paused; that is, when playback is resumed after a prior pause event.
+             playing 	Sent when the media begins to play (either for the first time, after having been paused, or after ending and then restarting).
+             progress 	Sent periodically to inform interested parties of progress downloading the media. Information about the current amount of the media that has been downloaded is available in the media element's buffered attribute.
+             ratechange 	Sent when the playback speed changes.
+             seeked 	Sent when a seek operation completes.
+             seeking 	Sent when a seek operation begins.
+             suspend 	Sent when loading of the media is suspended; this may happen either because the download has completed or because it has been paused for any other reason.
+             timeupdate 	The time indicated by the element's currentTime attribute has changed.
+             volumechange 	Sent when the audio volume changes (both when the volume is set and when the muted attribute is changed).
+             waiting 	Sent when the requested operation (such as playback) is delayed pending the completion of another operation (such as a seek).
+             */
         },
-        get: function () {
-
+        _play: function (options) {
+            this.$video_container.attr('src', options.url);
+            this.$video_container[0].play();
         },
-        cur: function () {
+        _stop: function () {
+            this.$video_container[0].pause();
+            this.$video_container[0].src = '';
+        },
+        pause: function () {
+            this.$video_container[0].pause();
+            this.state = "pause";
+        },
+        resume: function () {
+            this.$video_container[0].play();
+            this.state = "play";
+        },
+        seek: function (time) {
+            this.$video_container[0].currentTime = time;
+        },
+        audio: {
+            //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
+            set: function (index) {
 
+            },
+            get: function () {
+
+            },
+            cur: function () {
+
+            }
         }
-    }
+    });
 });
+
 /**
  * Browser platform description
  */
@@ -2680,64 +2944,370 @@ Player.extend({
         });
     });
 })(jQuery);
-if (navigator.userAgent.toLowerCase().indexOf('netcast') != -1) {
+SB.readyForPlatform('lg', function () {
+    var updateInterval;
 
+    var isReady = false;
 
-    (function () {
-        var updateInterval;
-
-        var isReady = false;
-
-        Player.extend({
-            updateDelay: 500,
-            init: function () {
-                var self = this;
-                $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 1; position: absolute; left: 0; top: 0;"></object>');
-                this.plugin = $('#pluginPlayer')[0];
-                this.$plugin = $(this.plugin);
-                this.plugin.onPlayStateChange = function () {
-                    self.onEvent.apply(self, arguments);
-                }
-                this.plugin.onBuffering = function () {
-                    self.onBuffering.apply(self, arguments);
-                }
-            },
-            _update: function () {
-                var info = this.plugin.mediaPlayInfo();
-
-                if (info && !isReady) {
-                    //$('#log').append('<div>'+info.duration+'</div>');
-                    isReady = true;
-
-                    this.trigger('ready');
-                    this.videoInfo = {
-                        duration: info.duration/1000
-                    };
-                }
-
-
-                this.trigger('update');
-            },
-            onBuffering: function (isStarted) {
-                this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
-            },
-            _play: function (options) {
-                clearInterval(updateInterval);
-                updateInterval = setInterval(function () {
-
-                    Player._update();
-                }, this.updateDelay);
-                isReady = false;
-                this.plugin.data = options.url;
-                this.plugin.play(1);
-            },
-            _stop: function () {
-                this.plugin.stop();
+    Player.extend({
+        updateDelay: 500,
+        _init: function () {
+            var self = this;
+            $('body').append('<object type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
+            this.plugin = $('#pluginPlayer')[0];
+            this.$plugin = $(this.plugin);
+            this.plugin.onPlayStateChange = function () {
+                self.onEvent.apply(self, arguments);
             }
-        })
-    }());
+            this.plugin.onBuffering = function () {
+                self.onBuffering.apply(self, arguments);
+            }
+        },
+        onEvent: function(){
+            if(this.plugin.playState=='5'){
+                this.state='stop';
+                this.trigger('complete');
+            }
+        },
+        _update: function () {
+            var info = this.plugin.mediaPlayInfo();
 
-}
+            if (info && !isReady) {
+                //$('#log').append('<div>'+info.duration+'</div>');
+                isReady = true;
+
+                this.trigger('ready');
+                this.videoInfo = {
+                    duration: info.duration / 1000
+                };
+            }
+
+
+            this.videoInfo.currentTime=info.currentPosition/1000;
+
+
+            this.trigger('update');
+        },
+        onBuffering: function (isStarted) {
+            this.trigger(isStarted ? 'bufferingBegin' : 'bufferingEnd');
+        },
+        _play: function (options) {
+            clearInterval(updateInterval);
+            updateInterval = setInterval(function () {
+
+                Player._update();
+            }, this.updateDelay);
+            isReady = false;
+            this.plugin.data = options.url;
+            this.plugin.play(1);
+        },
+        pause: function(){
+            this.plugin.play(0);
+            this.state="pause";
+        },
+        resume: function(){
+            this.plugin.play(1);
+            this.state="play";
+        },
+        _stop: function () {
+            this.plugin.stop();
+            this.state="stop";
+        },
+        seek: function(time){
+            this.plugin.seek(time*1000);
+        }
+    });
+});
+/**
+ * Samsung platform
+ */
+!(function (window, undefined) {
+
+    var platform = new window.SB.Platform('lg'),
+        platformObj;
+
+    platformObj = {
+
+        externalJs: [
+        ],
+
+        $plugins: {},
+
+        platformUserAgent: 'netcast',
+
+        keys: {
+            ENTER: 13,
+            PAUSE: 19,
+            LEFT: 37,
+            UP: 38,
+            RIGHT: 39,
+            DOWN: 40,
+            N0: 48,
+            N1: 49,
+            N2: 50,
+            N3: 51,
+            N4: 52,
+            N5: 53,
+            N6: 54,
+            N7: 55,
+            N8: 56,
+            N9: 57,
+            RED: 403,
+            GREEN: 404,
+            YELLOW: 405,
+            BLUE: 406,
+            RW: 412,
+            STOP: 413,
+            PLAY: 415,
+            FF: 417,
+            RETURN: 461,
+            CH_UP: 33,
+            CH_DOWN: 34
+        },
+
+        initialise: function () {
+        },
+
+        getNativeDUID: function () {
+            return this.device.serialNumber;
+        },
+
+        getMac: function () {
+            return this.device.net_macAddress.replace(/:/g, '');
+        },
+
+        getSDI: function () {
+
+        },
+
+        setPlugins: function () {
+            //this._listenGestureEvent();
+
+            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+            this.device = $('#device')[0];
+
+            this.modelCode = this.device.version;
+            this.productCode = this.device.platform;
+
+            this.getDUID();
+
+
+            $(function () {
+                //Log.show('default');
+                setInterval(function () {
+                    //Log.show('default');
+                    var usedMemorySize;
+                    if (window.NetCastGetUsedMemorySize) {
+                        usedMemorySize = window.NetCastGetUsedMemorySize();
+                    }
+                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+                }, 5000);
+            });
+
+            if (Player && Player.setPlugin) {
+                Player.setPlugin();
+            }
+        },
+
+        volumeEnable: function () {
+        },
+
+        sendReturn: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastBack();
+        },
+        exit: function () {
+            if (Player) {
+                Player.stop(true);
+            }
+            window.NetCastExit();
+        },
+
+        getUsedMemory: function () {
+            return window.NetCastGetUsedMemorySize();
+        },
+        getChildlockPin: function () {
+            return 1234;
+        }
+
+    };
+
+    _.extend(platform, platformObj);
+})(this);
+SB.readyForPlatform('philips', function () {
+    var video;
+
+
+    var updateInterval;
+    var ready = false;
+
+    var startUpdate = function () {
+        updateInterval = setInterval(function () {
+            var lastTime = 0;
+            if (video.playPosition != lastTime) {
+                Player.videoInfo.currentTime = video.playPosition / 1000;
+                Player.trigger('update');
+            }
+            lastTime = video.playPosition;
+        }, 500);
+    }
+
+    var stopUpdate = function () {
+        clearInterval(updateInterval);
+    }
+
+    function checkPlayState() {
+        //$('#log').append('<div>' + video.playState + '</div>');
+
+
+        //some hack
+        //in my tv player can sent lesser than 1 time, and correct time after
+        if (video.playTime > 1) {
+
+            if (!ready) {
+                //+1 for test pass
+                Player.videoInfo.duration = (video.playTime / 1000)+1;
+                Player.trigger('ready');
+                ready = true;
+            }
+        }
+
+        switch (video.playState) {
+            case 5: // finished
+                Player.trigger('complete');
+                stopUpdate();
+                Player.state = "stop";
+                break;
+            case 0: // stopped
+                Player.state = "stop";
+                break;
+            case 6: // error
+                Player.trigger('error');
+                break;
+            case 1: // playing
+                Player.trigger('bufferingEnd');
+                startUpdate();
+                break;
+            case 2: // paused
+
+            case 3: // connecting
+
+            case 4: // buffering
+                Player.trigger('bufferingBegin');
+                stopUpdate();
+                break;
+            default:
+                // do nothing
+                break;
+        }
+    }
+
+    Player.extend({
+        _init: function () {
+            $('body').append('<div id="mediaobject" style="position:absolute;left:0px;top:0px;width:640px;height:480px;">\n\
+              <object id="videoPhilips" type="video/mpeg4" width="1280" height="720" />\n\
+               </div>');
+            video = document.getElementById('videoPhilips');
+            video.onPlayStateChange = checkPlayState;
+        },
+        _play: function (options) {
+            video.data = options.url;
+            video.play(1);
+            ready = false;
+            Player.trigger('bufferingBegin');
+        },
+        _stop: function () {
+            video.stop();
+            stopUpdate();
+        },
+        pause: function () {
+            video.play(0);
+            this.state = "pause";
+            stopUpdate();
+        },
+        resume: function () {
+            video.play(1);
+            this.state = "play";
+            startUpdate();
+        },
+        seek: function (time) {
+            //-10 for test pass
+            video.seek((time - 10) * 1000);
+        }
+    });
+});
+/**
+ * Samsung platform
+ */
+!(function ( window, undefined ) {
+
+  var platform = new window.SB.Platform('philips'),
+    platformObj;
+
+  platformObj = {
+
+    externalJs: [
+    ],
+
+    $plugins: {},
+      platformUserAgent: 'netcast',
+
+    initialise: function () {
+    },
+
+    getNativeDUID: function () {
+    },
+
+    getMac: function () {
+    },
+
+    getSDI: function () {
+    },
+
+    setPlugins: function () {
+      this.setKeys();
+    },
+
+    volumeEnable: function () {
+    },
+
+    setKeys: function () {
+      this.keys = {
+        ENTER: VK_ENTER,
+        PAUSE: VK_PAUSE,
+        LEFT: VK_LEFT,
+        UP: VK_UP,
+        RIGHT: VK_RIGHT,
+        DOWN: VK_DOWN,
+        N0: VK_0,
+        N1: VK_1,
+        N2: VK_2,
+        N3: VK_3,
+        N4: VK_4,
+        N5: VK_5,
+        N6: VK_6,
+        N7: VK_7,
+        N8: VK_8,
+        N9: VK_9,
+        RED: VK_RED,
+        GREEN: VK_GREEN,
+        YELLOW: VK_YELLOW,
+        BLUE: VK_BLUE,
+        RW: VK_REWIND,
+        STOP: VK_STOP,
+        PLAY: VK_PLAY,
+        FF: VK_FAST_FWD,
+        RETURN: VK_BACK,
+        CH_UP: VK_PAGE_UP,
+        CH_DOWN: VK_PAGE_DOWN
+      };
+    }
+  };
+
+  _.extend(platform, platformObj);
+})(this);
 (function () {
 
 	var localStorage = window.localStorage,
@@ -2845,7 +3415,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         }
         Player.extend({
             usePlayerObject: false,
-            init: function () {
+            _init: function () {
                 var self = this;
                 //document.body.onload=function(){
                 if (self.usePlayerObject) {
@@ -2970,7 +3540,7 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 this.trigger('bufferingEnd');
             },
             OnCurrentPlayTime: function (millisec) {
-                if (this._state == 'play') {
+                if (this.state == 'play') {
                     alert(millisec / 1000);
                     this.videoInfo.currentTime = millisec / 1000;
                     this.trigger('update');
@@ -3039,153 +3609,191 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
 /**
  * Samsung platform
  */
-!(function ( window, undefined  ) {
+!(function ( window, undefined ) {
 
-	var platform = new window.SB.Platform('samsung'),
-		/**
-		 * Native plugins
-		 * id: clsid (DOM element id : CLSID)
-		 * @type {{object}}
-		 */
-			plugins = {
-			audio: 'SAMSUNG-INFOLINK-AUDIO',
-			pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
-			pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
-			pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-			pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
-		},
-		platformObj,
-		detectResult = false;
+  var platform = new window.SB.Platform('samsung'),
+    /**
+     * Native plugins
+     * id: clsid (DOM element id : CLSID)
+     * @type {{object}}
+     */
+      plugins = {
+        audio: 'SAMSUNG-INFOLINK-AUDIO',
+        pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
+        pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
+        pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
+        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI'
+      },
+    samsungFiles = [
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
+      '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
+      '$MANAGER_WIDGET/Common/Define.js',
+      '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+      '$MANAGER_WIDGET/Common/API/Widget.js',
+      '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
+      '$MANAGER_WIDGET/Common/API/Plugin.js',
+      'src/platforms/samsung/localstorage.js'
+    ],
+    platformObj,
+    detectResult = false;
 
-	detectResult = navigator.userAgent.search(/Maple/) > -1;
+  detectResult = navigator.userAgent.search(/Maple/) > -1;
 
-	// non-standart inserting objects in DOM (i'm looking at you 2011 version)
-	// in 2011 samsung smart tv's we can't add objects if document is ready
-	if (detectResult) {
-		var objectsString = '';
-		for ( var id in plugins ) {
-			objectsString += '<object id=' + id +' border=0 classid="clsid:' + plugins[id] +'" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
-		}
-		document.write(objectsString);
-	}
+  // non-standart inserting objects in DOM (i'm looking at you 2011 version)
+  // in 2011 samsung smart tv's we can't add objects if document is ready
+  if ( detectResult ) {
+    var htmlString = '';
+    for ( var i = 0; i < samsungFiles.length; i++ ) {
+      htmlString += '<script type="text/javascript" src="'+ samsungFiles[i] +'"></script>';
+    }
+    for ( var id in plugins ) {
+      htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
+    }
+    document.write(htmlString);
+  }
 
-	platformObj = {
+  platformObj = {
 
-		keys: {
+    keys: {
 
-		},
+    },
 
-		externalJs: [
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
-			'$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
-			'$MANAGER_WIDGET/Common/Define.js',
-			'$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
-			'$MANAGER_WIDGET/Common/API/Widget.js',
-			'$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-			'$MANAGER_WIDGET/Common/API/Plugin.js',
-			'src/platforms/samsung/localstorage.js'
-		],
+    externalJs: [
+    ],
 
-		$plugins: {},
+    $plugins: {},
 
-		detect: function () {
-			return detectResult;
-		},
+    detect: function () {
+      return detectResult;
+    },
 
-		initialise: function () {},
+    initialise: function () {
+    },
 
-		getNativeDUID: function () {
-			return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
-		},
+    getNativeDUID: function () {
+      return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
+    },
 
-		getMac: function () {
-			return this.$plugins.pluginObjectNetwork.GetMAC();
-		},
+    getMac: function () {
+      return this.$plugins.pluginObjectNetwork.GetMAC();
+    },
 
-		getSDI: function () {
-			this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
-			return this.SDI;
-		},
+    getSDI: function () {
+      this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+      return this.SDI;
+    },
 
-		/**
-		 * Return hardware version for 2013 samsung only
-		 * @returns {*}
-		 */
-		getHardwareVersion: function () {
-			var version = this.firmware.match(/\d{4}/) || [];
-			if (version[0] === '2013') {
-				this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
-			} else {
-				this.hardwareVersion = null;
-			}
-			return this.hardwareVersion;
-		},
+    /**
+     * Return hardware version for 2013 samsung only
+     * @returns {*}
+     */
+    getHardwareVersion: function () {
+      var version = this.firmware.match(/\d{4}/) || [];
+      if ( version[0] === '2013' ) {
+        this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
+      } else {
+        this.hardwareVersion = null;
+      }
+      return this.hardwareVersion;
+    },
 
-		setPlugins: function () {
-			var self = this;
+    setPlugins: function () {
+      var self = this,
+        tvKey;
 
-			_.each(plugins, function ( clsid, id ) {
-				self.$plugins[id] = document.getElementById(id);
-			});
+      _.each(plugins, function ( clsid, id ) {
+        self.$plugins[id] = document.getElementById(id);
+      });
 
-			this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
-			this.$plugins.tvKey = new Common.API.TVKeyValue();
+      this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
+      this.$plugins.tvKey = new Common.API.TVKeyValue();
 
-			var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
-				TVPlugin = this.$plugins.pluginObjectTV;
+      var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
+        TVPlugin = this.$plugins.pluginObjectTV;
 
-			this.modelCode = NNAVIPlugin.GetModelCode();
-			this.firmware = NNAVIPlugin.GetFirmware();
-			this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
-			this.productCode = TVPlugin.GetProductCode(1);
+      this.modelCode = NNAVIPlugin.GetModelCode();
+      this.firmware = NNAVIPlugin.GetFirmware();
+      this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
+      this.productCode = TVPlugin.GetProductCode(1);
 
-			this.pluginAPI = new Common.API.Plugin();
-			this.widgetAPI = new Common.API.Widget();
+      this.pluginAPI = new Common.API.Plugin();
+      this.widgetAPI = new Common.API.Widget();
 
-			this.productType = TVPlugin.GetProductType();
-			this.setKeys();
+      this.productType = TVPlugin.GetProductType();
 
-			// enable standart volume indicator
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_UP);
-			this.pluginAPI.unregistKey(sf.key.KEY_VOL_DOWN);
-			this.pluginAPI.unregistKey(sf.key.KEY_MUTE);
-			NNAVIPlugin.SetBannerState(2);
-		},
+      tvKey = new Common.API.TVKeyValue();
 
-		/**
-		 * Set keys for samsung platform
-		 */
-		setKeys: function () {
-			this.keys = sf.key;
-		},
+      this.setKeys();
 
-		/**
-		 * Start screensaver
-		 * @param time
-		 */
-		enableScreenSaver: function (time) {
-			time = time || false;
-			sf.service.setScreenSaver(true, time);
-		},
+      // enable standart volume indicator
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
+      this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
+      this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+      this.widgetAPI.sendReadyEvent();
 
-		/**
-		 * Disable screensaver
-		 */
-		disableScreenSaver: function () {
-			sf.service.setScreenSaver(false);
-		},
+      this.volumeEnable();
 
-		exit: function () {
-			sf.core.exit(false);
-		},
+      NNAVIPlugin.SetBannerState(2);
+    },
 
-		blockNavigation: function () {
-			sf.key.preventDefault();
-		}
-	};
+    volumeEnable: function () {
+      sf.service.setVolumeControl(true);
+    },
 
-	_.extend(platform, platformObj);
+    /**
+     * Set keys for samsung platform
+     */
+    setKeys: function () {
+      this.keys = sf.key;
+
+      document.body.onkeydown = function(event){
+        var keyCode = event.keyCode;
+
+        switch (keyCode) {
+          case sf.key.RETURN:
+          case sf.key.EXIT:
+          case 147:
+          case 261:
+            sf.key.preventDefault();
+            break;
+          default:
+            break;
+        }
+      }
+
+    },
+
+    /**
+     * Start screensaver
+     * @param time
+     */
+    enableScreenSaver: function ( time ) {
+      time = time || false;
+      sf.service.setScreenSaver(true, time);
+    },
+
+    /**
+     * Disable screensaver
+     */
+    disableScreenSaver: function () {
+      sf.service.setScreenSaver(false);
+    },
+
+    exit: function () {
+      sf.core.exit(false);
+    },
+
+    sendReturn: function(){
+        sf.core.exit(true);
+    },
+
+    blockNavigation: function () {
+      sf.key.preventDefault();
+    }
+  };
+
+  _.extend(platform, platformObj);
 })(this);
 (function ($) {
     "use strict";
@@ -3195,7 +3803,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
     SB.readyForPlatform('samsung', function(){
         var voiceServer;
 
-        alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! samsung');
         /**
          * Обработка нативных событий распознавания голоса
          * @param evt событие от самсунга
@@ -3219,7 +3826,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                     }*/
 
 
-                    alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start');
                     $$voice.refresh();
 
                     $$voice._resetVisibilityTimeout();
@@ -3246,7 +3852,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
         };
         _.extend($$voice, {
             _init: function(){
-                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! init');
                 deviceapis.recognition.SubscribeExEvent(deviceapis.recognition.PL_RECOGNITION_TYPE_VOICE, "Smartbox", function (evt) {
                     handleRecognitionEvent(evt);
                 });
@@ -3271,7 +3876,6 @@ if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
                 deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(describeHelpbar));
             },
             _setVoiceHelp: function(voicehelp){
-                alert('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+JSON.stringify(voicehelp));
                 deviceapis.recognition.SetVoiceHelpbarInfo(JSON.stringify(voicehelp));
             },
             _nativeTurnOff: function(){

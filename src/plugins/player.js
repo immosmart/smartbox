@@ -1,10 +1,21 @@
+/**
+ * Player plugin for smartbox
+ */
+
 (function (window) {
 
     var updateInterval, curAudio = 0;
 
-    //emulates events after `play` method called
+
+
+
+    /**
+     * emulates events after `play` method called
+     * @private
+     * @param self Player
+     */
     var stub_play = function (self) {
-        self._state = "play";
+        self.state = "play";
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -15,28 +26,57 @@
         }, 500);
     }
 
+    var inited=false;
+
     var Player = window.Player = {
+
         /**
-         * inserts player object to DOM and do some init work
+         * Inserts player object to DOM and do some init work
+         * @examples
+         * Player._init(); // run it after SB.ready
          */
-        init: function () {
+        _init: function () {
+
             //no need to do anything because just stub
         },
         /**
          * current player state ["play", "stop", "pause"]
          */
-        _state: 'stop',
+        state: 'stop',
         /**
          * Runs some video
-         * @param options object {
-         *      url: "path to video file/stream"
-         *      from: optional {Number} time in seconds where need start playback
-         *      type: optional {String} should be set to "hls" if stream is hls
+         * @param {Object} options {url: "path", type: "hls", from: 0
          * }
+         * @examples
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * }); // => runs video
+         *
+         * Player.play({
+         * url: "movie.mp4"
+         * from: 20
+         * }); // => runs video from 20 second
+         *
+         * Player.play({
+         * url: "stream.m3u8",
+         * type: "hls"
+         * }); // => runs stream
          */
         play: function (options) {
+            if(!inited){
+                this._init();
+                inited=true;
+            }
+
+            if(typeof options=="string"){
+                options={
+                    url: options
+                }
+            }
+
             this.stop();
-            this._state = 'play';
+            this.state = 'play';
             this._play(options);
         },
         _play: function () {
@@ -57,32 +97,49 @@
         },
         /**
          * Stop video playback
-         * @param silent {Boolean} if flag is set, player will no trigger "stop" event
+         * @param {Boolean} silent   if flag is set, player will no trigger "stop" event
+         * @examples
+         *
+         * Player.stop(); // stop video
+         *
+         * App.onDestroy(function(){
+         *      Player.stop(true);
+         * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
-            if (this._state != 'stop') {
+            if (this.state != 'stop') {
                 this._stop();
                 if (!silent) {
                     this.trigger('stop');
                 }
             }
-            this._state = 'stop';
+            this.state = 'stop';
         },
         /**
          * Pause playback
+         * @examples
+         * Player.pause(); //paused
          */
         pause: function () {
             this._stop();
-            this._state = "pause";
+            this.state = "pause";
         },
         /**
          * Resume playback
+         * @examples
+         * Player.pause(); //resumed
          */
         resume: function () {
             stub_play(this);
         },
+        /**
+         * Toggles pause/resume
+         * @examples
+         *
+         * Player.togglePause(); // paused or resumed
+         */
         togglePause: function () {
-            if (this._state == "play") {
+            if (this.state == "play") {
                 this.pause();
             } else {
                 this.resume();
@@ -93,12 +150,10 @@
         },
         /**
          * Converts time in seconds to readable string in format H:MM:SS
-         * @param seconds {Number} time to convert
+         * @param {Number} seconds time to convert
          * @returns {String} result string
-         * Example:
-         * $('#duration').html(Player.formatTime(PLayer.videoInfo.duration));
-         * Result:
-         * <div id="duration">1:30:27</div>
+         * @examples
+         * Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
          */
         formatTime: function (seconds) {
             var hours = Math.floor(seconds / (60 * 60));
@@ -114,7 +169,9 @@
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
-
+        /**
+         * Hash contains info about current video
+         */
         videoInfo: {
             /**
              * Total video duration in seconds
@@ -133,12 +190,12 @@
              */
             currentTime: 0
         },
+
         /**
-         * If set to true Player.init() calls after DOM ready
-         */
-        autoInit: false,
-        /**
-         * @param seconds time to seek
+         *
+         * @param {Number} seconds time to seek
+         * @examples
+         * Player.seek(20); // seek to 20 seconds
          */
         seek: function (seconds) {
             var self = this;
@@ -206,14 +263,6 @@
 
     Player.extend(eventProto);
 
-
-    $(function () {
-        if (Player.autoInit) {
-            $('body').on('load', function () {
-                Player.init();
-            });
-        }
-    });
 
 
 }(this));
