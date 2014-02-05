@@ -9,10 +9,23 @@
 * <a href="#sbcurrentplatformduid">`SB.currentPlatform.DUID`</a>
 * <a href="#sbconfigduid">`SB.config.DUID`</a>
 * <a href="#sbcurrentplatformname">`SB.currentPlatform.name`</a>
+* 
+<a href="#Публичные-методы">`Публичные методы`</a>
+* <a href="#detect">`detect`</a>
+
 
 <a href="#Добавление-новой-платформы">`Добавление новой платформы`</a>
  
 ##Публичные свойства
+
+###`SB.Platform.platformUserAgent`
+
+*String*: строка используемая для детектирования платформы с помощью `userAgent`.
+
+```js
+SB.currentPlatform.keys.TOOLS; //=> 32
+```
+
 
 ###`SB.currentPlatform.keys`
 
@@ -22,6 +35,10 @@
 SB.currentPlatform.keys.TOOLS; //=> 32
 ```
 
+
+###`SB.currentPlatform.DUID`
+
+*String*: содержит уникальный ID устройства
 
 ###`SB.currentPlatform.DUID`
 
@@ -47,6 +64,18 @@ SB.ready(function(){
 ```
 
 
+##Публичные методы
+
+
+###detect
+
+Определяет платформу. По умолчанию ищет строку `SB.Platrorm.platformUserAgent` в `navigator.userAgent`. 
+
+#### Возвращает
+
+*Boolean*: `true` при успешном детекте и `false` при не успешном.
+
+
 ###`SB.currentPlatform.name`
 
 *String*: название платформы (samsung, lg, philips, etc...)
@@ -56,11 +85,17 @@ SB.ready(function(){
 
 Вы можете добавить новую платформу, создавая объект `SB.Platform`. 
 
+Далее, если вы хотите использовать определениче через `userAgent` нужно переопределить свойство `platformUserAgent`. Если какой-то другой способ, то нужно переопределить метод `detect` и вернуть `true`, если окружение удовлетворяет каким-то условиям.
+
 ```js
   var platform = new SB.Platform('philips'),
     platformObj;
 
   platformObj = {
+    platformUserAgent: 'nettv',
+    detect: function(){
+      return !!window.opera;
+    }
     //TODO: override some methods
   };
   
