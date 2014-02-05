@@ -1,6 +1,6 @@
 # Platform
 
-Базовый класс через который вызываются нативные методы устройства. Вы можете расширить его и добавить свою новую платформу.
+Базовый класс через который вызываются нативные методы устройства. Вы можете расширить его и добавить свою новую платформу. После `SB.ready` текущая платформа уже определена и хранится в `SB.currentPlatform`.
 
 ###Оглавление
 
@@ -10,6 +10,7 @@
 * <a href="#sbconfigduid">`SB.config.DUID`</a>
 * <a href="#sbcurrentplatformname">`SB.currentPlatform.name`</a>
 
+<a href="#Добавление-новой-платформы">`Добавление новой платформы`</a>
  
 ##Публичные свойства
 
@@ -49,3 +50,19 @@ SB.ready(function(){
 ###`SB.currentPlatform.name`
 
 *String*: название платформы (samsung, lg, philips, etc...)
+
+
+##Добавление новой платформы
+
+Вы можете добавить новую платформу, создавая объект `SB.Platform`. 
+
+```js
+  var platform = new SB.Platform('philips'),
+    platformObj;
+
+  platformObj = {
+    //TODO: override some methods
+  };
+  
+  _.extend(platform, platformObj);
+```
