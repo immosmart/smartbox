@@ -1,8 +1,8 @@
 # Platform
 
-Базовый класс через который вызываются нативные методы устройства. Вы можете расширить его и добавить свою новую платформу. После `SB.ready` текущая платформа уже определена и хранится в `SB.currentPlatform`.
+Device native methods are called through the base class. You can extend it and add your own new platform. After `SB.ready` a current platform has been defined already and is kept in `SB.currentPlatform`.
 
-###Оглавление
+###Contents
 
 <a href="#public-properies">`Public properies`</a>
 * <a href="#sbcurrentplatformkeys">`SB.currentPlatform.keys`</a>
@@ -16,7 +16,7 @@
 
 ###`SB.currentPlatform.keys`
 
-*Plain object*: хеш, содержащий коды клавиш и их названия. 
+*Plain object*: hash containing keys codes and them names. 
 
 ```js
 SB.currentPlatform.keys.TOOLS; //=> 32
@@ -25,19 +25,19 @@ SB.currentPlatform.keys.TOOLS; //=> 32
 
 ###`SB.currentPlatform.DUID`
 
-*String*: содержит уникальный ID устройства
+*String*: contains a unique device ID
 
 ###`SB.config.DUID` 
 
-*String*: настройка которая показывает каким способом приложение будет получать DUID. Значение по умолчанию: `real`.
+*String*: shows which method is used to get DUID for application. By default: `real`.
 
-`real`: используется метод SB.Platform.getNativeDUID()
+`real`: the method SB.Platform.getNativeDUID() is used
 
-`mac`: используется метод MAC адрес устройства, доступно для LG и Samsung,
+`mac`: the method device MAC-address is used, available for LG and Samsung,
 
-`random`: при каждом запуске приложения будет сгенерирован новый DUID
+`random`: a new DUID is generated each application starting
 
-`[Другое значение]`: будет использовано в качестве DUID. Например: 
+`[other value]`: will be used as DUID. For example: 
 
 ```js
 SB.config.DUID="fgsfds";
@@ -49,12 +49,12 @@ SB.ready(function(){
 
 ###`SB.currentPlatform.name`
 
-*String*: название платформы (samsung, lg, philips, etc...)
+*String*: platform name (samsung, lg, philips, etc...)
 
 
 ##New platform adding
 
-Вы можете добавить новую платформу, создавая объект `SB.Platform`. 
+You can add a new plaform creating the object `SB.Platform`. 
 
 ```js
   var platform = new SB.Platform('philips'),
