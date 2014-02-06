@@ -2,13 +2,13 @@
 
 ###Contents
 
-<a href="#Публичные-события">`Public events`</a>
+<a href="#Public events">`Public events`</a>
 * <a href="#ready">`ready`</a>
 * <a href="#bufferingbegin-bufferingend">`bufferingBegin, bufferingEnd`</a>
 * <a href="#stop">`stop`</a>
 * <a href="#complete">`complete`</a>
 
-<a href="#Публичные-свойства">`Public properties`</a>
+<a href="#Public properties">`Public properties`</a>
 * <a href="#playerstate">`Player.state`</a>
 * <a href="#playervideoinfoduration">`Player.videoInfo.duration`</a>
 * <a href="#playervideoinfocurrenttime">`Player.videoInfo.currentTime`</a>
@@ -16,7 +16,7 @@
 * <a href="#playervideoinfoheight">`Player.videoInfo.height`</a>
 * <a href="#useplayerobject">`Player.usePlayerObject`</a>
 
-<a href="#публичные-методы">`Public methods`</a>
+<a href="#Public methods">`Public methods`</a>
 * <a href="#playerplayoptions">`Player.play(options)`</a>
 * <a href="#playerstopsilent">`Player.stop([silent])`</a>
 * <a href="#playerpause">`Player.pause()`</a>
@@ -50,7 +50,7 @@ Player.on('ready', function(){
 
 События отправляются когда начинается и заканчивается буферизация видео, при слабом коннекте или после перемотки.
 
-#### Пример
+#### Example
 
 ```js
 var $loadingIndicator=$('#loading_indicator');
@@ -70,7 +70,7 @@ Player.on('bufferingEnd', function(){
 
 Отправляется когда было остановлено воспроизведение.
 
-#### Пример
+#### Example
 
 ```js
 Player.on('stop', function(){
@@ -84,7 +84,7 @@ Player.on('stop', function(){
 
 Отправляется когда видео файл доиграл до конца и остановился.
 
-#### Пример
+#### Example
 
 ```js
 Player.on('complete', function(){
@@ -136,67 +136,66 @@ Player.on('complete', function(){
 
 *Boolean*: определяет будет использоваться <object> или sef плагин.
 
-*Доступно только для следующей платформы: Samsung*
+*Available only for the next platform: Samsung*
 
 * * *
 
 
 
-## Публичные методы
+## Public methods
 
 ###`Player.play(options)`
 
-Начинает воспроизведение видео.
+The video starts playing.
 
-#### Аргументы
-`options` *Plain object*: хеш содержащий параметры для запуска
+#### Arguments
+`options` *Plain object*: hash containing parametrs for the starting
  
- Или 
+ Or
 
-`url` *String*: путь к видео
+`url` *String*: the path to a video
 
-#### Примеры
+#### Examples
 ```js
 Player.play({
   url: "movie.mp4"
 });
 Player.play("movie.mp4"); 
-//оба варианта одинаковы 
+//Both variants are the same 
 
 Player.play({
   url: "movie.mp4"
   from: 20
-});// запускает видео с 20 секунды
+});// starts video from the 20 sec point
 ```
 
 * * *
 
 ###`Player.stop([silent])`
 
-Останавливает воспроизведение видео.
+Stops video playing.
 
-#### Аргументы
-1. `silent[optional]` *Boolean*: если передан флаг `silent`, то не будет вызвано событие `stop`
+#### Arguments
+1. `silent[optional]` *Boolean*: if flag `silent` is sent, then the event `stop` isn't called 
 
 
-#### Примеры
+#### Examples
 ```js
 Player.stop();
 
 App.onDestroy(function(){
    Player.stop(true);
-});  // Останавливает воспроизведение и позволяет избежать побочных эффектов
+});  // Stops playing and allows to avoid side effects
 ```
 
 * * *
 
 ###`Player.pause()`
 
-Приостанавливает воспроизведение видео.
+Pauses video playing.
 
 
-
-#### Примеры
+#### Examples
 ```js
 Player.pause();
 ```
@@ -205,10 +204,9 @@ Player.pause();
 
 ###`Player.resume()`
 
-Возобновляет воспроизведение видео после паузы.
+Resumes video playing after pause.
 
-
-#### Примеры
+#### Examples
 ```js
 Player.resume();
 ```
@@ -217,9 +215,9 @@ Player.resume();
 
 ###`Player.togglePause()`
 
-Переключает pause/resume в зависимости от текущего состояния.
+Switches pause/resume according to the current condition.
 
-#### Примеры
+#### Examples
 ```js
 Player.togglePause();
 ```
@@ -228,16 +226,16 @@ Player.togglePause();
 
 ###`Player.formatTime(seconds)`
 
-Конвертирует время в секундах в строку вида H:MM:SS
+Converts time in seconds in the srting with a type H:MM:SS
 
-#### Аргументы
-`seconds` *Number*: время в секундах
-
-#### Возвращает
-*String*: реультирующая строка
+#### Arguments
+`seconds` *Number*: the time in seconds
+ 
+#### Returns
+*String*: result string
  
 
-#### Примеры
+#### Examples
 ```js
 Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
 ```
@@ -247,13 +245,13 @@ Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
 
 ###`Player.seek(seconds)`
 
-Переход на заданное время в секундах.
+The transit on the set time in seconds.
 
-#### Аргументы
-`seconds` *Number*: время в секундах
+#### Arguments
+`seconds` *Number*: the time in seconds
  
 
-#### Примеры
+#### Examples
 ```js
 Player.seek(20);//перейти на 20 секунду
 
@@ -265,18 +263,18 @@ Player.seek(Player.videoInfo.currentTime + 10);//прыжок на 10 секун
 
 ###`Player.audio.get()`
 
-Возвращает массив с кодами языков звуковых дорожек.   
+Returns an array with codes of sound tracks languages.   
 
-Список всех кодов можно найти тут
+A list with all codes you can find here
 <a href="http://forum.doom9.org/showthread.php?t=155762">http://forum.doom9.org/showthread.php?t=155762</a>
 
-*Доступно только для следующей платформы: Samsung*
+*Available only for the next platform: Samsung*
 
-#### Возвращает
-*Array*: массив с кодами
+#### Returns
+*Array*: the array with codes
  
 
-#### Примеры
+#### Examples
 ```js
 var tracksArray=Player.audio.get();//=> [7501171, 6448492]
 var currentLang=array[Player.audio.cur()];//=> 7501171
@@ -288,16 +286,16 @@ var currentLangString=Strings[currentLang];//=> "Russian"
 
 ###`Player.audio.set(index)`
 
-Задает звуковую дорожку согласно индексу. 
+Defines the sound track in copliance with the index. 
 
-*Доступно только для следующей платформы: Samsung*
+*Available only for the next platform: Samsung*
 
-#### Аррргументы
+#### Arguments
 
-`index` *Number*: индекс звуковой дорожки
+`index` *Number*: sound track index
 
 
-#### Примеры
+#### Examples
 ```js
 Player.audio.set(0);
 ```
@@ -306,15 +304,15 @@ Player.audio.set(0);
 
 ###`Player.audio.cur()`
 
-Задает звуковую дорожку согласно индексу. 
+Defines the sound track in copliance with the index. 
 
-*Доступно только для следующей платформы: Samsung*
+*Available only for the next platform: Samsung*
 
 
-#### Возвращает
-*Number*: индекс текущей звуковой дорожки.
+#### Returns
+*Number*: Index of the current sound track
 
-#### Примеры
+#### Examples
 ```js
 Player.audio.cur(); //=> 1
 ```
