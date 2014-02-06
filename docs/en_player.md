@@ -35,7 +35,7 @@
 
 'ready' is sent when player has recieved a steam info (duration, resolution, etc) and playing starts.
 
-#### Example
+#### Examples
 
 ```js
 Player.on('ready', function(){
@@ -48,9 +48,9 @@ Player.on('ready', function(){
 
 ###`bufferingBegin, bufferingEnd`
 
-События отправляются когда начинается и заканчивается буферизация видео, при слабом коннекте или после перемотки.
+Events are sent when a video buffering starts and ends, weak Internet connection or after rewinding.
 
-#### Example
+#### Examples
 
 ```js
 var $loadingIndicator=$('#loading_indicator');
@@ -68,9 +68,9 @@ Player.on('bufferingEnd', function(){
 
 ###`stop`
 
-Отправляется когда было остановлено воспроизведение.
+Sends when the playback has been stopped.
 
-#### Example
+#### Examples
 
 ```js
 Player.on('stop', function(){
@@ -82,9 +82,9 @@ Player.on('stop', function(){
 
 ###`complete`
 
-Отправляется когда видео файл доиграл до конца и остановился.
+is sent when the end of video file is reached and playing is stopped.
 
-#### Example
+#### Examples
 
 ```js
 Player.on('complete', function(){
@@ -95,46 +95,46 @@ Player.on('complete', function(){
 * * *
 
 
-##Публичные свойства
+##Public properties
 
 ###`Player.state`
 
-*String*: Текущее состояние плеера:
+*String*: Current player condition:
 
-1. `play`: видео воспроизводится
-2. `pause`: видео приостановлено
-3. `stop`: видео остановлено
+1. `play`: video is playing
+2. `pause`: video is paused
+3. `stop`: video is stopped
 
 * * *
 
 
 ###`Player.videoInfo.duration`
 
-*Number*: продолжительность видео файла в секундах
+*Number*: video file duration in seconds
 
 * * *
 
 ###`Player.videoInfo.currentTime`
 
-*Number*: текущее время воспроизведения в секундах
+*Number*: current playing time in seconds
 
 * * *
 
 ###`Player.videoInfo.width`
 
-*Number*: ширина потока видео в пикселях
+*Number*: video stream width in pixels
 
 * * *
 
 ###`Player.videoInfo.height`
 
-*Number*: высота потока видео в пикселях
+*Number*: video stream height in pixels
 
 * * *
 
 ###`Player.usePlayerObject`
 
-*Boolean*: определяет будет использоваться <object> или sef плагин.
+*Boolean*: defines: will or won't the <object> or sef plugin be used.
 
 *Available only for the next platform: Samsung*
 
