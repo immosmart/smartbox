@@ -4,15 +4,15 @@
 
 ###Оглавление
 
-<a href="#Публичные-свойства">`Публичные свойства`</a>
+<a href="#public-properies">`Public properies`</a>
 * <a href="#sbcurrentplatformkeys">`SB.currentPlatform.keys`</a>
 * <a href="#sbcurrentplatformduid">`SB.currentPlatform.DUID`</a>
 * <a href="#sbconfigduid">`SB.config.DUID`</a>
 * <a href="#sbcurrentplatformname">`SB.currentPlatform.name`</a>
 
-<a href="#Добавление-новой-платформы">`Добавление новой платформы`</a>
+<a href="#new-platform-adding">`New platform adding`</a>
  
-##Публичные свойства
+##Public properies
 
 ###`SB.currentPlatform.keys`
 
@@ -52,7 +52,7 @@ SB.ready(function(){
 *String*: название платформы (samsung, lg, philips, etc...)
 
 
-##Добавление новой платформы
+##New platform adding
 
 Вы можете добавить новую платформу, создавая объект `SB.Platform`. 
 
