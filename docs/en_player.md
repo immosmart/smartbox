@@ -2,13 +2,13 @@
 
 ###Contents
 
-<a href="#Public-events">`Public events`</a>
+<a href="#public-events">`Public events`</a>
 * <a href="#ready">`ready`</a>
 * <a href="#bufferingbegin-bufferingend">`bufferingBegin, bufferingEnd`</a>
 * <a href="#stop">`stop`</a>
 * <a href="#complete">`complete`</a>
 
-<a href="#Public-properties">`Public properties`</a>
+<a href="#public-properties">`Public properties`</a>
 * <a href="#playerstate">`Player.state`</a>
 * <a href="#playervideoinfoduration">`Player.videoInfo.duration`</a>
 * <a href="#playervideoinfocurrenttime">`Player.videoInfo.currentTime`</a>
@@ -16,7 +16,7 @@
 * <a href="#playervideoinfoheight">`Player.videoInfo.height`</a>
 * <a href="#useplayerobject">`Player.usePlayerObject`</a>
 
-<a href="#Public-methods">`Public methods`</a>
+<a href="#public-methods">`Public methods`</a>
 * <a href="#playerplayoptions">`Player.play(options)`</a>
 * <a href="#playerstopsilent">`Player.stop([silent])`</a>
 * <a href="#playerpause">`Player.pause()`</a>
