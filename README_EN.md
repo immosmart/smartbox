@@ -25,18 +25,6 @@ The compiled version of the library is located in the folder <a href="https://gi
 
 # Library plugins
 
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">Методы отдельных платформ</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_log.md">Консоль Лог</a>
-* Навигация
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav.md">Инициализация и методы</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_alg.md">Алгоритм</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_extended.md">Продвинутое использование</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_input.md">Поля ввода</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
-* Легенда @todo_doc
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_player.md">Плеер</a>
-
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">Platforms' methods</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_log.md">Log console</a>
 * Navigation
