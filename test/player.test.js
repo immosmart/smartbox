@@ -1,4 +1,4 @@
-xdescribe('Player', function () {
+describe('Player', function () {
 
     var currentURL = Config.trailer;
     var currentType = '';
@@ -170,12 +170,12 @@ xdescribe('Player', function () {
 
             waitsFor(function () {
                 return update.calls.length == 1
-            }, 'update handler was called', 25000);
+            }, 'update handler was called', 5000);
 
             runs(function () {
                 expect(Player.videoInfo.currentTime).toBeGreaterThan(118);
                 expect(Player.videoInfo.currentTime).toBeLessThan(122);
-            }, 'seeking success', 15000);
+            });
         });
 
 

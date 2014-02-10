@@ -218,6 +218,10 @@
 				max = opt.max,
 				method;
 
+            if(!text){
+                text='';
+            }
+
 			if ( text.length > max && max != 0 ) {
 				text = text.substr(0, max);
 			}

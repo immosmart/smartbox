@@ -144,6 +144,14 @@
 			}
 		}
 	};
+
+    window.$$log=function(){
+        SB.utils.log.log.apply(SB.utils.log, arguments);
+    }
+
+    window.$$error=function(msg){
+        SB.utils.error(msg, 'error');
+    }
 })(this);
 
 $(function(){

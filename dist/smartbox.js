@@ -4,30 +4,18 @@
 (function (window, undefined) {
 
     var _ready = false,
-        readyCallbacks = [];
+        readyCallbacks = [],
+        _running = false;
 
 
-    var userAgent=navigator.userAgent.toLowerCase();
-    var detect= function(slug){
+    var userAgent = navigator.userAgent.toLowerCase();
+    var detect = function (slug) {
         return userAgent.indexOf(slug) !== -1;
     }
 
     var SB = {
 
         platform: 'browser',
-
-        run: function () {
-
-            var self = this;
-
-            $(function () {
-                self.setPlugins();
-                setTimeout(function () {
-                    self._onReady();
-                });
-            });
-
-        },
 
         extend: function (platformName, prototype) {
             if ((prototype.detect != undefined && prototype.detect()) ||
@@ -64,6 +52,18 @@
          * @param cb {Function} callback after initialization
          */
         ready: function (cb) {
+            var self = this;
+
+            if (!_running) {
+                _running = true;
+                $(function () {
+                    self.setPlugins();
+                    self.getDUID();
+                    setTimeout(function () {
+                        self._onReady();
+                    });
+                });
+            }
 
             if (_ready) {
                 cb.call(this);
@@ -200,9 +200,19 @@
         removeData: function () {
         },
 
+        sendReturn: function () {
+        },
+
         exit: function () {
+        },
+
+        getSDI: function () {
+
         }
     };
+
+    //TODO: For backward capability. Remove this.
+    SB.currentPlatform = SB;
 
 
     window.SB = SB;
@@ -426,6 +436,10 @@
 			var opt = this.options,
 				max = opt.max,
 				method;
+
+            if(!text){
+                text='';
+            }
 
 			if ( text.length > max && max != 0 ) {
 				text = text.substr(0, max);
@@ -1329,6 +1343,14 @@ window.SB.keyboardPresets = {
 			}
 		}
 	};
+
+    window.$$log=function(){
+        SB.utils.log.log.apply(SB.utils.log, arguments);
+    }
+
+    window.$$error=function(msg){
+        SB.utils.error(msg, 'error');
+    }
 })(this);
 
 $(function(){
@@ -1569,7 +1591,7 @@ $(function(){
 
 				this.$container = container ? $(container) : $body;
 
-                if (SB.currentPlatform.name != 'philips') {
+                if (SB.platform != 'philips') {
                     this.$container.on('mouseenter.nav', this.area_selector, function (e) {
                         if (!$(this).is(self.phantom_selector)) {
                             self.current(this, 'mouseenter');

@@ -229,7 +229,7 @@
 
 				this.$container = container ? $(container) : $body;
 
-                if (SB.currentPlatform.name != 'philips') {
+                if (SB.platform != 'philips') {
                     this.$container.on('mouseenter.nav', this.area_selector, function (e) {
                         if (!$(this).is(self.phantom_selector)) {
                             self.current(this, 'mouseenter');
