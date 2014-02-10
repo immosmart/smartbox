@@ -13,6 +13,22 @@
         paused = false;
 
 
+
+    var init= function(){
+        if (!inited) {
+
+            enabled = $$voice._nativeCheckSupport();
+            if (!enabled) {
+                return;
+            }
+
+            $$voice._init();
+            $buble = $('#voice_buble');
+            inited = true;
+        }
+    }
+
+
     var defaults = {
         selector: '.voicelink',
         moreText: 'More',
@@ -61,6 +77,7 @@
         },
         helpbarVisible: false,
         enabled: function () {
+            init();
             return enabled;
         },
         _setVoiceHelp: function (voicehelp) {
@@ -324,17 +341,8 @@
             return;
         }
 
-        if (!inited) {
+        init()
 
-            enabled = $$voice._nativeCheckSupport();
-            if (!enabled) {
-                return;
-            }
-
-            $$voice._init();
-            $buble = $('#voice_buble');
-            inited = true;
-        }
 
         currentVoiceState = {
             self: this,
