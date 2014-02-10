@@ -51,11 +51,11 @@
          * Main function
          * @param cb {Function} callback after initialization
          */
-        ready: function (cb) {
+        ready: function (cb, notRun) {
             var self = this;
 
-            if (!_running) {
-                _running = true;
+            if (!notRun&&!_running) {
+                _running=true;
                 $(function () {
                     self.setPlugins();
                     self.getDUID();
@@ -78,7 +78,7 @@
                 if (platform == self.platform) {
                     cb.call(self);
                 }
-            });
+            }, true);
         },
 
         /**

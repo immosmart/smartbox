@@ -51,11 +51,11 @@
          * Main function
          * @param cb {Function} callback after initialization
          */
-        ready: function (cb) {
+        ready: function (cb, notRun) {
             var self = this;
 
-            if (!_running) {
-                _running = true;
+            if (!notRun&&!_running) {
+                _running=true;
                 $(function () {
                     self.setPlugins();
                     self.getDUID();
@@ -78,7 +78,7 @@
                 if (platform == self.platform) {
                     cb.call(self);
                 }
-            });
+            }, true);
         },
 
         /**
@@ -1363,7 +1363,13 @@ $(function(){
 !(function ( window, undefined ) {
 
 	var $body = null,
-		nav;
+		nav, invertedKeys;
+
+    SB.ready(function(){
+        invertedKeys= _(SB.keys).invert().mapValues(function(a){
+            return a.toLowerCase();
+        }).value();
+    }, true);
 
 	function Navigation () {
 
@@ -1393,8 +1399,10 @@ $(function(){
 				return;
 			}
 
-			key = SB.currentPlatform.getKeyByKeyCode(keyCode);
+			key = invertedKeys[keyCode];
 
+
+            if(key)
 			if ( colorKeys.indexOf(key) > -1 ) {
 				throttleEvent(key);
 			} else {
