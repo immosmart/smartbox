@@ -26,7 +26,7 @@
         }, 500);
     }
 
-    var inited=false;
+    var inited = false;
 
     var Player = window.Player = {
 
@@ -64,13 +64,13 @@
          * }); // => runs stream
          */
         play: function (options) {
-            if(!inited){
+            if (!inited) {
                 this._init();
-                inited=true;
+                inited = true;
             }
 
-            if(typeof options=="string"){
-                options={
+            if (typeof options == "string") {
+                options = {
                     url: options
                 }
             }
@@ -235,6 +235,17 @@
              */
             cur: function () {
                 return curAudio;
+            },
+            toggle: function () {
+                var l = this.get().length;
+                var cur = this.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = 0;
+                    }
+                    this.set(cur);
+                }
             }
         }
     };
@@ -262,7 +273,6 @@
     };
 
     Player.extend(eventProto);
-
 
 
 }(this));

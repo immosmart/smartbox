@@ -1,231 +1,135 @@
 /**
  * Main smartbox file
  */
-(function ( window, undefined ) {
+(function (window, undefined) {
 
-  // save in case of overwrite
-  var document = window.document,
-    _inited = false,
-    _ready = false,
-    readyCallbacks = [];
+    var _ready = false,
+        readyCallbacks = [],
+        _running = false;
 
-  var SB = {
 
-    config: {
-      /**
-       * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-       * ex: browser, samsung, lg
-       * @type: {String}
-       */
-      defaultPlatform: 'browser'
-    },
-
-    isInited: function () {
-      return _inited;
-    },
-
-    /**
-     * Main function
-     * @param cb {Function} callback after initialization
-     */
-    ready: function ( cb ) {
-      if ( _ready ) {
-        cb.call(this);
-      } else {
-        readyCallbacks.push(cb);
-      }
-    },
-
-    readyForPlatform: function ( platform, cb ) {
-      var self = this;
-      this.ready(function () {
-        if ( platform == self.currentPlatform.name ) {
-          cb.call(self);
-        }
-      });
-    },
-
-    /**
-     * Applying all ready callbacks
-     * @private
-     */
-    _onReady: function () {
-      _ready = true;
-
-      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-        readyCallbacks[i].call(this);
-      }
-    },
-
-    initialise: function () {
-      var self = this,
-        utils = this.utils;
-
-      if ( _inited ) {
-        return;
-      }
-
-      window.$$log = utils.log.log;
-      window.$$error = utils.error;
-
-      //$$log('!!!!!!!!!LOG: initialising SB');
-
-      SB.platforms.initialise(function ( currentPlatform ) {
-        self.currentPlatform = currentPlatform;
-        _inited = true;
-
-        //prevent calling before other dom ready callbacks
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
+    var userAgent = navigator.userAgent.toLowerCase();
+    var detect = function (slug) {
+        return userAgent.indexOf(slug) !== -1;
     }
-  };
 
-  SB.utils = {
-    /**
-     * Show error message
-     * @param msg
-     */
-    error: function ( msg ) {
-      $$log(msg, 'error');
-    },
+    var SB = {
 
-    /**
-     * Show messages in log
-     * all functionality in main.js
-     */
-    log: {
-      log: $.noop,
-      state: $.noop,
-      show: $.noop,
-      hide: $.noop,
-      startProfile: $.noop,
-      stopProfile: $.noop
-    },
+        platform: 'browser',
 
-    legend: {}
-  };
+        extend: function (platformName, prototype) {
+            if ((prototype.detect != undefined && prototype.detect()) ||
+                detect(prototype.platformUserAgent)
+                ) {
+                _.extend(this, prototype);
+                this.platform = platformName;
 
-  $(function () {
-    SB.initialise();
-  });
-  window.SB = SB;
-})(this);
-// global SB
-!(function ( window, undefined ) {
-
-	var platforms,
-		Platform,
-		PlatformPrototype,
-		_supportedPlatforms = {},
-		_platform = null,
-		_defaultPlatform = null;
-
-	// Object for all platforms
-	platforms = {
-
-		// add supported platform
-		addPlatform: function ( platform ) {
-			if ( platform.name === SB.config.defaultPlatform ) {
-				_defaultPlatform = platform;
-			} else {
-				_supportedPlatforms[platform.name] = platform;
-			}
-		},
-
-		// return currentPlatform
-		getCurrentPlatform: function () {
-			return _platform;
-		},
-
-		// Detect & initialise platform
-		initialise: function (cb) {
-			var prevTime = new Date().getTime();
-
-			// get first platform, where detect() return true
-			var currentPlatform = _.find(_supportedPlatforms, function ( platform ) {
-				return platform.detect();
-			});
-
-			currentPlatform = currentPlatform || _defaultPlatform;
-			if ( !currentPlatform ) {
-				$$error('No Platform detected!');
-			} else {
-				//$$log('detect platform: ' + currentPlatform.name);
-				currentPlatform.addExternalFiles(function () {
-					//$$log('adding files callback');
-
-					currentPlatform.setPlugins();
-					currentPlatform.refreshKeys();
-					currentPlatform.initialise();
-
-					_platform = currentPlatform;
-					cb && cb.call(this, currentPlatform);
-				});
-			}
-		}
-	};
-
-	/**
-	 * Master class for platform
-	 * @param name
-	 * @constructor
-	 */
-	Platform = function ( name ) {
-		this.name = name;
-		var _keys = {};
+                if (_.isFunction(this.onDetect)) {
+                    this.onDetect();
+                }
+            }
+        },
 
 
-		this.refreshKeys = function refreshKeys() {
-			_keys = {};
-			for(var keyName in this.keys) {
-				_keys[this.keys[keyName]] = keyName.toLowerCase();
-			}
-		};
+        /**
+         * Can be overridden by function that calls after successfully detect()
+         */
+        onDetect: null,
 
-		/**
-		 * Returns key name by key code
-		 * @param keyCode
-		 * @returns {string} key name
-		 */
-		this.getKeyByKeyCode = function ( keyCode) {
-			return _keys[keyCode];
-		};
+        /**
+         * Detecting current platform
+         * @returns {boolean} true if running on current platform
+         */
 
-		SB.platforms.addPlatform(this);
-	};
 
-	PlatformPrototype = {
-		externalCss: [],
-		externalJs: [],
-		keys: {},
+        config: {
+            DUID: 'real'
+        },
 
-		DUID: '',
-        DUIDSettings: 'real',
 
-        platformUserAgent: 'not found',
+        /**
+         * Main function
+         * @param cb {Function} callback after initialization
+         */
+        ready: function (cb, notRun) {
+            var self = this;
 
-		/**
-		 * Detecting current platform
-		 * @returns {boolean} true if running on current platform
-		 */
-		detect: function () {
-            var userAgent = navigator.userAgent.toLowerCase();
-            return (userAgent.indexOf(this.platformUserAgent) !== -1);
-		},
+            if (!notRun&&!_running) {
+                _running=true;
+                $(function () {
+                    self.setPlugins();
+                    self.getDUID();
+                    setTimeout(function () {
+                        self._onReady();
+                    });
+                });
+            }
 
-		/**
-		 * Function called if running on current platform
-		 */
-		initialise: function () {},
+            if (_ready) {
+                cb.call(this);
+            } else {
+                readyCallbacks.push(cb);
+            }
+        },
 
-		/**
-		 * Get DUID in case of Config
-		 * @return {string} DUID
-		 */
-		getDUID: function () {
-            switch (this.DUIDSettings) {
+        readyForPlatform: function (platform, cb) {
+            var self = this;
+            this.ready(function () {
+                if (platform == self.platform) {
+                    cb.call(self);
+                }
+            }, true);
+        },
+
+        /**
+         * Applying all ready callbacks
+         * @private
+         */
+        _onReady: function () {
+            _ready = true;
+
+            for (var i = 0, len = readyCallbacks.length; i < len; i++) {
+                readyCallbacks[i].call(this);
+            }
+        },
+
+
+        utils: {
+            /**
+             * Show error message
+             * @param msg
+             */
+            error: function (msg) {
+                $$log(msg, 'error');
+            },
+
+            /**
+             * Show messages in log
+             * all functionality in main.js
+             */
+            log: {
+                log: $.noop,
+                state: $.noop,
+                show: $.noop,
+                hide: $.noop,
+                startProfile: $.noop,
+                stopProfile: $.noop
+            },
+
+            legend: {}
+        },
+
+        keys: {},
+
+        DUID: '',
+
+
+        /**
+         * Get DUID in case of Config
+         * @return {string} DUID
+         */
+        getDUID: function () {
+            switch (SB.config.DUID) {
                 case 'real':
                     this.DUID = this.getNativeDUID();
                     break;
@@ -236,10 +140,10 @@
                     this.DUID = this.getRandomDUID();
                     break;
                 /*case 'local_random':
-                    this.DUID = this.getLocalRandomDUID();
-                    break;*/
+                 this.DUID = this.getLocalRandomDUID();
+                 break;*/
                 default:
-                    this.DUID = Config.DUIDSettings;
+                    this.DUID = SB.config.DUID;
                     break;
             }
             //this.formattedDUID = _.formatText(this.DUID, 4, '-');
@@ -247,15 +151,15 @@
 
 
             return this.DUID;
-		},
+        },
 
-		/**
-		 * Returns random DUID for platform
-		 * @returns {string}
-		 */
-		getRandomDUID: function () {
-			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
-		},
+        /**
+         * Returns random DUID for platform
+         * @returns {string}
+         */
+        getRandomDUID: function () {
+            return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
+        },
 
         /**
          * Returns native DUID for platform if exist
@@ -265,102 +169,53 @@
             return '';
         },
 
-		/**
-		 * Returns native DUID for platform if exist
-		 * @returns {string}
-		 */
-		getNativeDUID: function () {
-			return '';
-		},
+        /**
+         * Returns native DUID for platform if exist
+         * @returns {string}
+         */
+        getNativeDUID: function () {
+            return '';
+        },
 
-		/**
-		 * Set custom plugins
-		 */
-		setPlugins: function () {},
+        /**
+         * Set custom plugins
+         */
+        setPlugins: function () {
+        },
 
-		// TODO: volume for all platforms
-		volumeUp: function() {},
-		volumeDown: function () {},
-		getVolume: function () {},
+        // TODO: volume for all platforms
+        volumeUp: function () {
+        },
+        volumeDown: function () {
+        },
+        getVolume: function () {
+        },
 
-		setData: function () {},
+        setData: function () {
+        },
 
-		getData: function () {},
+        getData: function () {
+        },
 
-		removeData: function () {},
+        removeData: function () {
+        },
 
-		addExternalFiles: function (cb) {
-			this.addExternalJS(this.externalJs, cb);
-			this.addExternalCss(this.externalCss);
-		},
+        sendReturn: function () {
+        },
 
-		/**
-		 * Asynchroniosly adding platform files
-     * @param filesArray {Array} array of sources of javascript files
-		 * @param cb {Function} callback on load javascript files
-		 */
-    addExternalJS: function ( filesArray, cb ) {
-      var $externalJsContainer,
-        loadedScripts = 0,
-        len = filesArray.length,
-        el,
-        scriptEl;
+        exit: function () {
+        },
 
-      function onloadScript () {
-        loadedScripts++;
+        getSDI: function () {
 
-        if ( loadedScripts === len ) {
-          cb && cb.call();
         }
-      }
+    };
 
-      if ( filesArray.length ) {
+    //TODO: For backward capability. Remove this.
+    SB.currentPlatform = SB;
 
-        $externalJsContainer = document.createDocumentFragment();
-        el = document.createElement('script');
-        el.type = 'text/javascript';
-        el.onload = onloadScript;
 
-        for ( var i = 0; i < len; i++ ) {
-          scriptEl = el.cloneNode();
-          scriptEl.src = filesArray[i];
-          $externalJsContainer.appendChild(scriptEl);
-        }
-
-        document.body.appendChild($externalJsContainer);
-      } else {
-
-        // if no external js simple call cb
-        cb && cb.call(this);
-      }
-    },
-
-		addExternalCss: function (filesArray) {
-			var $externalCssContainer;
-
-			if (filesArray.length) {
-				$externalCssContainer = document.createDocumentFragment();
-				_.each(filesArray, function ( src ) {
-
-					var el = document.createElement('link');
-
-					el.rel = 'stylesheet';
-					el.href = src;
-
-					$externalCssContainer.appendChild(el);
-				});
-
-				document.body.appendChild($externalCssContainer);
-			}
-		},
-
-		exit: function () {}
-	};
-
-	_(Platform.prototype).extend(PlatformPrototype);
-
-	SB.platforms = platforms;
-	SB.Platform = Platform;
+    window.SB = SB;
 })(this);
 /**
  * Keyboard Plugin
@@ -581,6 +436,10 @@
 			var opt = this.options,
 				max = opt.max,
 				method;
+
+            if(!text){
+                text='';
+            }
 
 			if ( text.length > max && max != 0 ) {
 				text = text.substr(0, max);
@@ -1484,6 +1343,14 @@ window.SB.keyboardPresets = {
 			}
 		}
 	};
+
+    window.$$log=function(){
+        SB.utils.log.log.apply(SB.utils.log, arguments);
+    }
+
+    window.$$error=function(msg){
+        SB.utils.error(msg, 'error');
+    }
 })(this);
 
 $(function(){
@@ -1496,7 +1363,13 @@ $(function(){
 !(function ( window, undefined ) {
 
 	var $body = null,
-		nav;
+		nav, invertedKeys;
+
+    SB.ready(function(){
+        invertedKeys= _(SB.keys).invert().mapValues(function(a){
+            return a.toLowerCase();
+        }).value();
+    }, true);
 
 	function Navigation () {
 
@@ -1526,8 +1399,10 @@ $(function(){
 				return;
 			}
 
-			key = SB.currentPlatform.getKeyByKeyCode(keyCode);
+			key = invertedKeys[keyCode];
 
+
+            if(key)
 			if ( colorKeys.indexOf(key) > -1 ) {
 				throttleEvent(key);
 			} else {
@@ -1724,7 +1599,7 @@ $(function(){
 
 				this.$container = container ? $(container) : $body;
 
-                if (SB.currentPlatform.name != 'philips') {
+                if (SB.platform != 'philips') {
                     this.$container.on('mouseenter.nav', this.area_selector, function (e) {
                         if (!$(this).is(self.phantom_selector)) {
                             self.current(this, 'mouseenter');
@@ -2110,7 +1985,7 @@ $(function(){
         }, 500);
     }
 
-    var inited=false;
+    var inited = false;
 
     var Player = window.Player = {
 
@@ -2148,13 +2023,13 @@ $(function(){
          * }); // => runs stream
          */
         play: function (options) {
-            if(!inited){
+            if (!inited) {
                 this._init();
-                inited=true;
+                inited = true;
             }
 
-            if(typeof options=="string"){
-                options={
+            if (typeof options == "string") {
+                options = {
                     url: options
                 }
             }
@@ -2319,6 +2194,17 @@ $(function(){
              */
             cur: function () {
                 return curAudio;
+            },
+            toggle: function () {
+                var l = this.get().length;
+                var cur = this.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = 0;
+                    }
+                    this.set(cur);
+                }
             }
         }
     };
@@ -2348,7 +2234,6 @@ $(function(){
     Player.extend(eventProto);
 
 
-
 }(this));
 (function ($) {
     "use strict";
@@ -2363,6 +2248,22 @@ $(function(){
         $moreDiv = $('<div/>'),
 
         paused = false;
+
+
+
+    var init= function(){
+        if (!inited) {
+
+            enabled = $$voice._nativeCheckSupport();
+            if (!enabled) {
+                return;
+            }
+
+            $$voice._init();
+            $buble = $('#voice_buble');
+            inited = true;
+        }
+    }
 
 
     var defaults = {
@@ -2413,6 +2314,7 @@ $(function(){
         },
         helpbarVisible: false,
         enabled: function () {
+            init();
             return enabled;
         },
         _setVoiceHelp: function (voicehelp) {
@@ -2676,17 +2578,8 @@ $(function(){
             return;
         }
 
-        if (!inited) {
+        init()
 
-            enabled = $$voice._nativeCheckSupport();
-            if (!enabled) {
-                return;
-            }
-
-            $$voice._init();
-            $buble = $('#voice_buble');
-            inited = true;
-        }
 
         currentVoiceState = {
             self: this,
@@ -2805,96 +2698,92 @@ SB.readyForPlatform('browser', function(){
 /**
  * Browser platform description
  */
-!(function ( window, undefined  ) {
+SB.extend('browser', {
+    keys: {
+        RIGHT: 39,
+        LEFT: 37,
+        DOWN: 40,
+        UP: 38,
+        RETURN: 27,//esc
+        EXIT: 46,//delete
+        TOOLS: 32,//space
+        FF: 33,//page up
+        RW: 34,//page down
+        NEXT: 107,//num+
+        PREV: 109,//num-
+        ENTER: 13,
+        RED: 65,//A
+        GREEN: 66,//B
+        YELLOW: 67,//C
+        BLUE: 68,//D
+        CH_UP: 221, // ]
+        CH_DOWN: 219, // [
+        N0: 48,
+        N1: 49,
+        N2: 50,
+        N3: 51,
+        N4: 52,
+        N5: 53,
+        N6: 54,
+        N7: 55,
+        N8: 56,
+        N9: 57,
+        PRECH: 45,//ins
+        SMART: 36,//home
+        PLAY: 97,//numpad 1
+        STOP: 98,//numpad 2
+        PAUSE: 99,//numpad 3
+        SUBT: 76,//l,
+        INFO: 73,//i
+        REC: 82//r
+    },
 
-	var platform = new window.SB.Platform('browser'),
-		platformObj;
+    detect: function () {
+        // always true for browser platform
+        return true;
+    },
 
-	platformObj = {
+    initialise: function () {
+    },
 
-		keys: {
-			RIGHT: 39,
-			LEFT: 37,
-			DOWN: 40,
-			UP: 38,
-			RETURN: 27,//esc
-			EXIT: 46,//delete
-			TOOLS: 32,//space
-			FF: 33,//page up
-			RW: 34,//page down
-			NEXT: 107,//num+
-			PREV: 109,//num-
-			ENTER: 13,
-			RED: 65,//A
-			GREEN: 66,//B
-			YELLOW: 67,//C
-			BLUE: 68,//D
-			CH_UP: 221, // ]
-			CH_DOWN: 219, // [
-			N0: 48,
-			N1: 49,
-			N2: 50,
-			N3: 51,
-			N4: 52,
-			N5: 53,
-			N6: 54,
-			N7: 55,
-			N8: 56,
-			N9: 57,
-			PRECH: 45,//ins
-			SMART: 36,//home
-			PLAY: 97,//numpad 1
-			STOP: 98,//numpad 2
-			PAUSE: 99,//numpad 3
-			SUBT: 76,//l,
-			INFO: 73,//i
-			REC: 82//r
-		},
+    getNativeDUID: function () {
+        if (navigator.userAgent.indexOf('Chrome') != -1) {
+            this.DUID = 'CHROMEISFINETOO';
+        } else {
+            this.DUID = 'FIREFOXISBEST';
+        }
+        return this.DUID;
+    },
 
-		detect: function () {
-			// always true for browser platform
-			return false;
-		},
+    volumeUp: function () {
+    },
 
-		initialise: function () {},
+    volumeDown: function () {
+    },
 
-		getNativeDUID: function () {
-			if (navigator.userAgent.indexOf('Chrome') != -1) {
-				this.DUID = 'CHROMEISFINETOO';
-			} else {
-				this.DUID = 'FIREFOXISBEST';
-			}
-			return this.DUID;
-		},
+    getVolume: function () {
+    },
 
-		volumeUp: function() {},
+    setData: function (name, val) {
+        // save data in string format
+        localStorage.setItem(name, JSON.stringify(val));
+    },
 
-		volumeDown: function () {},
+    getData: function (name) {
+        var result;
+        try {
+            result = JSON.parse(localStorage.getItem(name));
+        } catch (e) {
+        }
 
-		getVolume: function () {},
+        return result;
+    },
 
-		setData: function (name, val) {
-			// save data in string format
-			localStorage.setItem(name, JSON.stringify(val));
-		},
+    removeData: function (name) {
+        localStorage.removeItem(name);
+    }
+});
 
-		getData: function (name) {
-			var result;
-			try {
-				result = JSON.parse(localStorage.getItem(name));
-			} catch (e) {}
-
-			return result;
-		},
-
-		removeData: function (name) {
-			localStorage.removeItem(name);
-		}
-	};
-
-	_(platform).extend(platformObj);
-
-})(this);
 (function ($) {
     "use strict";
 
@@ -3022,123 +2911,111 @@ SB.readyForPlatform('lg', function () {
     });
 });
 /**
- * Samsung platform
+ * LG platform
  */
-!(function (window, undefined) {
 
-    var platform = new window.SB.Platform('lg'),
-        platformObj;
+SB.extend('lg', {
+    platformUserAgent: 'netcast',
 
-    platformObj = {
+    keys: {
+        ENTER: 13,
+        PAUSE: 19,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+        N0: 48,
+        N1: 49,
+        N2: 50,
+        N3: 51,
+        N4: 52,
+        N5: 53,
+        N6: 54,
+        N7: 55,
+        N8: 56,
+        N9: 57,
+        RED: 403,
+        GREEN: 404,
+        YELLOW: 405,
+        BLUE: 406,
+        RW: 412,
+        STOP: 413,
+        PLAY: 415,
+        FF: 417,
+        RETURN: 461,
+        CH_UP: 33,
+        CH_DOWN: 34
+    },
 
-        externalJs: [
-        ],
+    initialise: function () {
+    },
 
-        $plugins: {},
+    getNativeDUID: function () {
+        return this.device.serialNumber;
+    },
 
-        platformUserAgent: 'netcast',
+    getMac: function () {
+        return this.device.net_macAddress.replace(/:/g, '');
+    },
 
-        keys: {
-            ENTER: 13,
-            PAUSE: 19,
-            LEFT: 37,
-            UP: 38,
-            RIGHT: 39,
-            DOWN: 40,
-            N0: 48,
-            N1: 49,
-            N2: 50,
-            N3: 51,
-            N4: 52,
-            N5: 53,
-            N6: 54,
-            N7: 55,
-            N8: 56,
-            N9: 57,
-            RED: 403,
-            GREEN: 404,
-            YELLOW: 405,
-            BLUE: 406,
-            RW: 412,
-            STOP: 413,
-            PLAY: 415,
-            FF: 417,
-            RETURN: 461,
-            CH_UP: 33,
-            CH_DOWN: 34
-        },
+    getSDI: function () {
 
-        initialise: function () {
-        },
+    },
 
-        getNativeDUID: function () {
-            return this.device.serialNumber;
-        },
+    setPlugins: function () {
+        //this._listenGestureEvent();
 
-        getMac: function () {
-            return this.device.net_macAddress.replace(/:/g, '');
-        },
+        $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+        this.device = $('#device')[0];
 
-        getSDI: function () {
+        this.modelCode = this.device.version;
+        this.productCode = this.device.platform;
 
-        },
-
-        setPlugins: function () {
-            //this._listenGestureEvent();
-
-            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
-            this.device = $('#device')[0];
-
-            this.modelCode = this.device.version;
-            this.productCode = this.device.platform;
-
-            this.getDUID();
+        this.getDUID();
 
 
-            $(function () {
-                //Log.show('default');
-                setInterval(function () {
-                    //Log.show('default');
-                    var usedMemorySize;
-                    if (window.NetCastGetUsedMemorySize) {
-                        usedMemorySize = window.NetCastGetUsedMemorySize();
-                    }
-                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
-                }, 5000);
-            });
-
-            if (Player && Player.setPlugin) {
-                Player.setPlugin();
+        //Log.show('default');
+        setInterval(function () {
+            //Log.show('default');
+            var usedMemorySize;
+            if (window.NetCastGetUsedMemorySize) {
+                usedMemorySize = window.NetCastGetUsedMemorySize();
             }
-        },
+            //Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+        }, 5000);
 
-        volumeEnable: function () {
-        },
 
-        sendReturn: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastBack();
-        },
-        exit: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastExit();
-        },
-
-        getUsedMemory: function () {
-            return window.NetCastGetUsedMemorySize();
-        },
-        getChildlockPin: function () {
-            return 1234;
+        if (Player && Player.setPlugin) {
+            Player.setPlugin();
         }
+    },
 
-    };
+    volumeEnable: function () {
+    },
 
-    _.extend(platform, platformObj);
-})(this);
+    sendReturn: function () {
+        if (Player) {
+            Player.stop(true);
+        }
+        window.NetCastBack();
+    },
+    exit: function () {
+        if (Player) {
+            Player.stop(true);
+        }
+        window.NetCastExit();
+    },
+
+    getUsedMemory: function () {
+        return window.NetCastGetUsedMemorySize();
+    },
+    getChildlockPin: function () {
+        return 1234;
+    }
+});
+
+
+
 SB.readyForPlatform('philips', function () {
     var video;
 
@@ -3242,75 +3119,42 @@ SB.readyForPlatform('philips', function () {
     });
 });
 /**
- * Samsung platform
+ * Philips platform
  */
-!(function ( window, undefined ) {
-
-  var platform = new window.SB.Platform('philips'),
-    platformObj;
-
-  platformObj = {
-
-    externalJs: [
-    ],
-
-    $plugins: {},
+SB.extend('philips', {
     platformUserAgent: 'nettv',
-
-    initialise: function () {
-    },
-
-    getNativeDUID: function () {
-    },
-
-    getMac: function () {
-    },
-
-    getSDI: function () {
-    },
-
     setPlugins: function () {
-      this.setKeys();
-    },
-
-    volumeEnable: function () {
-    },
-
-    setKeys: function () {
-      this.keys = {
-        ENTER: VK_ENTER,
-        PAUSE: VK_PAUSE,
-        LEFT: VK_LEFT,
-        UP: VK_UP,
-        RIGHT: VK_RIGHT,
-        DOWN: VK_DOWN,
-        N0: VK_0,
-        N1: VK_1,
-        N2: VK_2,
-        N3: VK_3,
-        N4: VK_4,
-        N5: VK_5,
-        N6: VK_6,
-        N7: VK_7,
-        N8: VK_8,
-        N9: VK_9,
-        RED: VK_RED,
-        GREEN: VK_GREEN,
-        YELLOW: VK_YELLOW,
-        BLUE: VK_BLUE,
-        RW: VK_REWIND,
-        STOP: VK_STOP,
-        PLAY: VK_PLAY,
-        FF: VK_FAST_FWD,
-        RETURN: VK_BACK,
-        CH_UP: VK_PAGE_UP,
-        CH_DOWN: VK_PAGE_DOWN
-      };
+        this.keys = {
+            ENTER: VK_ENTER,
+            PAUSE: VK_PAUSE,
+            LEFT: VK_LEFT,
+            UP: VK_UP,
+            RIGHT: VK_RIGHT,
+            DOWN: VK_DOWN,
+            N0: VK_0,
+            N1: VK_1,
+            N2: VK_2,
+            N3: VK_3,
+            N4: VK_4,
+            N5: VK_5,
+            N6: VK_6,
+            N7: VK_7,
+            N8: VK_8,
+            N9: VK_9,
+            RED: VK_RED,
+            GREEN: VK_GREEN,
+            YELLOW: VK_YELLOW,
+            BLUE: VK_BLUE,
+            RW: VK_REWIND,
+            STOP: VK_STOP,
+            PLAY: VK_PLAY,
+            FF: VK_FAST_FWD,
+            RETURN: VK_BACK,
+            CH_UP: VK_PAGE_UP,
+            CH_DOWN: VK_PAGE_DOWN
+        };
     }
-  };
-
-  _.extend(platform, platformObj);
-})(this);
+});
 (function () {
 
 	var localStorage = window.localStorage,
@@ -3384,420 +3228,403 @@ SB.readyForPlatform('philips', function () {
 		}
 	}
 }());
-if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
-    (function () {
-        var curAudio = 0;
+SB.readyForPlatform('samsung', function () {
+    var curAudio = 0;
 
 
-        var safeApply = function (self, method, args) {
-            try {
-                switch (args.length) {
-                    case 0:
-                        return self[method]();
-                    case 1:
-                        return self[method](args[0]);
-                    case 2:
-                        return self[method](args[0], args[1]);
-                    case 3:
-                        return self[method](args[0], args[1], args[2]);
-                    case 4:
-                        return self[method](args[0], args[1], args[2], args[3]);
-                    case 5:
-                        return self[method](args[0], args[1], args[2], args[3], args[4]);
-                    case 6:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5]);
-                    case 7:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-                    case 8:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+    var safeApply = function (self, method, args) {
+        try {
+            switch (args.length) {
+                case 0:
+                    return self[method]();
+                case 1:
+                    return self[method](args[0]);
+                case 2:
+                    return self[method](args[0], args[1]);
+                case 3:
+                    return self[method](args[0], args[1], args[2]);
+                case 4:
+                    return self[method](args[0], args[1], args[2], args[3]);
+                case 5:
+                    return self[method](args[0], args[1], args[2], args[3], args[4]);
+                case 6:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5]);
+                case 7:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+                case 8:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 
-                }
-            } catch (e) {
-                throw e;
             }
+        } catch (e) {
+            throw e;
         }
-        Player.extend({
-            usePlayerObject: true,
-            _init: function () {
-                var self = this;
-                //document.body.onload=function(){
-                if (self.usePlayerObject) {
-                    //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
-                    self.plugin = document.getElementById('pluginPlayer');
-                    $('body').append(self.$plugin);
+    }
+    Player.extend({
+        usePlayerObject: true,
+        _init: function () {
+            var self = this;
+            //document.body.onload=function(){
+            if (self.usePlayerObject) {
+                //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
+                self.plugin = document.getElementById('pluginPlayer');
+                $('body').append(self.$plugin);
 
 
+            } else {
+                self.plugin = sf.core.sefplugin('Player');
+            }
+
+
+            if (!self.plugin) {
+                throw new Error('failed to set plugin');
+            }
+
+            self.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
+            self.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
+            self.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
+            self.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
+            self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
+            //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
+            self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
+            //self.plugin.OnConnectionFailed = 'Player.onError';
+            //self.plugin.OnNetworkDisconnected = 'Player.onError';
+            //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
+
+            self.plugin.OnEvent = 'Player.onEvent';
+            //}
+
+        },
+        seek: function (time) {
+            if (time <= 0) {
+                time = 0;
+            }
+            /*if ( this.duration <= time + 1 ) {
+             this.videoInfo.currentTime = this.videoInfo.duration;
+             }
+             else {*/
+            var jump = Math.floor(time - this.videoInfo.currentTime - 1);
+            this.videoInfo.currentTime = time;
+            alert('jump: ' + jump);
+            if (jump < 0) {
+                this.doPlugin('JumpBackward', -jump);
+            }
+            else {
+                this.doPlugin('JumpForward', jump);
+            }
+            //  this.currentTime = time;
+            //}
+        },
+        onEvent: function (event, arg1, arg2) {
+
+            // alert('playerEvent: ' + event);
+            switch (event) {
+                case 9:
+                    this.OnStreamInfoReady();
+                    break;
+
+                case 4:
+                    //this.onError();
+                    break;
+
+                case 8:
+                    this.OnRenderingComplete();
+                    break;
+                case 14:
+                    this.OnCurrentPlayTime(arg1);
+                    break;
+                case 13:
+                    //this.OnBufferingProgress(arg1);
+                    break;
+                case 12:
+                    this.OnBufferingComplete();
+                    break;
+                case 11:
+                    this.OnBufferingStart();
+                    break;
+            }
+        },
+        OnRenderingComplete: function () {
+            alert('PLAYER COMPLETE');
+            Player.trigger('complete');
+        },
+        OnStreamInfoReady: function () {
+            var duration, width, height, resolution;
+
+            try {
+                duration = this.doPlugin('GetDuration');
+            } catch (e) {
+                alert('######## ' + e.message);
+            }
+
+            duration = Math.ceil(duration / 1000);
+            //this.jumpLength = Math.floor(this.duration / 30);
+
+            if (this.usePlayerObject) {
+                width = this.doPlugin('GetVideoWidth');
+                height = this.doPlugin('GetVideoHeight');
+            } else {
+                resolution = this.doPlugin('GetVideoResolution');
+                if (resolution == -1) {
+                    width = 0;
+                    height = 0;
                 } else {
-                    self.plugin = sf.core.sefplugin('Player');
+                    var arrResolution = resolution.split('|');
+                    width = arrResolution[0];
+                    height = arrResolution[1];
                 }
+            }
+
+            this.videoInfo.duration = duration;
+            this.videoInfo.width = width * 1;
+            this.videoInfo.height = height * 1;
+            this.trigger('ready');
+        },
+        OnBufferingStart: function () {
+            this.trigger('bufferingBegin');
+        },
+        OnBufferingComplete: function () {
+            this.trigger('bufferingEnd');
+        },
+        OnCurrentPlayTime: function (millisec) {
+            if (this.state == 'play') {
+                alert(millisec / 1000);
+                this.videoInfo.currentTime = millisec / 1000;
+                this.trigger('update');
+            }
+        },
+        _play: function (options) {
+            var url = options.url;
+            switch (options.type) {
+                case 'hls':
+                    url += '|COMPONENT=HLS'
+            }
+            this.doPlugin('InitPlayer', url);
+            this.doPlugin('StartPlayback', options.from || 0);
+        },
+        _stop: function () {
+            this.doPlugin('Stop');
+        },
+        doPlugin: function () {
+            var result,
+                plugin = this.plugin,
+                methodName = arguments[0],
+                args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
+
+            if (this.usePlayerObject) {
 
 
-                if (!self.plugin) {
-                    throw new Error('failed to set plugin');
+                result = safeApply(plugin, methodName, args);
+
+            }
+            else {
+                if (methodName.indexOf('Buffer') != -1) {
+                    methodName += 'Size';
                 }
+                args.unshift(methodName);
+                result = safeApply(plugin, 'Execute', args);
+            }
 
-                self.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
-                self.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
-                self.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
-                self.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
-                self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
-                //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
-                self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
-                //self.plugin.OnConnectionFailed = 'Player.onError';
-                //self.plugin.OnNetworkDisconnected = 'Player.onError';
-                //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
-
-                self.plugin.OnEvent = 'Player.onEvent';
-                //}
-
+            return result;
+        },
+        audio: {
+            set: function (index) {
+                /*one is for audio*/
+                //http://www.samsungdforum.com/SamsungDForum/ForumView/f0cd8ea6961d50c3?forumID=63d211aa024c66c9
+                Player.doPlugin('SetStreamID', 1, index);
+                curAudio = index;
             },
-            seek: function (time) {
-                if (time <= 0) {
-                    time = 0;
+            get: function () {
+                /*one is for audio*/
+                var len = Player.doPlugin('GetTotalNumOfStreamID', 1);
+
+                var result = [];
+                for (var i = 0; i < len; i++) {
+                    result.push(Player.doPlugin('GetStreamLanguageInfo', 1, i));
                 }
-                /*if ( this.duration <= time + 1 ) {
-                 this.videoInfo.currentTime = this.videoInfo.duration;
-                 }
-                 else {*/
-                var jump = Math.floor(time - this.videoInfo.currentTime - 1);
-                this.videoInfo.currentTime = time;
-                alert('jump: ' + jump);
-                if (jump < 0) {
-                    this.doPlugin('JumpBackward', -jump);
-                }
-                else {
-                    this.doPlugin('JumpForward', jump);
-                }
-                //  this.currentTime = time;
-                //}
-            },
-            onEvent: function (event, arg1, arg2) {
-
-               // alert('playerEvent: ' + event);
-                switch (event) {
-                    case 9:
-                        this.OnStreamInfoReady();
-                        break;
-
-                    case 4:
-                        //this.onError();
-                        break;
-
-                    case 8:
-                        this.OnRenderingComplete();
-                        break;
-                    case 14:
-                        this.OnCurrentPlayTime(arg1);
-                        break;
-                    case 13:
-                        //this.OnBufferingProgress(arg1);
-                        break;
-                    case 12:
-                        this.OnBufferingComplete();
-                        break;
-                    case 11:
-                        this.OnBufferingStart();
-                        break;
-                }
-            },
-            OnRenderingComplete: function () {
-                alert('PLAYER COMPLETE');
-                Player.trigger('complete');
-            },
-            OnStreamInfoReady: function () {
-                var duration, width, height, resolution;
-
-                try {
-                    duration = this.doPlugin('GetDuration');
-                } catch (e) {
-                    alert('######## ' + e.message);
-                }
-
-                duration = Math.ceil(duration / 1000);
-                //this.jumpLength = Math.floor(this.duration / 30);
-
-                if (this.usePlayerObject) {
-                    width = this.doPlugin('GetVideoWidth');
-                    height = this.doPlugin('GetVideoHeight');
-                } else {
-                    resolution = this.doPlugin('GetVideoResolution');
-                    if (resolution == -1) {
-                        width = 0;
-                        height = 0;
-                    } else {
-                        var arrResolution = resolution.split('|');
-                        width = arrResolution[0];
-                        height = arrResolution[1];
-                    }
-                }
-
-                this.videoInfo.duration = duration;
-                this.videoInfo.width = width * 1;
-                this.videoInfo.height = height * 1;
-                this.trigger('ready');
-            },
-            OnBufferingStart: function () {
-                this.trigger('bufferingBegin');
-            },
-            OnBufferingComplete: function () {
-                this.trigger('bufferingEnd');
-            },
-            OnCurrentPlayTime: function (millisec) {
-                if (this.state == 'play') {
-                    alert(millisec / 1000);
-                    this.videoInfo.currentTime = millisec / 1000;
-                    this.trigger('update');
-                }
-            },
-            _play: function (options) {
-                var url = options.url;
-                switch (options.type) {
-                    case 'hls':
-                        url += '|COMPONENT=HLS'
-                }
-                this.doPlugin('InitPlayer', url);
-                this.doPlugin('StartPlayback', options.from || 0);
-            },
-            _stop: function () {
-                this.doPlugin('Stop');
-            },
-            doPlugin: function () {
-                var result,
-                    plugin = this.plugin,
-                    methodName = arguments[0],
-                    args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
-
-                if (this.usePlayerObject) {
-
-
-                    result = safeApply(plugin, methodName, args);
-
-                }
-                else {
-                    if (methodName.indexOf('Buffer') != -1) {
-                        methodName += 'Size';
-                    }
-                    args.unshift(methodName);
-                    result = safeApply(plugin, 'Execute', args);
-                }
-
                 return result;
             },
-            audio: {
-                set: function (index) {
-                    /*one is for audio*/
-                    //http://www.samsungdforum.com/SamsungDForum/ForumView/f0cd8ea6961d50c3?forumID=63d211aa024c66c9
-                    Player.doPlugin('SetStreamID', 1, index);
-                    curAudio = index;
-                },
-                get: function () {
-                    /*one is for audio*/
-                    var len = Player.doPlugin('GetTotalNumOfStreamID', 1);
-
-                    var result = [];
-                    for (var i = 0; i < len; i++) {
-                        result.push(Player.doPlugin('GetStreamLanguageInfo', 1, i));
-                    }
-                    return result;
-                },
-                cur: function () {
-                    return curAudio;
-                }
+            cur: function () {
+                return curAudio;
             }
-        });
-    }());
-
-}
-
+        }
+    });
+});
 /**
  * Samsung platform
  */
-!(function ( window, undefined ) {
+!(function (window, undefined) {
 
-  var platform = new window.SB.Platform('samsung'),
-    /**
-     * Native plugins
-     * id: clsid (DOM element id : CLSID)
-     * @type {{object}}
-     */
-      plugins = {
-        audio: 'SAMSUNG-INFOLINK-AUDIO',
-        pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
-        pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
-        pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
-        pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
-      },
-    samsungFiles = [
-      '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
-      '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
-      '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
-      '$MANAGER_WIDGET/Common/Define.js',
-      '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
-      '$MANAGER_WIDGET/Common/API/Widget.js',
-      '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-      '$MANAGER_WIDGET/Common/API/Plugin.js',
-      'src/platforms/samsung/localstorage.js'
-    ],
-    platformObj,
-    detectResult = false;
 
-  detectResult = navigator.userAgent.search(/Maple/) > -1;
+    var
+        document=window.document,
+        /**
+         * Native plugins
+         * id: clsid (DOM element id : CLSID)
+         * @type {{object}}
+         */
+            plugins = {
+            audio: 'SAMSUNG-INFOLINK-AUDIO',
+            pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
+            pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
+            pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
+            pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
+            pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
+        },
+        samsungFiles = [
+            '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
+            '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
+            '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
+            '$MANAGER_WIDGET/Common/Define.js',
+            '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+            '$MANAGER_WIDGET/Common/API/Widget.js',
+            '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
+            '$MANAGER_WIDGET/Common/API/Plugin.js',
+            'src/platforms/samsung/localstorage.js'
+        ];
 
-  // non-standart inserting objects in DOM (i'm looking at you 2011 version)
-  // in 2011 samsung smart tv's we can't add objects if document is ready
-  if ( detectResult ) {
-    var htmlString = '';
-    for ( var i = 0; i < samsungFiles.length; i++ ) {
-      htmlString += '<script type="text/javascript" src="'+ samsungFiles[i] +'"></script>';
-    }
-    for ( var id in plugins ) {
-      htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
-    }
-    document.write(htmlString);
-  }
 
-  platformObj = {
+    SB.extend('samsung', {
 
-    keys: {
+        $plugins: {},
+        platformUserAgent: 'maple',
 
-    },
+        onDetect: function () {
+            // non-standart inserting objects in DOM (i'm looking at you 2011 version)
+            // in 2011 samsung smart tv's we can't add objects if document is ready
 
-    externalJs: [
-    ],
+            var htmlString = '';
+            for (var i = 0; i < samsungFiles.length; i++) {
+                htmlString += '<script type="text/javascript" src="' + samsungFiles[i] + '"></script>';
+            }
+            for (var id in plugins) {
+                htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
+            }
+            document.write(htmlString);
+        },
 
-    $plugins: {},
 
-    detect: function () {
-      return detectResult;
-    },
+        getNativeDUID: function () {
+            return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
+        },
 
-    initialise: function () {
-    },
+        getMac: function () {
+            return this.$plugins.pluginObjectNetwork.GetMAC();
+        },
 
-    getNativeDUID: function () {
-      return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
-    },
+        getSDI: function () {
+            this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+            return this.SDI;
+        },
 
-    getMac: function () {
-      return this.$plugins.pluginObjectNetwork.GetMAC();
-    },
+        /**
+         * Return hardware version for 2013 samsung only
+         * @returns {*}
+         */
+        getHardwareVersion: function () {
+            var version = this.firmware.match(/\d{4}/) || [];
+            if (version[0] === '2013') {
+                this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
+            } else {
+                this.hardwareVersion = null;
+            }
+            return this.hardwareVersion;
+        },
 
-    getSDI: function () {
-      this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
-      return this.SDI;
-    },
+        setPlugins: function () {
+            var self = this,
+                tvKey;
 
-    /**
-     * Return hardware version for 2013 samsung only
-     * @returns {*}
-     */
-    getHardwareVersion: function () {
-      var version = this.firmware.match(/\d{4}/) || [];
-      if ( version[0] === '2013' ) {
-        this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
-      } else {
-        this.hardwareVersion = null;
-      }
-      return this.hardwareVersion;
-    },
+            _.each(plugins, function (clsid, id) {
+                self.$plugins[id] = document.getElementById(id);
+            });
 
-    setPlugins: function () {
-      var self = this,
-        tvKey;
+            this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
+            this.$plugins.tvKey = new Common.API.TVKeyValue();
 
-      _.each(plugins, function ( clsid, id ) {
-        self.$plugins[id] = document.getElementById(id);
-      });
+            var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
+                TVPlugin = this.$plugins.pluginObjectTV;
 
-      this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
-      this.$plugins.tvKey = new Common.API.TVKeyValue();
+            this.modelCode = NNAVIPlugin.GetModelCode();
+            this.firmware = NNAVIPlugin.GetFirmware();
+            this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
+            this.productCode = TVPlugin.GetProductCode(1);
 
-      var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
-        TVPlugin = this.$plugins.pluginObjectTV;
+            this.pluginAPI = new Common.API.Plugin();
+            this.widgetAPI = new Common.API.Widget();
 
-      this.modelCode = NNAVIPlugin.GetModelCode();
-      this.firmware = NNAVIPlugin.GetFirmware();
-      this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
-      this.productCode = TVPlugin.GetProductCode(1);
+            this.productType = TVPlugin.GetProductType();
 
-      this.pluginAPI = new Common.API.Plugin();
-      this.widgetAPI = new Common.API.Widget();
+            tvKey = new Common.API.TVKeyValue();
 
-      this.productType = TVPlugin.GetProductType();
+            this.setKeys();
 
-      tvKey = new Common.API.TVKeyValue();
+            // enable standart volume indicator
+            this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
+            this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
+            this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+            this.widgetAPI.sendReadyEvent();
 
-      this.setKeys();
+            this.volumeEnable();
 
-      // enable standart volume indicator
-      this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
-      this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
-      this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
-      this.widgetAPI.sendReadyEvent();
+            NNAVIPlugin.SetBannerState(2);
+        },
 
-      this.volumeEnable();
+        volumeEnable: function () {
+            sf.service.setVolumeControl(true);
+        },
 
-      NNAVIPlugin.SetBannerState(2);
-    },
+        /**
+         * Set keys for samsung platform
+         */
+        setKeys: function () {
+            this.keys = sf.key;
 
-    volumeEnable: function () {
-      sf.service.setVolumeControl(true);
-    },
+            document.body.onkeydown = function (event) {
+                var keyCode = event.keyCode;
 
-    /**
-     * Set keys for samsung platform
-     */
-    setKeys: function () {
-      this.keys = sf.key;
+                switch (keyCode) {
+                    case sf.key.RETURN:
+                    case sf.key.EXIT:
+                    case 147:
+                    case 261:
+                        sf.key.preventDefault();
+                        break;
+                    default:
+                        break;
+                }
+            }
 
-      document.body.onkeydown = function(event){
-        var keyCode = event.keyCode;
+        },
 
-        switch (keyCode) {
-          case sf.key.RETURN:
-          case sf.key.EXIT:
-          case 147:
-          case 261:
+        /**
+         * Start screensaver
+         * @param time
+         */
+        enableScreenSaver: function (time) {
+            time = time || false;
+            sf.service.setScreenSaver(true, time);
+        },
+
+        /**
+         * Disable screensaver
+         */
+        disableScreenSaver: function () {
+            sf.service.setScreenSaver(false);
+        },
+
+        exit: function () {
+            sf.core.exit(false);
+        },
+
+        sendReturn: function () {
+            sf.core.exit(true);
+        },
+
+        blockNavigation: function () {
             sf.key.preventDefault();
-            break;
-          default:
-            break;
         }
-      }
+    });
 
-    },
-
-    /**
-     * Start screensaver
-     * @param time
-     */
-    enableScreenSaver: function ( time ) {
-      time = time || false;
-      sf.service.setScreenSaver(true, time);
-    },
-
-    /**
-     * Disable screensaver
-     */
-    disableScreenSaver: function () {
-      sf.service.setScreenSaver(false);
-    },
-
-    exit: function () {
-      sf.core.exit(false);
-    },
-
-    sendReturn: function(){
-        sf.core.exit(true);
-    },
-
-    blockNavigation: function () {
-      sf.key.preventDefault();
-    }
-  };
-
-  _.extend(platform, platformObj);
 })(this);
 (function ($) {
     "use strict";
