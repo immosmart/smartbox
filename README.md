@@ -80,3 +80,7 @@ SB.ready будет выполнен после всех коллбеков jQue
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
 
+# Посты о Smartbox
+* <a href="http://habrahabr.ru/post/211236//">Habr: Библиотека SmartBox для Samsung, LG, Philips и других</a>
+* <a href="http://habrahabr.ru/post/188294/">Habr: Создание кроссплатформенного Smart TV приложения на базе библиотеки SmartBox</a>
+
