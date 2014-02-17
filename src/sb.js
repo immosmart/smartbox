@@ -36,12 +36,6 @@
          */
         onDetect: null,
 
-        /**
-         * Detecting current platform
-         * @returns {boolean} true if running on current platform
-         */
-
-
         config: {
             DUID: 'real'
         },
@@ -50,19 +44,13 @@
         /**
          * Main function
          * @param cb {Function} callback after initialization
+         * @param notRun {Boolean}
          */
         ready: function (cb, notRun) {
-            var self = this;
 
-            if (!notRun&&!_running) {
-                _running=true;
-                $(function () {
-                    self.setPlugins();
-                    self.getDUID();
-                    setTimeout(function () {
-                        self._onReady();
-                    });
-                });
+            // initializing on first calling ready func
+            if (!notRun && !_running) {
+              this.initialize();
             }
 
             if (_ready) {
@@ -70,6 +58,23 @@
             } else {
                 readyCallbacks.push(cb);
             }
+        },
+
+        initialize: function () {
+          var self = this;
+
+          _running = true;
+
+          window.$$log = SB.utils.log.log;
+          window.$$error = SB.utils.error;
+
+          $(function () {
+            self.setPlugins();
+            self.getDUID();
+            setTimeout(function () {
+              self._onReady();
+            });
+          });
         },
 
         readyForPlatform: function (platform, cb) {
@@ -213,7 +218,6 @@
 
     //TODO: For backward capability. Remove this.
     SB.currentPlatform = SB;
-
 
     window.SB = SB;
 })(this);
