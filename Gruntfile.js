@@ -29,6 +29,19 @@ module.exports = function ( grunt ) {
 			]
 		},
 
+        cssmin: {
+            combine: {
+                files: {
+                    'dist/smartbox.css': [
+                        'css/input.css',
+                        'css/keyboard.css',
+                        'css/legend.css',
+                        'css/voicelink.css'
+                    ]
+                }
+            }
+        },
+
 		clean: {
 			build: ['dist']
 		},
@@ -76,6 +89,6 @@ module.exports = function ( grunt ) {
 			concatTask += 'all';
 		}
 
-		grunt.task.run('clean', concatTask ,'uglify');
+		grunt.task.run('clean', concatTask ,'uglify', 'cssmin');
 	});
 };

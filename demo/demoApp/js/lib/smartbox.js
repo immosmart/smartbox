@@ -2272,7 +2272,7 @@ $(function(){
                 //чтобы обновлял подсказки если был вызван голосовой поиск смотри баг #966
                 if (typeof voiceServer == 'function') {
                     voiceServer = false;
-                    $.voice.restore();
+                    $$voice.restore();
                 }
 
 

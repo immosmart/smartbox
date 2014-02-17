@@ -644,15 +644,17 @@
 			var board = '',
 				preset,
 				haveNums = false,
-				type;
+				type,
 
-			preset = SB.keyboardPresets[this.type];
+                _type=_.result(this, 'type');
+
+			preset = SB.keyboardPresets[_type];
 
 			this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
 
 			if ( typeof preset === 'function' ) {
-				this.presets.push(this.type);
-				board = this.generateBoard(this.type);
+				this.presets.push(_type);
+				board = this.generateBoard(_type);
 			} else if ( preset.length ) {
 				this.presets = preset;
 				haveNums = (preset.indexOf('fullnum') !== -1);
@@ -661,7 +663,7 @@
 
 			this.$wrap
 				.append(board)
-			 	.addClass('kekekey_' + this.type);
+			 	.addClass('kekekey_' + _type);
 
 			this.$el.append(this.$wrap);
 			this.setEvents();
@@ -924,12 +926,12 @@
 		},
 		show: function () {
 			this.$wrap.show();
-			this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
+			this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
 			return this;
 		},
 		hide: function () {
 			this.$wrap.hide();
-			this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
+			this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
 		}
 	};
 
@@ -2298,7 +2300,7 @@ $(function(){
                 //чтобы обновлял подсказки если был вызван голосовой поиск смотри баг #966
                 if (typeof voiceServer == 'function') {
                     voiceServer = false;
-                    $.voice.restore();
+                    $$voice.restore();
                 }
 
 
@@ -3577,7 +3579,9 @@ SB.readyForPlatform('samsung', function () {
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = sf.key;
+            this.keys = _.foldl(sf.key, function (sum, val, key) {
+                return sum[key.toLowerCase()] = val;
+            }, {});
 
             document.body.onkeydown = function (event) {
                 var keyCode = event.keyCode;

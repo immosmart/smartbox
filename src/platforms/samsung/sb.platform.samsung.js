@@ -126,7 +126,9 @@
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = sf.key;
+            this.keys = _.foldl(sf.key, function (sum, val, key) {
+                return sum[key.toLowerCase()] = val;
+            }, {});
 
             document.body.onkeydown = function (event) {
                 var keyCode = event.keyCode;
