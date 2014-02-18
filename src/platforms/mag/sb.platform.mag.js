@@ -1,7 +1,7 @@
 /**
  * Browser platform description
  */
-SB.extend('mag', {
+SB.createPlatform('mag', {
     keys: {
         RIGHT: 39,
         LEFT: 37,

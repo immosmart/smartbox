@@ -22,7 +22,8 @@
 
     platformName: '',
 
-    // TODO:
+    // TODO: refactor platform creating
+    // because platform can be overrided
     createPlatform: function ( platformName, platformApi ) {
 
       var isCurrent = platformApi.detect && platformApi.detect(),

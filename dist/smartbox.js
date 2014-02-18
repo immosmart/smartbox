@@ -22,7 +22,8 @@
 
     platformName: '',
 
-    // TODO:
+    // TODO: refactor platform creating
+    // because platform can be overrided
     createPlatform: function ( platformName, platformApi ) {
 
       var isCurrent = platformApi.detect && platformApi.detect(),
@@ -3092,7 +3093,7 @@ SB.readyForPlatform('mag', function(){
 /**
  * Browser platform description
  */
-SB.extend('mag', {
+SB.createPlatform('mag', {
     keys: {
         RIGHT: 39,
         LEFT: 37,
