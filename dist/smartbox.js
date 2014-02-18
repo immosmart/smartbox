@@ -32,6 +32,10 @@
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
         _.extend(this, platformApi);
+
+        if (typeof platformApi.onDetect === 'function') {
+          this.onDetect();
+        }
       }
     },
 
@@ -3627,6 +3631,7 @@ SB.readyForPlatform('samsung', function () {
         platformUserAgent: 'maple',
 
         onDetect: function () {
+            alert('ONDETECT!!!!')
             // non-standart inserting objects in DOM (i'm looking at you 2011 version)
             // in 2011 samsung smart tv's we can't add objects if document is ready
 
