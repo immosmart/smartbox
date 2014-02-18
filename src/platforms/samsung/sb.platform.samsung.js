@@ -32,7 +32,7 @@
         ];
 
 
-    SB.extend('samsung', {
+    SB.createPlatform('samsung', {
 
         $plugins: {},
         platformUserAgent: 'maple',

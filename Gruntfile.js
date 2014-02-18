@@ -32,12 +32,7 @@ module.exports = function ( grunt ) {
         cssmin: {
             combine: {
                 files: {
-                    'dist/smartbox.css': [
-                        'css/input.css',
-                        'css/keyboard.css',
-                        'css/legend.css',
-                        'css/voicelink.css'
-                    ]
+                    'dist/smartbox.css': ['css/*.css']
                 }
             }
         },

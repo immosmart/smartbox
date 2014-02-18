@@ -1,7 +1,7 @@
 /**
  * Philips platform
  */
-SB.extend('philips', {
+SB.createPlatform('philips', {
     platformUserAgent: 'nettv',
     setPlugins: function () {
         this.keys = {

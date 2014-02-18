@@ -1,7 +1,7 @@
 /**
  * Browser platform description
  */
-SB.extend('browser', {
+SB.createPlatform('browser', {
     keys: {
         RIGHT: 39,
         LEFT: 37,
@@ -46,9 +46,6 @@ SB.extend('browser', {
         return true;
     },
 
-    initialise: function () {
-    },
-
     getNativeDUID: function () {
         if (navigator.userAgent.indexOf('Chrome') != -1) {
             this.DUID = 'CHROMEISFINETOO';
@@ -56,15 +53,6 @@ SB.extend('browser', {
             this.DUID = 'FIREFOXISBEST';
         }
         return this.DUID;
-    },
-
-    volumeUp: function () {
-    },
-
-    volumeDown: function () {
-    },
-
-    getVolume: function () {
     },
 
     setData: function (name, val) {
@@ -76,8 +64,7 @@ SB.extend('browser', {
         var result;
         try {
             result = JSON.parse(localStorage.getItem(name));
-        } catch (e) {
-        }
+        } catch (e) {}
 
         return result;
     },

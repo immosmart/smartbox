@@ -142,6 +142,9 @@
         self = this;
 
       this.$input.on({
+        'nav_focus': function () {
+          $$nav.current(self.$el);
+        },
         change: function () {
           self.$text.html(this.value);
         },

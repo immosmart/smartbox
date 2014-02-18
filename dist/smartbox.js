@@ -1,605 +1,674 @@
 /**
  * Main smartbox file
  */
-(function (window, undefined) {
+(function ( window, undefined ) {
 
-    var _ready = false,
-        readyCallbacks = [],
-        _running = false;
+  var _ready = false,
+    readyCallbacks = [],
+    SB,
+    _running = false;
 
+  var userAgent = navigator.userAgent.toLowerCase();
 
-    var userAgent = navigator.userAgent.toLowerCase();
-    var detect = function (slug) {
-        return userAgent.indexOf(slug) !== -1;
-    }
+  /**
+   * Detecting current platform
+   * @returns {boolean} true if running on current platform
+   */
+  function detect ( slug ) {
+    return userAgent.indexOf(slug) !== -1;
+  }
 
-    var SB = {
+  SB = {
 
-        platform: 'browser',
+    platformName: '',
 
-        extend: function (platformName, prototype) {
-            if ((prototype.detect != undefined && prototype.detect()) ||
-                detect(prototype.platformUserAgent)
-                ) {
-                _.extend(this, prototype);
-                this.platform = platformName;
+    // TODO:
+    createPlatform: function ( platformName, platformApi ) {
 
-                if (_.isFunction(this.onDetect)) {
-                    this.onDetect();
-                }
-            }
-        },
+      var isCurrent = platformApi.detect && platformApi.detect(),
+        platform;
 
+      if ( isCurrent || detect(platformApi.platformUserAgent) ) {
+        this.platformName = platformName;
+        _.extend(this, platformApi);
+      }
+    },
 
-        /**
-         * Can be overridden by function that calls after successfully detect()
-         */
-        onDetect: null,
+    config: {
+      DUID: 'real'
+    },
 
-        /**
-         * Detecting current platform
-         * @returns {boolean} true if running on current platform
-         */
+    /**
+     * Main function
+     * @param cb {Function} callback after initialization
+     * @param notRun {Boolean}
+     */
+    ready: function ( cb, notRun ) {
 
+      // initializing on first calling ready func
+      if ( !notRun && !_running ) {
+        this.initialize();
+      }
 
-        config: {
-            DUID: 'real'
-        },
+      if ( _ready ) {
+        cb.call(this);
+      } else {
+        readyCallbacks.push(cb);
+      }
+    },
 
+    initialize: function () {
+      var self = this;
 
-        /**
-         * Main function
-         * @param cb {Function} callback after initialization
-         */
-        ready: function (cb, notRun) {
-            var self = this;
+      _running = true;
 
-            if (!notRun&&!_running) {
-                _running=true;
-                $(function () {
-                    self.setPlugins();
-                    self.getDUID();
-                    setTimeout(function () {
-                        self._onReady();
-                    });
-                });
-            }
+      window.$$log = SB.utils.log.log;
+      window.$$error = SB.utils.error;
 
-            if (_ready) {
-                cb.call(this);
-            } else {
-                readyCallbacks.push(cb);
-            }
-        },
+      $(function () {
+        self.setPlugins();
+        self.getDUID();
 
-        readyForPlatform: function (platform, cb) {
-            var self = this;
-            this.ready(function () {
-                if (platform == self.platform) {
-                    cb.call(self);
-                }
-            }, true);
-        },
+        // wait for calling others $()
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    },
 
-        /**
-         * Applying all ready callbacks
-         * @private
-         */
-        _onReady: function () {
-            _ready = true;
-
-            for (var i = 0, len = readyCallbacks.length; i < len; i++) {
-                readyCallbacks[i].call(this);
-            }
-        },
-
-
-        utils: {
-            /**
-             * Show error message
-             * @param msg
-             */
-            error: function (msg) {
-                $$log(msg, 'error');
-            },
-
-            /**
-             * Show messages in log
-             * all functionality in main.js
-             */
-            log: {
-                log: $.noop,
-                state: $.noop,
-                show: $.noop,
-                hide: $.noop,
-                startProfile: $.noop,
-                stopProfile: $.noop
-            },
-
-            legend: {}
-        },
-
-        keys: {},
-
-        DUID: '',
-
-
-        /**
-         * Get DUID in case of Config
-         * @return {string} DUID
-         */
-        getDUID: function () {
-            switch (SB.config.DUID) {
-                case 'real':
-                    this.DUID = this.getNativeDUID();
-                    break;
-                case 'mac':
-                    this.DUID = this.getMac();
-                    break;
-                case 'random':
-                    this.DUID = this.getRandomDUID();
-                    break;
-                /*case 'local_random':
-                 this.DUID = this.getLocalRandomDUID();
-                 break;*/
-                default:
-                    this.DUID = SB.config.DUID;
-                    break;
-            }
-            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
-
-
-            return this.DUID;
-        },
-
-        /**
-         * Returns random DUID for platform
-         * @returns {string}
-         */
-        getRandomDUID: function () {
-            return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
-        },
-
-        /**
-         * Returns native DUID for platform if exist
-         * @returns {string}
-         */
-        getMac: function () {
-            return '';
-        },
-
-        /**
-         * Returns native DUID for platform if exist
-         * @returns {string}
-         */
-        getNativeDUID: function () {
-            return '';
-        },
-
-        /**
-         * Set custom plugins
-         */
-        setPlugins: function () {
-        },
-
-        // TODO: volume for all platforms
-        volumeUp: function () {
-        },
-        volumeDown: function () {
-        },
-        getVolume: function () {
-        },
-
-        setData: function () {
-        },
-
-        getData: function () {
-        },
-
-        removeData: function () {
-        },
-
-        sendReturn: function () {
-        },
-
-        exit: function () {
-        },
-
-        getSDI: function () {
-
+    readyForPlatform: function ( platform, cb ) {
+      var self = this;
+      this.ready(function () {
+        if ( platform == self.platformName ) {
+          cb.call(self);
         }
-    };
+      }, true);
+    },
 
-    //TODO: For backward capability. Remove this.
-    SB.currentPlatform = SB;
+    /**
+     * Applying all ready callbacks
+     * @private
+     */
+    _onReady: function () {
+      _ready = true;
 
+      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+        readyCallbacks[i].call(this);
+      }
+    },
 
-    window.SB = SB;
+    utils: {
+      /**
+       * Show error message
+       * @param msg
+       */
+      error: function ( msg ) {
+        $$log(msg, 'error');
+      },
+
+      /**
+       * Show messages in log
+       * all functionality in main.js
+       */
+      log: {
+        log: $.noop,
+        state: $.noop,
+        show: $.noop,
+        hide: $.noop,
+        startProfile: $.noop,
+        stopProfile: $.noop
+      },
+
+      /**
+       * Asynchroniosly adding javascript files
+       * @param filesArray {Array} array of sources of javascript files
+       * @param cb {Function} callback on load javascript files
+       */
+      addExternalJS: function ( filesArray, cb ) {
+        var $externalJsContainer,
+          loadedScripts = 0,
+          len = filesArray.length,
+          el,
+          scriptEl;
+
+        function onloadScript () {
+          loadedScripts++;
+
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
+
+        if ( filesArray.length ) {
+
+          $externalJsContainer = document.createDocumentFragment();
+          el = document.createElement('script');
+          el.type = 'text/javascript';
+          el.onload = onloadScript;
+
+          for ( var i = 0; i < len; i++ ) {
+            scriptEl = el.cloneNode();
+            scriptEl.src = filesArray[i];
+            $externalJsContainer.appendChild(scriptEl);
+          }
+
+          document.body.appendChild($externalJsContainer);
+        } else {
+
+          // if no external js simple call cb
+          cb && cb.call(this);
+        }
+      },
+
+      addExternalCss: function ( filesArray ) {
+        var $externalCssContainer;
+
+        if ( filesArray.length ) {
+          $externalCssContainer = document.createDocumentFragment();
+          _.each(filesArray, function ( src ) {
+
+            var el = document.createElement('link');
+
+            el.rel = 'stylesheet';
+            el.href = src;
+
+            $externalCssContainer.appendChild(el);
+          });
+
+          document.body.appendChild($externalCssContainer);
+        }
+      },
+
+      addExternalFiles: function ( cb ) {
+        if ( this.externalJs.length ) {
+          this.addExternalJS(this.externalJs, cb);
+        }
+        if ( this.externalCss.length ) {
+          this.addExternalCss(this.externalCss);
+        }
+      },
+
+      legend: {}
+    }
+  };
+
+  // for backward compatibility
+  SB.currentPlatform = SB;
+
+  window.SB = SB;
+})(this);
+// global SB
+!(function ( window, undefined ) {
+
+  var PlatformApi = {
+    externalCss: [],
+    externalJs: [],
+    keys: {},
+
+    DUID: '',
+
+    platformUserAgent: 'not found',
+
+    /**
+     * Function called if running on current platform
+     */
+    initialise: $.noop,
+
+    /**
+     * Get DUID in case of Config
+     * @return {string} DUID
+     */
+    getDUID: function () {
+      switch (SB.config.DUID) {
+        case 'real':
+          this.DUID = this.getNativeDUID();
+          break;
+        case 'mac':
+          this.DUID = this.getMac();
+          break;
+        case 'random':
+          this.DUID = this.getRandomDUID();
+          break;
+        /*case 'local_random':
+         this.DUID = this.getLocalRandomDUID();
+         break;*/
+        default:
+          this.DUID = Config.DUIDSettings;
+          break;
+      }
+
+      return this.DUID;
+    },
+
+    getSDI: function () {
+      return '';
+    },
+
+    /**
+     * Returns random DUID for platform
+     * @returns {string}
+     */
+    getRandomDUID: function () {
+      return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
+    },
+
+    /**
+     * Returns native DUID for platform if exist
+     * @returns {string}
+     */
+    getMac: function () {
+      return '';
+    },
+
+    /**
+     * Returns native DUID for platform if exist
+     * @returns {string}
+     */
+    getNativeDUID: function () {
+      return '';
+    },
+
+    /**
+     * Set custom plugins
+     */
+    setPlugins: $.noop,
+
+    // TODO: volume for all platforms
+    volumeUp: $.noop,
+    volumeDown: $.noop,
+    getVolume: $.noop,
+    setData: $.noop,
+    getData: $.noop,
+    removeData: $.noop,
+    exit: $.noop
+  };
+
+  _.extend(SB, PlatformApi);
 })(this);
 /**
  * Keyboard Plugin
  */
-;(function ( $, window, document, undefined ) {
+;
+(function ( $, window, document, undefined ) {
 
+  var pluginName = 'SBInput',
+    defaultOptions = {
+      keyboard: {
+        type: 'fulltext_ru',
+        firstLayout: 'ru'
+      },
 
-	var pluginName = 'SBInput',
-		defaultOptions = {
-			keyboard: {
-				type: 'fulltext_ru',
-				firstLayout: 'ru'
-			},
+      /**
+       * Format function
+       * @param text
+       */
+      formatText: null,
+      bindKeyboard: null,
 
-			/**
-			 * Format function
-			 * @param text
-			 */
-			formatText: null,
-			bindKeyboard: null,
+      input: {
+        template: '<div class="smart_input-container">' +
+                  '<div class="smart_input-wrap">' +
+                  '<span class="smart_input-text"></span>' +
+                  '<span class="smart_input-cursor"></span>' +
+                  '</div>' +
+                  '</div>',
+        elClass: 'smart_input-container',
+        wrapperClass: 'smart_input-wrap',
+        cursorClass: 'smart_input-cursor',
+        textClass: 'smart_input-text'
+      },
 
-			input: {
-				template: '<div class="smart_input-container">' +
-										'<div class="smart_input-wrap">' +
-											'<span class="smart_input-text"></span>' +
-											'<span class="smart_input-cursor"></span>' +
-										'</div>' +
-									'</div>',
-				elClass: 'smart_input-container',
-				wrapperClass: 'smart_input-wrap',
-				cursorClass: 'smart_input-cursor',
-				textClass: 'smart_input-text'
-			},
+      directKeyboardInput: true,
 
-			directKeyboardInput: true,
+      max: 0,
 
-			max: 0,
+      next: null
+    },
+    pluginPrototype,
+    $keyboardOverlay,
+    $keyboardPopup,
+  // in app can be only one blink cursor
+    blinkInterval;
 
-			next: null
-		},
-		pluginPrototype,
-		$keyboardOverlay,
-		$keyboardPopup,
-		// in app can be only one blink cursor
-		blinkInterval;
+  /**
+   * Generate input element
+   * @param opt  input options
+   * @returns {*}  jQuery el
+   */
+  function generateInput ( opt ) {
+    var div = $(document.createElement('div'));
+    div.html(opt.template);
+    return div.find('.' + opt.elClass);
+  }
 
-	/**
-	 * Generate input element
-	 * @param opt  input options
-	 * @returns {*}  jQuery el
-	 */
-	function generateInput(opt) {
-		var div = $(document.createElement('div'));
-		div.html(opt.template);
-		return div.find('.' + opt.elClass);
-	}
+  /**
+   * generate popup for input keyboards
+   */
+  function generateKeyboardPopup () {
+    $keyboardOverlay = $(document.createElement('div')).attr('id', 'keyboard_overlay');
+    $keyboardPopup = $(document.createElement('div')).attr({
+      'id': 'keyboard_popup',
+      'class': 'keyboard_popup_wrapper'
+    });
+    $keyboardOverlay.append($keyboardPopup);
+    $(document.body).append($keyboardOverlay);
+  }
 
-	/**
-	 * generate popup for input keyboards
-	 */
-	function generateKeyboardPopup() {
-		$keyboardOverlay = $(document.createElement('div')).attr('id', 'keyboard_overlay');
-		$keyboardPopup = $(document.createElement('div')).attr({
-			'id': 'keyboard_popup',
-			'class': 'keyboard_popup_wrapper'
-		});
-		$keyboardOverlay.append($keyboardPopup);
-		$(document.body).append($keyboardOverlay);
-	}
+  // The actual plugin constructor
+  function Plugin ( element, options ) {
+    this.$input = $(element);
+    this.initialise(options);
+    this.stopBlink();
+    this.setText(element.value);
+  }
 
-	// The actual plugin constructor
-	function Plugin( element, options ) {
-		this.$input = $(element);
-		this.initialise(options);
-		this.stopBlink();
-		this.setText(element.value);
-	}
+  pluginPrototype = {
+    isInited: false,
+    _generatedKeyboard: false,
+    isKeyboardActive: false,
+    text: '',
+    initialise: function ( options ) {
+      var $el;
+      if ( this.isInited ) {
+        return this;
+      }
 
-	pluginPrototype = {
-		isInited: false,
-		_generatedKeyboard: false,
-		isKeyboardActive: false,
-		text: '',
-		initialise: function (options) {
-			var $el;
-			if (this.isInited) {
-				return this;
-			}
+      options = $.extend({}, defaultOptions, options);
+      options.next = this.$input.attr('data-next') || options.next;
+      options.max = this.$input.attr('data-max') || options.max || 0;
 
-			options = $.extend({}, defaultOptions, options);
-			options.next = this.$input.attr('data-next') || options.next;
-			options.max = this.$input.attr('data-max') || options.max || 0;
+      this.options = options;
 
-			this.options = options;
+      this.$input.attr({
+        'data-value': '',
+        'data-max': options.max
+      });
 
-			this.$input.attr({
-				'data-value': '',
-				'data-max': options.max
-			});
+      $el = generateInput(options.input);
+      $el.addClass(this.$input[0].className);
 
-			$el = generateInput(options.input);
-			$el.addClass(this.$input[0].className);
+      this.$input.hide().after($el);
 
-			this.$input.hide().after($el);
+      this.$el = $el;
+      this.$text = $el.find('.' + options.input.textClass);
+      this.$cursor = $el.find('.' + options.input.cursorClass);
+      this.$wrapper = $el.find('.' + options.input.wrapperClass);
 
-			this.$el = $el;
-			this.$text = $el.find('.' + options.input.textClass);
-			this.$cursor = $el.find('.' + options.input.cursorClass);
-			this.$wrapper = $el.find('.' + options.input.wrapperClass);
+      if ( options.directKeyboardInput ) {
+        this.addDirectKeyboardEvents();
+      }
 
-			if ( options.directKeyboardInput ) {
-				this.addDirectKeyboardEvents();
-			}
+      this.addEvents();
+      this.isInited = true;
+      return this;
+    },
 
-			this.addEvents();
-			this.isInited = true;
-			return this;
-		},
+    startBlink: function () {
+      var self = this,
+        hiddenClass = this.options.input.cursorClass + '_hidden';
 
-		startBlink: function () {
-			var self = this,
-				hiddenClass = this.options.input.cursorClass + '_hidden';
+      if ( blinkInterval ) {
+        clearInterval(blinkInterval);
+      }
+      blinkInterval = setInterval(function () {
+        self.$cursor.toggleClass(hiddenClass);
+      }, 500);
+    },
 
-			if ( blinkInterval ) {
-				clearInterval(blinkInterval);
-			}
-			blinkInterval = setInterval(function () {
-				self.$cursor.toggleClass(hiddenClass);
-			}, 500);
-		},
+    stopBlink: function () {
+      var hiddenClass = this.options.input.cursorClass + '_hidden';
+      if ( blinkInterval ) {
+        clearInterval(blinkInterval);
+      }
+      this.$cursor.addClass(hiddenClass);
+    },
 
-		stopBlink: function () {
-			var hiddenClass = this.options.input.cursorClass + '_hidden';
-			if ( blinkInterval ) {
-				clearInterval(blinkInterval);
-			}
-			this.$cursor.addClass(hiddenClass);
-		},
+    addEvents: function () {
+      var $wrap = this.$wrapper,
+        opt = this.options,
+        self = this;
 
-		addEvents: function () {
-			var $wrap = this.$wrapper,
-				opt = this.options,
-				self = this;
+      this.$input.on({
+        'nav_focus': function () {
+          $$nav.current(self.$el);
+        },
+        change: function () {
+          self.$text.html(this.value);
+        },
+        'startBlink': function () {
+          self.startBlink();
+        },
+        'stopBlink': function () {
+          self.stopBlink();
+        },
+        'hideKeyboard': function () {
+          if ( $wrap.hasClass('smart-input-active') ) {
+            self.hideKeyboard();
+          }
+        },
+        'showKeyboard': function () {
+          self.showKeyboard();
+        }
+      });
 
-			this.$input.on({
-				change: function () {
-					self.$text.html(this.value);
-				},
-				'startBlink': function () {
-					self.startBlink();
-				},
-				'stopBlink': function () {
-					self.stopBlink();
-				},
-				'hideKeyboard': function () {
-					if ( $wrap.hasClass('smart-input-active') ) {
-						self.hideKeyboard();
-					}
-				},
-				'showKeyboard': function () {
-					self.showKeyboard();
-				}
-			});
+      $wrap.off('nav_focus nav_blur click');
 
-			$wrap.off('nav_focus nav_blur click');
+      if ( opt.bindKeyboard ) {
+        opt.keyboard = false;
+        opt.bindKeyboard
+          .off('type backspace delall')
+          .on('type', function ( e ) {
+            self.type(e.letter);
+          })
+          .on('backspace', function () {
+            self.type('backspace');
+          })
+          .on('delall', function () {
+            self.type('delall');
+          });
+      }
 
-			if (opt.bindKeyboard) {
-				opt.keyboard = false;
-				opt.bindKeyboard
-					.off('type backspace delall')
-					.on('type',function ( e ) {
-						self.type(e.letter);
-					})
-					.on('backspace',function () {
-						self.type('backspace');
-					})
-					.on('delall', function () {
-						self.type('delall');
-					});
-			}
+      if ( opt.keyboard ) {
+        this.$el.on('click', function () {
+          self.startBlink();
+          self.showKeyboard();
+        })
+      }
+    },
 
-			if (opt.keyboard) {
-				this.$el.on('click', function () {
-					self.startBlink();
-					self.showKeyboard();
-				})
-			}
-		},
+    addDirectKeyboardEvents: function () {
+      var self = this;
 
-		addDirectKeyboardEvents: function () {
-			var self = this;
-
-			this.$el.on({
-				nav_focus: function () {
-					self.startBlink();
-					$(document.body).on('keypress.SBInput', function ( e ) {
-						if ( e.charCode ) {
-							e.preventDefault();
-							self.type(String.fromCharCode(e.charCode));
-						} else {
-							switch ( e.keyCode ) {
-								case 8:
-									e.preventDefault();
-									self.type('backspace');
-									break;
-							}
-						}
-					});
-				},
-				nav_blur: function () {
-					self.stopBlink();
-					$(document.body).off('keypress.SBInput');
-				}
-			});
-		},
-
-		setText: function (text) {
-			var opt = this.options,
-				max = opt.max,
-				method;
-
-            if(!text){
-                text='';
+      this.$el.on({
+        nav_focus: function () {
+          self.startBlink();
+          $(document.body).on('keypress.SBInput', function ( e ) {
+            if ( e.charCode ) {
+              e.preventDefault();
+              self.type(String.fromCharCode(e.charCode));
+            } else {
+              switch ( e.keyCode ) {
+                case 8:
+                  e.preventDefault();
+                  self.type('backspace');
+                  break;
+              }
             }
+          });
+        },
+        nav_blur: function () {
+          self.stopBlink();
+          $(document.body).off('keypress.SBInput');
+        }
+      });
+    },
 
-			if ( text.length > max && max != 0 ) {
-				text = text.substr(0, max);
-			}
+    setText: function ( text ) {
+      var opt = this.options,
+        max = opt.max,
+        method;
 
-			if (opt.formatText) {
-				text = opt.formatText(text);
-			}
+      text = text || '';
 
-			this.$input.val(text).change();
-			this.text = text;
+      if ( text.length > max && max != 0 ) {
+        text = text.substr(0, max);
+      }
 
-			// TODO: fix for Samsung 11
-			if ( text.length > 1 ) {
-				method = (this.$text.width() > this.$wrapper.width()) ? 'add' : 'remove';
-				this.$wrapper[ method + 'Class']('.' + opt.input.wrapperClass + '_right');
-			} else {
-				this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
-			}
-		},
+      if ( opt.formatText ) {
+        text = opt.formatText(text);
+      }
 
-		type: function ( letter ) {
-			var text = this.text || '',
-				opt = this.options;
+      this.$input.val(text).change();
+      this.text = text;
 
-			switch (letter) {
-				case 'backspace':
-					text = text.substr(0, text.length - 1);
-					break;
-				case 'delall':
-					text = '';
-					break;
-				default:
-					text += letter;
-					break;
-			}
+      // TODO: fix for Samsung 11
+      if ( text.length > 1 ) {
+        method = (this.$text.width() > this.$wrapper.width()) ? 'add' : 'remove';
+        this.$wrapper[ method + 'Class']('.' + opt.input.wrapperClass + '_right');
+      } else {
+        this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
+      }
+    },
 
-			this.setText(text);
+    type: function ( letter ) {
+      var text = this.text || '',
+        opt = this.options;
 
-			//jump to next input if is set
-			if ( text.length === opt.max &&
-					 opt.next &&
-					 opt.max != 0 ) {
-				this.hideKeyboard();
-				$$nav.current(opt.next);
-				$$nav.current().click();
-			}
-		},
+      switch ( letter ) {
+        case 'backspace':
+          text = text.substr(0, text.length - 1);
+          break;
+        case 'delall':
+          text = '';
+          break;
+        default:
+          text += letter;
+          break;
+      }
 
-		hideKeyboard: function ( isComplete ) {
-			var $wrapper = this.$wrapper;
-			$wrapper.removeClass('smart-input-active');
-			this.$input.trigger('keyboard_hide');
+      this.setText(text);
 
-			$keyboardOverlay && $keyboardOverlay.hide();
+      //jump to next input if is set
+      if ( text.length === opt.max &&
+           opt.next &&
+           opt.max != 0 ) {
+        this.hideKeyboard();
+        $$nav.current(opt.next);
+        $$nav.current().click();
+      }
+    },
 
-			$$nav.restore();
-			$$voice.restore();
+    hideKeyboard: function ( isComplete ) {
+      var $wrapper = this.$wrapper;
+      $wrapper.removeClass('smart-input-active');
+      this.$input.trigger('keyboard_hide');
 
-			this.isKeyboardActive = false;
-			if ( isComplete ) {
-				this.$input.trigger('keyboard_complete');
-			}
-			else {
-				this.$input.trigger('keyboard_cancel');
-			}
-			$keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
-		},
+      $keyboardOverlay && $keyboardOverlay.hide();
 
-		showKeyboard: function () {
-			var $wrapper = this.$wrapper,
-				keyboardOpt = this.options.keyboard,
-				self = this;
+      $$nav.restore();
+      $$voice.restore();
 
-			this.isKeyboardActive = true;
-			$wrapper.addClass('smart-input-active');
+      this.isKeyboardActive = false;
+      if ( isComplete ) {
+        this.$input.trigger('keyboard_complete');
+      }
+      else {
+        this.$input.trigger('keyboard_cancel');
+      }
+      $keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
+    },
 
-			var h = this.$el.outerHeight();
-			var o = this.$el.offset();
-			var top = o.top + h;
+    showKeyboard: function () {
+      var $wrapper = this.$wrapper,
+        keyboardOpt = this.options.keyboard,
+        self = this;
 
-			if (!$keyboardOverlay) {
-				generateKeyboardPopup();
-			}
+      this.isKeyboardActive = true;
+      $wrapper.addClass('smart-input-active');
 
-			if (!this._generatedKeyboard) {
-				$keyboardPopup.SBKeyboard(keyboardOpt);
-				this._generatedKeyboard = true;
-			}
+      var h = this.$el.outerHeight();
+      var o = this.$el.offset();
+      var top = o.top + h;
 
-			$keyboardPopup.SBKeyboard('changeKeyboard', keyboardOpt.type)
-				.css({
-					'left': o.left,
-					'top': top
-				})
-				.off('type backspace delall complete cancel')
-				.on('type',function ( e ) {
-					self.type(e.letter);
-				})
-				.on('backspace',function () {
-					self.type('backspace');
-				})
-				.on('delall',function () {
-					self.type('delall');
-				})
-				.on('complete cancel', function ( e ) {
-					var isComplete = false;
-					if ( e.type === 'complete' ) {
-						isComplete = true;
-					}
-					self.stopBlink();
-					self.hideKeyboard(isComplete);
-				});
+      if ( !$keyboardOverlay ) {
+        generateKeyboardPopup();
+      }
 
-			$keyboardOverlay.show();
+      if ( !this._generatedKeyboard ) {
+        $keyboardPopup.SBKeyboard(keyboardOpt);
+        this._generatedKeyboard = true;
+      }
 
-			var kh = $keyboardPopup.height();
-			var kw = $keyboardPopup.width();
+      $keyboardPopup.SBKeyboard('changeKeyboard', keyboardOpt.type)
+        .css({
+          'left': o.left,
+          'top': top
+        })
+        .off('type backspace delall complete cancel')
+        .on('type', function ( e ) {
+          self.type(e.letter);
+        })
+        .on('backspace', function () {
+          self.type('backspace');
+        })
+        .on('delall', function () {
+          self.type('delall');
+        })
+        .on('complete cancel', function ( e ) {
+          var isComplete = false;
+          if ( e.type === 'complete' ) {
+            isComplete = true;
+          }
+          self.stopBlink();
+          self.hideKeyboard(isComplete);
+        });
 
-			if ( top + kh > 680 ) {
-				$keyboardPopup.css({
-					'top': top - kh - h
-				})
-			}
-			if ( o.left + kw > 1280 ) {
-				$keyboardPopup.css({
-					'left': 1280 - kw - 20
-				})
-			}
-			$$voice.save();
-			$$nav.save();
-			$$nav.on('#keyboard_popup');
-			$keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
-			this.$el.addClass($$nav.higlight_class);
-			this.$input.trigger('keyboard_show');
-			this.startBlink();
-		}
-	};
+      $keyboardOverlay.show();
 
-	$.extend(Plugin.prototype, pluginPrototype);
-	pluginPrototype = null;
+      var kh = $keyboardPopup.height();
+      var kw = $keyboardPopup.width();
 
-	$.fn.SBInput = function () {
-		var args = Array.prototype.slice.call(arguments),
-			method = (typeof args[0] == 'string') && args[0],
-			options = (typeof args[0] == 'object') && args[0],
-			params = args.slice(1);
+      if ( top + kh > 680 ) {
+        $keyboardPopup.css({
+          'top': top - kh - h
+        })
+      }
+      if ( o.left + kw > 1280 ) {
+        $keyboardPopup.css({
+          'left': 1280 - kw - 20
+        })
+      }
+      $$voice.save();
+      $$nav.save();
+      $$nav.on('#keyboard_popup');
+      $keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
+      this.$el.addClass($$nav.higlight_class);
+      this.$input.trigger('keyboard_show');
+      this.startBlink();
+    }
+  };
 
-		return this.each(function () {
-			var instance = $.data(this, 'plugin_' + pluginName);
-			if (!instance) {
-				$.data(this, 'plugin_' + pluginName,
-					new Plugin( this, options ));
-			} else if (typeof instance[method] === 'function'){
-				instance[method](params);
-			}
-		});
-	}
+  $.extend(Plugin.prototype, pluginPrototype);
+  pluginPrototype = null;
 
-})( jQuery, window, document );
+  $.fn.SBInput = function () {
+    var args = Array.prototype.slice.call(arguments),
+      method = (typeof args[0] == 'string') && args[0],
+      options = (typeof args[0] == 'object') && args[0],
+      params = args.slice(1);
+
+    return this.each(function () {
+      var instance = $.data(this, 'plugin_' + pluginName);
+      if ( !instance ) {
+        $.data(this, 'plugin_' + pluginName,
+          new Plugin(this, options));
+      } else if ( typeof instance[method] === 'function' ) {
+        instance[method](params);
+      }
+    });
+  }
+
+})(jQuery, window, document);
 /**
  * Keyboard Plugin
  */
@@ -1164,10 +1233,12 @@ window.SB.keyboardPresets = {
       text = text || '';
 
       if (!text && this.isShown) {
-        this.$el.hide();
+        this.$el[0].style.display = 'none';
+        this.$el.removeClass('legend-item-visible');
         this.isShown = false;
       } else if (text && !this.isShown) {
-        this.$el.show();
+        this.$el[0].style.display = '';
+        this.$el.addClass('legend-item-visible');
         this.isShown = true;
       }
 
@@ -1201,762 +1272,751 @@ window.SB.keyboardPresets = {
 })(this);
 (function ( window, undefined ) {
 
-	var profiles = {},
-		logs = {},
-		logNames = [],
-		curPanelIndex = 0,
-		// максимум логов на странице
-		maxLogCount = 20,
-		$logWrap,
-		$logRow,
-		Log,
-		LogPanel;
+  var profiles = {},
+    logs = {},
+    logNames = [],
+    curPanelIndex = 0,
+  // максимум логов на странице
+    maxLogCount = 20,
+    $logWrap,
+    $logRow,
+    Log,
+    LogPanel;
 
+  // append log wrapper to body
+  $logWrap = $('<div></div>', {
+    id: 'log'
+  });
 
-	// append log wrapper to body
-	$logWrap = $('<div></div>', {
-		id: 'log'
-	});
+  $(function () {
+    $logWrap.appendTo(document.body);
+  });
 
-    $(function(){
-        $logWrap.appendTo(document.body);
-    });
+  $logRow = $('<div></div>', {
+    'class': 'log-row'
+  });
 
+  /**
+   * LogPanel constructor
+   * @param logName {String} name of log panel
+   * @constructor
+   */
+  LogPanel = function ( logName ) {
+    this.name = logName;
+    this.logs = 0;
+    this.states = {};
 
-	$logRow = $('<div></div>', {
-		'class': 'log-row'
-	});
+    var $wrapper = $('#log_' + this.name);
 
-	/**
-	 * LogPanel constructor
-	 * @param logName {String} name of log panel
-	 * @constructor
-	 */
-	LogPanel = function ( logName ) {
-		this.name = logName;
-		this.logs = 0;
-		this.states = {};
+    this.$content = $wrapper.find('.log_content');
+    this.$state = $wrapper.find('.log_states');
 
-		var $wrapper = $('#log_' + this.name);
+    // no need anymore
+    $wrapper = null;
+  };
 
-		this.$content = $wrapper.find('.log_content');
-		this.$state = $wrapper.find('.log_states');
+  _.extend(LogPanel.prototype, {
+    log: function log ( msg ) {
+      var logRow = $logRow.clone(),
+        $rows, length;
+      this.logs++;
+      msg = _.escape(msg);
 
-		// no need anymore
-		$wrapper = null;
-	};
+      logRow.html(msg).appendTo(this.$content);
+      if ( this.logs > maxLogCount ) {
+        $rows = this.$content.find(".log-row");
+        length = $rows.length;
+        $rows.slice(0, length - maxLogCount).remove();
+        this.logs = $rows.length;
+      }
+    },
 
-	_.extend(LogPanel.prototype, {
-		log: function log ( msg ) {
-			var logRow = $logRow.clone(),
-				$rows, length;
-			this.logs++;
-			msg = _.escape(msg);
+    state: function state ( value, stateName ) {
+      var state = this.states[stateName] || this.createState(stateName);
+      state.textContent = stateName + ': ' + value;
+    },
 
-			logRow.html(msg).appendTo(this.$content);
-			if ( this.logs > maxLogCount ) {
-				$rows = this.$content.find(".log-row");
-				length = $rows.length;
-				$rows.slice(0, length - maxLogCount).remove();
-				this.logs = $rows.length;
-			}
-		},
+    createState: function ( stateName ) {
+      var $state = document.createElement('div');
+      $state.id = '#log_' + this.name + '_' + stateName;
+      this.states[stateName] = $state;
+      this.$state.append($state);
 
-		state: function state ( value, stateName ) {
-			var state = this.states[stateName] || this.createState(stateName);
-			state.textContent = stateName + ': ' + value;
-		},
-
-		createState: function ( stateName ) {
-			var $state = document.createElement('div');
-			$state.id = '#log_' + this.name + '_' + stateName;
-			this.states[stateName] = $state;
-			this.$state.append($state);
-
-			return $state;
-		}
-	});
-
-	var logPanelTemplate = _.template('<div class="log_pane" id="log_<%= name %>">' +
-																			'<div class="log_name">Log: <%=name%></div>' +
-																			'<div class="log_content_wrap">' +
-																				'<div class="log_content"></div>' +
-																			'</div>' +
-																			'<div class="log_states"></div>' +
-																		'</div>');
-
-	Log = {
-
-		create: function ( logName ) {
-			$logWrap.append(logPanelTemplate({
-				name: logName
-			}));
-			logs[logName] = new LogPanel(logName);
-			logNames.push(logName);
-			return logs[logName];
-		},
-
-		getPanel: function ( logName ) {
-			logName = logName || 'default';
-			return (logs[logName] || this.create(logName));
-		}
-	};
-
-	/**
-	 * Public log API
-	 */
-	window.SB.utils.log = {
-		log: function ( msg, logName ) {
-			Log.getPanel(logName).log(msg);
-		},
-
-		state: function ( msg, state, logName ) {
-			Log.getPanel(logName).state(msg, state);
-		},
-
-		show: function ( logName ) {
-			logName = logName || logNames[curPanelIndex];
-
-			if ( !logName ) {
-				curPanelIndex = 0;
-				this.hide();
-			} else {
-				curPanelIndex++;
-				$logWrap.show();
-				$('.log_pane').hide();
-				$('#log_' + logName).show();
-			}
-		},
-
-		hide: function () {
-			$logWrap.hide();
-		},
-
-		startProfile: function ( profileName ) {
-			if ( profileName ) {
-				profiles[profileName] = (new Date()).getTime();
-			}
-		},
-
-		stopProfile: function ( profileName ) {
-			if ( profiles[profileName] ) {
-				this.log(profileName + ': ' + ((new Date()).getTime() - profiles[profileName]) + 'ms', 'profiler');
-				delete profiles[profileName];
-			}
-		}
-	};
-
-    window.$$log=function(){
-        SB.utils.log.log.apply(SB.utils.log, arguments);
+      return $state;
     }
+  });
 
-    window.$$error=function(msg){
-        SB.utils.error(msg, 'error');
+  var logPanelTemplate = '<div class="log_pane" id="log_<%=name%>">' +
+                           '<div class="log_name">Log: <%=name%></div>' +
+                           '<div class="log_content_wrap">' +
+                            '<div class="log_content"></div>' +
+                           '</div>' +
+                           '<div class="log_states"></div>' +
+                         '</div>';
+
+  Log = {
+
+    create: function ( logName ) {
+      var logHtml = logPanelTemplate.replace(/<%=name%>/g, logName);
+      $logWrap.append(logHtml);
+      logs[logName] = new LogPanel(logName);
+      logNames.push(logName);
+      return logs[logName];
+    },
+
+    getPanel: function ( logName ) {
+      logName = logName || 'default';
+      return (logs[logName] || this.create(logName));
     }
+  };
+
+  /**
+   * Public log API
+   */
+  window.SB.utils.log = {
+    log: function ( msg, logName ) {
+      Log.getPanel(logName).log(msg);
+    },
+
+    state: function ( msg, state, logName ) {
+      Log.getPanel(logName).state(msg, state);
+    },
+
+    show: function ( logName ) {
+      logName = logName || logNames[curPanelIndex];
+
+      if ( !logName ) {
+        curPanelIndex = 0;
+        this.hide();
+      } else {
+        curPanelIndex++;
+        $logWrap.show();
+        $('.log_pane').hide();
+        $('#log_' + logName).show();
+      }
+    },
+
+    hide: function () {
+      $logWrap.hide();
+    },
+
+    startProfile: function ( profileName ) {
+      if ( profileName ) {
+        profiles[profileName] = (new Date()).getTime();
+      }
+    },
+
+    stopProfile: function ( profileName ) {
+      if ( profiles[profileName] ) {
+        this.log(profileName + ': ' + ((new Date()).getTime() - profiles[profileName]) + 'ms', 'profiler');
+        delete profiles[profileName];
+      }
+    }
+  };
+
 })(this);
 
-$(function(){
-    $(document.body).on('nav_key:tools', function () {
-        SB.utils.log.show();
-    });
+$(function () {
+  $(document.body).on('nav_key:tools', function () {
+    SB.utils.log.show();
+  });
 });
 
 
 !(function ( window, undefined ) {
 
-	var $body = null,
-		nav, invertedKeys;
+  var $body = null,
+    nav, invertedKeys;
 
-    SB.ready(function(){
-        invertedKeys= _(SB.keys).invert().mapValues(function(a){
-            return a.toLowerCase();
-        }).value();
-    }, true);
+  SB.ready(function () {
+    invertedKeys = _(SB.keys).invert().mapValues(function ( a ) {
+      return a.toLowerCase();
+    }).value();
+  }, true);
 
-	function Navigation () {
-
-
-		// for methods save и restore
-		var savedNavs = [],
-
-		// object for store throttled color keys  methods
-			throttledMethods = {},
-
-		// current el in focus
-			navCur = null,
-
-		// arrays
-			numsKeys = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9'],
-			colorKeys = ['green', 'red', 'yellow', 'red'],
-
-		// pause counter
-			paused = 0;
-
-		function onKeyDown ( e ) {
-			var key,
-				data = {},
-				keyCode = e.keyCode;
-
-			if ( paused || !navCur ) {
-				return;
-			}
-
-			key = invertedKeys[keyCode];
+  function Navigation () {
 
 
-            if(key)
-			if ( colorKeys.indexOf(key) > -1 ) {
-				throttleEvent(key);
-			} else {
-				if ( numsKeys.indexOf(key) > -1 ) {
-					data.num = key[1];
-					key = 'num';
-				}
+    // for methods save и restore
+    var savedNavs = [],
 
-				triggerKeyEvent(key, data);
-			}
-		}
+    // object for store throttled color keys  methods
+      throttledMethods = {},
 
-		/**
-		 * 'nav_key:' event trigger
-		 * @param key key name
-		 * @param data event data
-		 */
-		function triggerKeyEvent ( key, data ) {
-			var ev,
-				commonEvent;
-			if ( navCur ) {
-				ev = $.Event("nav_key:" + key, data || {});
-				commonEvent = $.Event("nav_key");
+    // current el in focus
+      navCur = null,
 
-				ev.keyName = key;
-				commonEvent.keyName = key;
-				navCur.trigger(ev);
-				//первый trigger мог уже сменить текщий элемент
-				navCur && navCur.trigger(commonEvent);
-			}
-		}
+    // arrays
+      numsKeys = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9'],
+      colorKeys = ['green', 'red', 'yellow', 'blue'],
 
-		function throttleEvent ( key ) {
-			var keyMethod = throttledMethods[key];
+    // pause counter
+      paused = 0;
 
-			// lazy init
-			if ( !keyMethod ) {
-				keyMethod = throttledMethods[key] = _.throttle(function () {
-					triggerKeyEvent(key);
-				}, 800, {
-					leading: true
-				});
-			}
+    function onKeyDown ( e ) {
+      var key,
+        data = {},
+        keyCode = e.keyCode;
 
-			keyMethod(key);
-		}
+      if ( paused || !navCur ) {
+        return;
+      }
 
-		/**
-		 * trigger click on current element
-		 */
-		function onClick () {
-			navCur && navCur.click();
-		}
+      key = invertedKeys[keyCode];
 
-		return {
+      if ( key ) {
+        if ( colorKeys.indexOf(key) > -1 ) {
+          throttleEvent(key);
+        } else {
+          if ( numsKeys.indexOf(key) > -1 ) {
+            data.num = key[1];
+            key = 'num';
+          }
 
-			// nav els selector
-			area_selector: '.nav-item',
+          triggerKeyEvent(key, data);
+        }
+      }
+    }
 
-			/**
-			 * Current el class
-			 * @type {string}
-			 */
-			higlight_class: 'focus',
+    /**
+     * 'nav_key:' event trigger
+     * @param key key name
+     * @param data event data
+     */
+    function triggerKeyEvent ( key, data ) {
+      var ev,
+        commonEvent;
+      if ( navCur ) {
+        ev = $.Event("nav_key:" + key, data || {});
+        commonEvent = $.Event("nav_key");
 
-			/**
-			 * navigation container
-			 * @type {jQuery}
-			 */
-			$container: null,
+        ev.keyName = key;
+        commonEvent.keyName = key;
+        navCur.trigger(ev);
+        //первый trigger мог уже сменить текщий элемент
+        navCur && navCur.trigger(commonEvent);
+      }
+    }
 
-			/**
-			 * Current looping type
-			 * false/hbox/vbox
-			 * @type {boolean|string}
-			 */
-			loopType: null,
+    function throttleEvent ( key ) {
+      var keyMethod = throttledMethods[key];
 
-			/**
-			 * Phantom els selector
-			 * @type {string}
-			 */
-			phantom_selector: '[data-nav-phantom]',
+      // lazy init
+      if ( !keyMethod ) {
+        keyMethod = throttledMethods[key] = _.throttle(function () {
+          triggerKeyEvent(key);
+        }, 800, {
+          leading: true
+        });
+      }
 
-			/**
-			 * Returns current navigation state
-			 * @returns {boolean}
-			 */
-			isPaused: function () {
-				return !!paused;
-			},
+      keyMethod(key);
+    }
 
-			/**
-			 * Stop navigation. Increase pause counter
-			 * @returns {Navigation}
-			 */
-			pause: function () {
-				paused++;
-				return this;
-			},
+    /**
+     * trigger click on current element
+     */
+    function onClick () {
+      navCur && navCur.click();
+    }
 
-			/**
-			 * Resume navigation if force or pause counter is zero
-			 * @param force {Boolean} force navigation resume
-			 * @returns {Navigation}
-			 */
-			resume: function ( force ) {
-				paused--;
-				if ( paused < 0 || force ) {
-					paused = 0;
-				}
-				return this;
-			},
+    return {
 
-			/**
-			 * Save current navigation state
-			 * @returns {Navigation}
-			 */
-			save: function () {
+      // nav els selector
+      area_selector: '.nav-item',
 
-				savedNavs.push({
-					navCur: navCur,
-					area_selector: this.area_selector,
-					higlight_class: this.higlight_class,
-					$container: this.$container
-				});
-				return this;
-			},
+      /**
+       * Current el class
+       * @type {string}
+       */
+      higlight_class: 'focus',
 
-			/**
-			 * Restore navigation state
-			 * @returns {Navigation}
-			 */
-			restore: function () {
-				if ( savedNavs.length ) {
-					this.off();
-					var foo = savedNavs.pop();
-					this.area_selector = foo.area_selector;
-					this.higlight_class = foo.higlight_class;
-					this.on(foo.$container, foo.navCur);
-				}
+      /**
+       * navigation container
+       * @type {jQuery}
+       */
+      $container: null,
 
-				return this;
-			},
+      /**
+       * Current looping type
+       * false/hbox/vbox
+       * @type {boolean|string}
+       */
+      loopType: null,
 
-			/**
-			 * Setting focus on element
-			 * @param element {*} - HTMLElement, selector or Jquery object
-			 * @param originEvent {string} - event source(nav_key, mousemove, voice etc.)
-			 * @return {Navigation}
-			 */
-			current: function ( element, originEvent ) {
-				if ( !element ) {
-					return navCur;
-				}
+      /**
+       * Phantom els selector
+       * @type {string}
+       */
+      phantom_selector: '[data-nav-phantom]',
 
-				originEvent = originEvent || 'nav_key';
+      /**
+       * Returns current navigation state
+       * @returns {boolean}
+       */
+      isPaused: function () {
+        return !!paused;
+      },
 
-				var $el = $(element);
-				if ( $el.is(this.phantom_selector) ) {
-					$el = $($($el.attr('data-nav-phantom'))[0]);
-				}
-				if ( $el.length > 1 ) {
-					throw new Error('Focused element must be only one!');
-				}
-				if ( !$el.length ) {
-					return this;
-				}
-				var old = navCur;
-				if ( navCur ) {
-					navCur.removeClass(this.higlight_class).trigger('nav_blur', [originEvent, $el]);
-				}
+      /**
+       * Stop navigation. Increase pause counter
+       * @returns {Navigation}
+       */
+      pause: function () {
+        paused++;
+        return this;
+      },
 
-				navCur = $el;
+      /**
+       * Resume navigation if force or pause counter is zero
+       * @param force {Boolean} force navigation resume
+       * @returns {Navigation}
+       */
+      resume: function ( force ) {
+        paused--;
+        if ( paused < 0 || force ) {
+          paused = 0;
+        }
+        return this;
+      },
 
-				$el.addClass(this.higlight_class).trigger('nav_focus', [originEvent, old]);
-				return this;
-			},
+      /**
+       * Save current navigation state
+       * @returns {Navigation}
+       */
+      save: function () {
 
-			/**
-			 * Turn on navigation in container, turn off previous navigation
-			 * @param container - HTMLElement, selector or Jquery object (body by default)
-			 * @param cur - HTMLElement, selector or Jquery object(first nav el by default)
-			 * @return {Navigation}
-			 */
-			on: function ( container, cur ) {
+        savedNavs.push({
+          navCur: navCur,
+          area_selector: this.area_selector,
+          higlight_class: this.higlight_class,
+          $container: this.$container
+        });
+        return this;
+      },
 
-				var self = this,
-					$navTypeEls;
+      /**
+       * Restore navigation state
+       * @returns {Navigation}
+       */
+      restore: function () {
+        if ( savedNavs.length ) {
+          this.off();
+          var foo = savedNavs.pop();
+          this.area_selector = foo.area_selector;
+          this.higlight_class = foo.higlight_class;
+          this.on(foo.$container, foo.navCur);
+        }
 
-				$body = $body || $(document.body);
+        return this;
+      },
 
-				this.off();
+      /**
+       * Setting focus on element
+       * @param element {*} - HTMLElement, selector or Jquery object
+       * @param originEvent {string} - event source(nav_key, mousemove, voice etc.)
+       * @return {Navigation}
+       */
+      current: function ( element, originEvent ) {
+        if ( !element ) {
+          return navCur;
+        }
 
-				this.$container = container ? $(container) : $body;
+        originEvent = originEvent || 'nav_key';
 
-                if (SB.platform != 'philips') {
-                    this.$container.on('mouseenter.nav', this.area_selector, function (e) {
-                        if (!$(this).is(self.phantom_selector)) {
-                            self.current(this, 'mouseenter');
-                        }
-                    });
+        var $el = $(element);
+        if ( $el.is(this.phantom_selector) ) {
+          $el = $($($el.attr('data-nav-phantom'))[0]);
+        }
+        if ( $el.length > 1 ) {
+          throw new Error('Focused element must be only one!');
+        }
+        if ( !$el.length ) {
+          return this;
+        }
+        var old = navCur;
+        if ( navCur ) {
+          navCur.removeClass(this.higlight_class).trigger('nav_blur', [originEvent, $el]);
+        }
+
+        navCur = $el;
+
+        $el.addClass(this.higlight_class).trigger('nav_focus', [originEvent, old]);
+        return this;
+      },
+
+      /**
+       * Turn on navigation in container, turn off previous navigation
+       * @param container - HTMLElement, selector or Jquery object (body by default)
+       * @param cur - HTMLElement, selector or Jquery object(first nav el by default)
+       * @return {Navigation}
+       */
+      on: function ( container, cur ) {
+
+        var self = this,
+          $navTypeEls;
+
+        $body = $body || $(document.body);
+
+        this.off();
+
+        this.$container = container ? $(container) : $body;
+
+        if ( SB.platform != 'philips' ) {
+          this.$container.on('mouseenter.nav', this.area_selector, function ( e ) {
+            if ( !$(this).is(self.phantom_selector) ) {
+              self.current(this, 'mouseenter');
+            }
+          });
+        }
+
+        $navTypeEls = this.$container.find('[data-nav_type]');
+
+        if ( this.$container.attr('data-nav_type') ) {
+          $navTypeEls = $navTypeEls.add(this.$container);
+        }
+
+        $navTypeEls.each(function () {
+          var $el = $(this);
+          var navType = $el.attr("data-nav_type");
+          $el.removeAttr('data-nav_type');
+          //self.setLoop($el);
+          var loop = $el.attr("data-nav_loop");
+
+          self.siblingsTypeNav($el, navType, loop);
+        });
+
+        $body
+          .bind('keydown.navigation', onKeyDown)
+          .bind('nav_key:enter.navigation', onClick);
+
+        if ( !cur ) {
+          cur = this.$container.find(this.area_selector).filter(':visible')[0];
+        }
+        this.current(cur);
+        return this;
+      },
+
+      siblingsTypeNav: function ( $container, type, loop ) {
+        var self = this;
+        $container.on('nav_key:left nav_key:right nav_key:up nav_key:down', this.area_selector,
+          function ( e ) {
+            var last = 'last',
+              cur = self.current(),
+              next,
+              fn;
+
+            //check if direction concur with declared
+            if ( (type == 'hbox' && e.keyName == 'left') ||
+                 (type == 'vbox' && e.keyName == 'up') ) {
+              fn = 'prev';
+            } else if ( (type == 'hbox' && e.keyName == 'right') ||
+                        (type == 'vbox' && e.keyName == 'down') ) {
+              fn = 'next';
+            }
+
+            if ( fn == 'next' ) {
+              last = 'first';
+            }
+
+            if ( fn ) {
+              next = cur[fn](self.area_selector);
+
+              while ( next.length && !next.is(':visible') ) {
+                next = next[fn](self.area_selector);
+              }
+
+              if ( !next.length && loop ) {
+                next = $container.find(self.area_selector).filter(':visible')[last]();
+              }
+
+              if ( next.length ) {
+                nav.current(next);
+                return false;
+              }
+            }
+          });
+      },
+
+      /**
+       * Turn off navigation from container, disable navigation from current element
+       * @return {Navigation}
+       */
+      off: function () {
+        if ( navCur ) {
+          navCur.removeClass(this.higlight_class).trigger('nav_blur');
+        }
+        this.$container && this.$container.off('mouseenter.nav').off('.loop');
+        $body.unbind('.navigation');
+        navCur = null;
+        return this;
+      },
+
+      /**
+       * Find first nav el & set navigation on them
+       */
+      findSome: function () {
+        var cur;
+
+        if ( !(navCur && navCur.is(':visible')) ) {
+          cur = this.$container.find(this.area_selector).filter(':visible').eq(0);
+          this.current(cur);
+        }
+
+        return this;
+      },
+
+      /**
+       * Find closest to $el element by dir direction
+       * @param $el {jQuery} - source element
+       * @param dir {string} - direction up, right, down, left
+       * @param navs {jQuery} - object, contains elements to search
+       * @returns {*}
+       */
+      findNav: function ( $el, dir, navs ) {
+        var user_defined = this.checkUserDefined($el, dir);
+
+        if ( user_defined ) {
+          return user_defined;
+        }
+
+        var objBounds = $el[0].getBoundingClientRect(),
+          arr = [],
+          curBounds = null,
+          cond1, cond2, i , l;
+
+        for ( i = 0, l = navs.length; i < l; i++ ) {
+          curBounds = navs[i].getBoundingClientRect();
+
+          if ( curBounds.left == objBounds.left &&
+               curBounds.top == objBounds.top ) {
+            continue;
+          }
+
+          switch ( dir ) {
+            case 'left':
+              cond1 = objBounds.left > curBounds.left;
+              break;
+            case 'right':
+              cond1 = objBounds.right < curBounds.right;
+              break;
+            case 'up':
+              cond1 = objBounds.top > curBounds.top;
+              break;
+            case 'down':
+              cond1 = objBounds.bottom < curBounds.bottom;
+              break;
+            default:
+              break;
+          }
+
+          if ( cond1 ) {
+            arr.push({
+              'obj': navs[i],
+              'bounds': curBounds
+            });
+          }
+        }
+
+        var min_dy = 9999999, min_dx = 9999999, min_d = 9999999, max_intersection = 0;
+        var dy = 0, dx = 0, d = 0;
+
+        function isIntersects ( b1, b2, dir ) {
+          var temp = null;
+          switch ( dir ) {
+            case 'left':
+            case 'right':
+              if ( b1.top > b2.top ) {
+                temp = b2;
+                b2 = b1;
+                b1 = temp;
+              }
+              if ( b1.bottom > b2.top ) {
+                if ( b1.top > b2.right ) {
+                  return b2.top - b1.right;
                 }
+                else {
+                  return b2.height;
+                }
+              }
+              break;
+            case 'up':
+            case 'down':
+              if ( b1.left > b2.left ) {
+                temp = b2;
+                b2 = b1;
+                b1 = temp;
+              }
+              if ( b1.right > b2.left ) {
+                if ( b1.left > b2.right ) {
+                  return b2.left - b1.right;
+                }
+                else {
+                  return b2.width;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+          return false;
+        }
 
+        var intersects_any = false;
+        var found = false;
 
+        for ( i = 0, l = arr.length; i < l; i++ ) {
+          if ( !this.checkEntryPoint(arr[i].obj, dir) ) {
+            continue;
+          }
 
-				$navTypeEls = this.$container.find('[data-nav_type]');
+          var b = arr[i].bounds;
+          var intersects = isIntersects(objBounds, b, dir);
+          dy = Math.abs(b.top - objBounds.top);
+          dx = Math.abs(b.left - objBounds.left);
+          d = Math.sqrt(dy * dy + dx * dx);
+          if ( intersects_any && !intersects ) {
+            continue;
+          }
+          if ( intersects && !intersects_any ) {
+            min_dy = dy;
+            min_dx = dx;
+            max_intersection = intersects;
+            found = arr[i].obj;
+            intersects_any = true;
+            continue;
+          }
 
-				if (this.$container.attr('data-nav_type')) {
-					$navTypeEls = $navTypeEls.add(this.$container);
-				}
+          switch ( dir ) {
+            case 'left':
+            case 'right':
+              if ( intersects_any ) {
+                cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
+              }
+              else {
+                cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
+              }
+              break;
+            case 'up':
+            case 'down':
+              if ( intersects_any ) {
+                cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
+              }
+              else {
+                cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
+              }
+              break;
+            default:
+              break;
+          }
+          if ( cond2 ) {
+            min_dy = dy;
+            min_dx = dx;
+            min_d = d;
+            found = arr[i].obj;
+          }
+        }
 
-				$navTypeEls.each(function () {
-					var $el = $(this);
-					var navType = $el.attr("data-nav_type");
-					$el.removeAttr('data-nav_type');
-					//self.setLoop($el);
-					var loop = $el.attr("data-nav_loop");
+        return found;
+      },
 
-					self.siblingsTypeNav($el, navType, loop);
-				});
+      /**
+       * Return element defied by user
+       * Если юзером ничего не определено или направление равно 0, то возвращает false
+       * Если направление определено как none, то переход по этому направлению запрещен
+       *
+       * @param $el - current element
+       * @param dir - direction
+       * @returns {*}
+       */
+      checkUserDefined: function ( $el, dir ) {
+        var ep = $el.attr('data-nav_ud'),
+          result = false,
+          res = $el.attr('data-nav_ud_' + dir);
 
-				$body
-					.bind('keydown.navigation', onKeyDown)
-					.bind('nav_key:enter.navigation', onClick);
+        if ( !(ep && res) ) {
+          return false;
+        }
 
-				if ( !cur ) {
-					cur = this.$container.find(this.area_selector).filter(':visible')[0];
-				}
-				this.current(cur);
-				return this;
-			},
+        if ( !res ) {
+          var sides = ep.split(','),
+            dirs = ['up', 'right', 'left', 'bottom'];
 
-			siblingsTypeNav: function ( $container, type, loop ) {
-				var self = this;
-				$container.on('nav_key:left nav_key:right nav_key:up nav_key:down', this.area_selector,
-					function ( e ) {
-						var last = 'last',
-							cur = self.current(),
-							fn;
+          $el.attr({
+            'data-nav_ud_up': sides[0],
+            'data-nav_ud_right': sides[1],
+            'data-nav_ud_down': sides[2],
+            'data-nav_ud_left': sides[3]
+          });
 
-						//check if direction concur with declared
-						if ( (type == 'hbox' && e.keyName == 'left') ||
-								 (type == 'vbox' && e.keyName == 'up') ) {
-							fn = 'prev';
-						} else if ((type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down')) {
-							fn = 'next';
-						}
+          res = sides[dirs.indexOf(dir)];
+        }
 
-						if ( fn == 'next' ) {
-							last = 'first';
-						}
+        if ( res == 'none' ) {
+          result = 'none';
+        } else if ( res ) {
+          result = $(res).first();
+        }
 
-						if ( fn ) {
-							var next = cur[fn](self.area_selector);
+        return result;
+      },
 
-							while ( next.length && !next.is(':visible') ) {
-								next = next[fn](self.area_selector);
-							}
+      /**
+       * Проверяет можно ли войти в элемент с определенной стороны.
+       * Работает если у элемента задан атрибут data-nav_ep. Точки входа задаются в атрибуте с помощью 0 и 1 через запятые
+       * 0 - входить нельзя
+       * 1 - входить можно
+       * Стороны указываются в порядке CSS - top, right, bottom, left
+       *
+       * data-nav_ep="0,0,0,0" - в элемент зайти нельзя, поведение такое же как у элемента не являющегося элементом навигации
+       * data-nav_ep="1,1,1,1" - поведение по умолчанию, как без задания этого атрибута
+       * data-nav_ep="0,1,0,0" - в элемент можно зайти справа
+       * data-nav_ep="1,1,0,1" - в элемент нельзя зайти снизу
+       * data-nav_ep="0,1,0,1" - можно зайти слева и справа, но нельзя сверху и снизу
+       *
+       * @param elem -  проверяемый элемент
+       * @param dir - направление
+       * @returns {boolean}
+       */
+      checkEntryPoint: function ( elem, dir ) {
+        var $el = $(elem),
+          ep = $el.attr('data-nav_ep'),
+          res = null;
 
-							if ( !next.length && loop ) {
-								next = $container.find(self.area_selector).filter(':visible')[last]();
-							}
+        if ( !ep ) {
+          return true;
+        }
 
-							if ( next.length ) {
-								nav.current(next);
-								return false;
-							}
-						}
-					});
-			},
+        res = $el.attr('data-nav_ep_' + dir);
 
-			/**
-			 * Turn off navigation from container, disable navigation from current element
-			 * @return {Navigation}
-			 */
-			off: function () {
-				if ( navCur ) {
-					navCur.removeClass(this.higlight_class).trigger('nav_blur');
-				}
-				this.$container && this.$container.off('mouseenter.nav').off('.loop');
-				$body.unbind('.navigation');
-				navCur = null;
-				return this;
-			},
+        if ( res === undefined ) {
+          var sides = ep.split(',');
+          $el.attr('data-nav_ep_top', sides[0]);
+          $el.attr('data-nav_ep_right', sides[1]);
+          $el.attr('data-nav_ep_bottom', sides[2]);
+          $el.attr('data-nav_ep_left', sides[3]);
+          res = $el.attr('data-nav_ep_' + dir);
+        }
 
-			/**
-			 * Find first nav el & set navigation on them
-			 */
-			findSome: function () {
-				var cur;
+        return !!parseInt(res);
+      }
+    };
+  }
 
-				if ( !(navCur && navCur.is(':visible')) ) {
-					cur = this.$container.find(this.area_selector).filter(':visible').eq(0);
-					this.current(cur);
-				}
+  nav = window.$$nav = new Navigation();
 
-				return this;
-			},
+  $(function () {
+    // Navigation events handler
+    $(document.body).bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
+      var cur = nav.current(),
+        $navs,
+        n;
 
-			/**
-			 * Find closest to $el element by dir direction
-			 * @param $el {jQuery} - source element
-			 * @param dir {string} - direction up, right, down, left
-			 * @param navs {jQuery} - object, contains elements to search
-			 * @returns {*}
-			 */
-			findNav: function ( $el, dir, navs ) {
-				var user_defined = this.checkUserDefined($el, dir);
-
-				if ( user_defined ) {
-					return user_defined;
-				}
-
-				var objBounds = $el[0].getBoundingClientRect(),
-					arr = [],
-					curBounds = null,
-					cond1, cond2, i , l;
-
-				for ( i = 0, l = navs.length; i < l; i++ ) {
-					curBounds = navs[i].getBoundingClientRect();
-
-					if ( curBounds.left == objBounds.left &&
-							 curBounds.top == objBounds.top ) {
-						continue;
-					}
-
-					switch ( dir ) {
-						case 'left':
-							cond1 = objBounds.left > curBounds.left;
-							break;
-						case 'right':
-							cond1 = objBounds.right < curBounds.right;
-							break;
-						case 'up':
-							cond1 = objBounds.top > curBounds.top;
-							break;
-						case 'down':
-							cond1 = objBounds.bottom < curBounds.bottom;
-							break;
-						default:
-							break;
-					}
-
-					if ( cond1 ) {
-						arr.push({
-							'obj': navs[i],
-							'bounds': curBounds
-						});
-					}
-				}
-
-				var min_dy = 9999999, min_dx = 9999999, min_d = 9999999, max_intersection = 0;
-				var dy = 0, dx = 0, d = 0;
-
-				function isIntersects ( b1, b2, dir ) {
-					var temp = null;
-					switch ( dir ) {
-						case 'left':
-						case 'right':
-							if ( b1.top > b2.top ) {
-								temp = b2;
-								b2 = b1;
-								b1 = temp;
-							}
-							if ( b1.bottom > b2.top ) {
-								if ( b1.top > b2.right ) {
-									return b2.top - b1.right;
-								}
-								else {
-									return b2.height;
-								}
-							}
-							break;
-						case 'up':
-						case 'down':
-							if ( b1.left > b2.left ) {
-								temp = b2;
-								b2 = b1;
-								b1 = temp;
-							}
-							if ( b1.right > b2.left ) {
-								if ( b1.left > b2.right ) {
-									return b2.left - b1.right;
-								}
-								else {
-									return b2.width;
-								}
-							}
-							break;
-						default:
-							break;
-					}
-					return false;
-				}
-
-				var intersects_any = false;
-				var found = false;
-
-				for ( i = 0, l = arr.length; i < l; i++ ) {
-					if ( !this.checkEntryPoint(arr[i].obj, dir) ) {
-						continue;
-					}
-
-					var b = arr[i].bounds;
-					var intersects = isIntersects(objBounds, b, dir);
-					dy = Math.abs(b.top - objBounds.top);
-					dx = Math.abs(b.left - objBounds.left);
-					d = Math.sqrt(dy * dy + dx * dx);
-					if ( intersects_any && !intersects ) {
-						continue;
-					}
-					if ( intersects && !intersects_any ) {
-						min_dy = dy;
-						min_dx = dx;
-						max_intersection = intersects;
-						found = arr[i].obj;
-						intersects_any = true;
-						continue;
-					}
-
-					switch ( dir ) {
-						case 'left':
-						case 'right':
-							if ( intersects_any ) {
-								cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
-							}
-							else {
-								cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
-							}
-							break;
-						case 'up':
-						case 'down':
-							if ( intersects_any ) {
-								cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
-							}
-							else {
-								cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
-							}
-							break;
-						default:
-							break;
-					}
-					if ( cond2 ) {
-						min_dy = dy;
-						min_dx = dx;
-						min_d = d;
-						found = arr[i].obj;
-					}
-				}
-
-				return found;
-			},
-
-			/**
-			 * Return element defied by user
-			 * Если юзером ничего не определено или направление равно 0, то возвращает false
-			 * Если направление определено как none, то переход по этому направлению запрещен
-			 *
-			 * @param $el - current element
-			 * @param dir - direction
-			 * @returns {*}
-			 */
-			checkUserDefined: function ( $el, dir ) {
-				var ep = $el.attr('data-nav_ud'),
-					result = false,
-					res = $el.attr('data-nav_ud_' + dir);
-
-				if ( !(ep && res) ) {
-					return false;
-				}
-
-				if ( !res ) {
-					var sides = ep.split(','),
-						dirs = ['up', 'right', 'left', 'bottom'];
-
-					$el.attr({
-						'data-nav_ud_up': sides[0],
-						'data-nav_ud_right': sides[1],
-						'data-nav_ud_down': sides[2],
-						'data-nav_ud_left': sides[3]
-					});
-
-					res = sides[dirs.indexOf(dir)];
-				}
-
-				if ( res == 'none' ) {
-					result = 'none';
-				} else if ( res ) {
-					result = $(res).first();
-				}
-
-				return result;
-			},
-
-			/**
-			 * Проверяет можно ли войти в элемент с определенной стороны.
-			 * Работает если у элемента задан атрибут data-nav_ep. Точки входа задаются в атрибуте с помощью 0 и 1 через запятые
-			 * 0 - входить нельзя
-			 * 1 - входить можно
-			 * Стороны указываются в порядке CSS - top, right, bottom, left
-			 *
-			 * data-nav_ep="0,0,0,0" - в элемент зайти нельзя, поведение такое же как у элемента не являющегося элементом навигации
-			 * data-nav_ep="1,1,1,1" - поведение по умолчанию, как без задания этого атрибута
-			 * data-nav_ep="0,1,0,0" - в элемент можно зайти справа
-			 * data-nav_ep="1,1,0,1" - в элемент нельзя зайти снизу
-			 * data-nav_ep="0,1,0,1" - можно зайти слева и справа, но нельзя сверху и снизу
-			 *
-			 * @param elem -  проверяемый элемент
-			 * @param dir - направление
-			 * @returns {boolean}
-			 */
-			checkEntryPoint: function ( elem, dir ) {
-				var $el = $(elem),
-					ep = $el.attr('data-nav_ep'),
-					res = null;
-
-				if ( !ep ) {
-					return true;
-				}
-
-				res = $el.attr('data-nav_ep_' + dir);
-
-				if ( res === undefined ) {
-					var sides = ep.split(',');
-					$el.attr('data-nav_ep_top', sides[0]);
-					$el.attr('data-nav_ep_right', sides[1]);
-					$el.attr('data-nav_ep_bottom', sides[2]);
-					$el.attr('data-nav_ep_left', sides[3]);
-					res = $el.attr('data-nav_ep_' + dir);
-				}
-
-				return !!parseInt(res);
-			}
-		};
-	}
-
-	nav = window.$$nav = new Navigation();
-
-	$(function () {
-		// Navigation events handler
-		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
-			var cur = nav.current(),
-				$navs,
-				n;
-
-			$navs = nav.$container.find(nav.area_selector).filter(':visible');
-			n = nav.findNav(cur, e.keyName, $navs);
-			n && nav.current(n);
-		});
-	});
+      $navs = nav.$container.find(nav.area_selector).filter(':visible');
+      n = nav.findNav(cur, e.keyName, $navs);
+      n && nav.current(n);
+    });
+  });
 
 })(this);
 /**
@@ -2700,7 +2760,7 @@ SB.readyForPlatform('browser', function(){
 /**
  * Browser platform description
  */
-SB.extend('browser', {
+SB.createPlatform('browser', {
     keys: {
         RIGHT: 39,
         LEFT: 37,
@@ -2745,9 +2805,6 @@ SB.extend('browser', {
         return true;
     },
 
-    initialise: function () {
-    },
-
     getNativeDUID: function () {
         if (navigator.userAgent.indexOf('Chrome') != -1) {
             this.DUID = 'CHROMEISFINETOO';
@@ -2755,15 +2812,6 @@ SB.extend('browser', {
             this.DUID = 'FIREFOXISBEST';
         }
         return this.DUID;
-    },
-
-    volumeUp: function () {
-    },
-
-    volumeDown: function () {
-    },
-
-    getVolume: function () {
     },
 
     setData: function (name, val) {
@@ -2775,8 +2823,7 @@ SB.extend('browser', {
         var result;
         try {
             result = JSON.parse(localStorage.getItem(name));
-        } catch (e) {
-        }
+        } catch (e) {}
 
         return result;
     },
@@ -2916,7 +2963,7 @@ SB.readyForPlatform('lg', function () {
  * LG platform
  */
 
-SB.extend('lg', {
+SB.createPlatform('lg', {
     platformUserAgent: 'netcast',
 
     keys: {
@@ -2949,9 +2996,6 @@ SB.extend('lg', {
         CH_DOWN: 34
     },
 
-    initialise: function () {
-    },
-
     getNativeDUID: function () {
         return this.device.serialNumber;
     },
@@ -2960,9 +3004,7 @@ SB.extend('lg', {
         return this.device.net_macAddress.replace(/:/g, '');
     },
 
-    getSDI: function () {
-
-    },
+    getSDI: $.noop,
 
     setPlugins: function () {
         //this._listenGestureEvent();
@@ -2992,19 +3034,15 @@ SB.extend('lg', {
         }
     },
 
-    volumeEnable: function () {
-    },
-
     sendReturn: function () {
         if (Player) {
             Player.stop(true);
         }
         window.NetCastBack();
     },
+
     exit: function () {
-        if (Player) {
-            Player.stop(true);
-        }
+        Player && Player.stop(true);
         window.NetCastExit();
     },
 
@@ -3015,9 +3053,6 @@ SB.extend('lg', {
         return 1234;
     }
 });
-
-
-
 SB.readyForPlatform('philips', function () {
     var video;
 
@@ -3123,7 +3158,7 @@ SB.readyForPlatform('philips', function () {
 /**
  * Philips platform
  */
-SB.extend('philips', {
+SB.createPlatform('philips', {
     platformUserAgent: 'nettv',
     setPlugins: function () {
         this.keys = {
@@ -3485,7 +3520,7 @@ SB.readyForPlatform('samsung', function () {
         ];
 
 
-    SB.extend('samsung', {
+    SB.createPlatform('samsung', {
 
         $plugins: {},
         platformUserAgent: 'maple',

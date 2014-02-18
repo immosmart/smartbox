@@ -278,6 +278,7 @@
           function ( e ) {
             var last = 'last',
               cur = self.current(),
+              next,
               fn;
 
             //check if direction concur with declared
@@ -294,7 +295,7 @@
             }
 
             if ( fn ) {
-              var next = cur[fn](self.area_selector);
+              next = cur[fn](self.area_selector);
 
               while ( next.length && !next.is(':visible') ) {
                 next = next[fn](self.area_selector);

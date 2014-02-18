@@ -2,7 +2,7 @@
  * LG platform
  */
 
-SB.extend('lg', {
+SB.createPlatform('lg', {
     platformUserAgent: 'netcast',
 
     keys: {
@@ -35,9 +35,6 @@ SB.extend('lg', {
         CH_DOWN: 34
     },
 
-    initialise: function () {
-    },
-
     getNativeDUID: function () {
         return this.device.serialNumber;
     },
@@ -46,9 +43,7 @@ SB.extend('lg', {
         return this.device.net_macAddress.replace(/:/g, '');
     },
 
-    getSDI: function () {
-
-    },
+    getSDI: $.noop,
 
     setPlugins: function () {
         //this._listenGestureEvent();
@@ -78,19 +73,15 @@ SB.extend('lg', {
         }
     },
 
-    volumeEnable: function () {
-    },
-
     sendReturn: function () {
         if (Player) {
             Player.stop(true);
         }
         window.NetCastBack();
     },
+
     exit: function () {
-        if (Player) {
-            Player.stop(true);
-        }
+        Player && Player.stop(true);
         window.NetCastExit();
     },
 
@@ -101,5 +92,3 @@ SB.extend('lg', {
         return 1234;
     }
 });
-
-

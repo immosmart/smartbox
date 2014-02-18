@@ -1,223 +1,199 @@
 /**
  * Main smartbox file
  */
-(function (window, undefined) {
+(function ( window, undefined ) {
 
-    var _ready = false,
-        readyCallbacks = [],
-        _running = false;
+  var _ready = false,
+    readyCallbacks = [],
+    SB,
+    _running = false;
 
+  var userAgent = navigator.userAgent.toLowerCase();
 
-    var userAgent = navigator.userAgent.toLowerCase();
-    var detect = function (slug) {
-        return userAgent.indexOf(slug) !== -1;
-    }
+  /**
+   * Detecting current platform
+   * @returns {boolean} true if running on current platform
+   */
+  function detect ( slug ) {
+    return userAgent.indexOf(slug) !== -1;
+  }
 
-    var SB = {
+  SB = {
 
-        platform: 'browser',
+    platformName: '',
 
-        extend: function (platformName, prototype) {
-            if ((prototype.detect != undefined && prototype.detect()) ||
-                detect(prototype.platformUserAgent)
-                ) {
-                _.extend(this, prototype);
-                this.platform = platformName;
+    // TODO:
+    createPlatform: function ( platformName, platformApi ) {
 
-                if (_.isFunction(this.onDetect)) {
-                    this.onDetect();
-                }
-            }
-        },
+      var isCurrent = platformApi.detect && platformApi.detect(),
+        platform;
 
+      if ( isCurrent || detect(platformApi.platformUserAgent) ) {
+        this.platformName = platformName;
+        _.extend(this, platformApi);
+      }
+    },
 
-        /**
-         * Can be overridden by function that calls after successfully detect()
-         */
-        onDetect: null,
+    config: {
+      DUID: 'real'
+    },
 
-        config: {
-            DUID: 'real'
-        },
+    /**
+     * Main function
+     * @param cb {Function} callback after initialization
+     * @param notRun {Boolean}
+     */
+    ready: function ( cb, notRun ) {
 
+      // initializing on first calling ready func
+      if ( !notRun && !_running ) {
+        this.initialize();
+      }
 
-        /**
-         * Main function
-         * @param cb {Function} callback after initialization
-         * @param notRun {Boolean}
-         */
-        ready: function (cb, notRun) {
+      if ( _ready ) {
+        cb.call(this);
+      } else {
+        readyCallbacks.push(cb);
+      }
+    },
 
-            // initializing on first calling ready func
-            if (!notRun && !_running) {
-              this.initialize();
-            }
+    initialize: function () {
+      var self = this;
 
-            if (_ready) {
-                cb.call(this);
-            } else {
-                readyCallbacks.push(cb);
-            }
-        },
+      _running = true;
 
-        initialize: function () {
-          var self = this;
+      window.$$log = SB.utils.log.log;
+      window.$$error = SB.utils.error;
 
-          _running = true;
+      $(function () {
+        self.setPlugins();
+        self.getDUID();
 
-          window.$$log = SB.utils.log.log;
-          window.$$error = SB.utils.error;
+        // wait for calling others $()
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    },
 
-          $(function () {
-            self.setPlugins();
-            self.getDUID();
-            setTimeout(function () {
-              self._onReady();
-            });
-          });
-        },
-
-        readyForPlatform: function (platform, cb) {
-            var self = this;
-            this.ready(function () {
-                if (platform == self.platform) {
-                    cb.call(self);
-                }
-            }, true);
-        },
-
-        /**
-         * Applying all ready callbacks
-         * @private
-         */
-        _onReady: function () {
-            _ready = true;
-
-            for (var i = 0, len = readyCallbacks.length; i < len; i++) {
-                readyCallbacks[i].call(this);
-            }
-        },
-
-
-        utils: {
-            /**
-             * Show error message
-             * @param msg
-             */
-            error: function (msg) {
-                $$log(msg, 'error');
-            },
-
-            /**
-             * Show messages in log
-             * all functionality in main.js
-             */
-            log: {
-                log: $.noop,
-                state: $.noop,
-                show: $.noop,
-                hide: $.noop,
-                startProfile: $.noop,
-                stopProfile: $.noop
-            },
-
-            legend: {}
-        },
-
-        keys: {},
-
-        DUID: '',
-
-
-        /**
-         * Get DUID in case of Config
-         * @return {string} DUID
-         */
-        getDUID: function () {
-            switch (SB.config.DUID) {
-                case 'real':
-                    this.DUID = this.getNativeDUID();
-                    break;
-                case 'mac':
-                    this.DUID = this.getMac();
-                    break;
-                case 'random':
-                    this.DUID = this.getRandomDUID();
-                    break;
-                /*case 'local_random':
-                 this.DUID = this.getLocalRandomDUID();
-                 break;*/
-                default:
-                    this.DUID = SB.config.DUID;
-                    break;
-            }
-            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
-
-
-            return this.DUID;
-        },
-
-        /**
-         * Returns random DUID for platform
-         * @returns {string}
-         */
-        getRandomDUID: function () {
-            return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
-        },
-
-        /**
-         * Returns native DUID for platform if exist
-         * @returns {string}
-         */
-        getMac: function () {
-            return '';
-        },
-
-        /**
-         * Returns native DUID for platform if exist
-         * @returns {string}
-         */
-        getNativeDUID: function () {
-            return '';
-        },
-
-        /**
-         * Set custom plugins
-         */
-        setPlugins: function () {
-        },
-
-        // TODO: volume for all platforms
-        volumeUp: function () {
-        },
-        volumeDown: function () {
-        },
-        getVolume: function () {
-        },
-
-        setData: function () {
-        },
-
-        getData: function () {
-        },
-
-        removeData: function () {
-        },
-
-        sendReturn: function () {
-        },
-
-        exit: function () {
-        },
-
-        getSDI: function () {
-
+    readyForPlatform: function ( platform, cb ) {
+      var self = this;
+      this.ready(function () {
+        if ( platform == self.platformName ) {
+          cb.call(self);
         }
-    };
+      }, true);
+    },
+
+    /**
+     * Applying all ready callbacks
+     * @private
+     */
+    _onReady: function () {
+      _ready = true;
+
+      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+        readyCallbacks[i].call(this);
+      }
+    },
+
+    utils: {
+      /**
+       * Show error message
+       * @param msg
+       */
+      error: function ( msg ) {
+        $$log(msg, 'error');
+      },
+
+      /**
+       * Show messages in log
+       * all functionality in main.js
+       */
+      log: {
+        log: $.noop,
+        state: $.noop,
+        show: $.noop,
+        hide: $.noop,
+        startProfile: $.noop,
+        stopProfile: $.noop
+      },
+
+      /**
+       * Asynchroniosly adding javascript files
+       * @param filesArray {Array} array of sources of javascript files
+       * @param cb {Function} callback on load javascript files
+       */
+      addExternalJS: function ( filesArray, cb ) {
+        var $externalJsContainer,
+          loadedScripts = 0,
+          len = filesArray.length,
+          el,
+          scriptEl;
+
+        function onloadScript () {
+          loadedScripts++;
+
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
+
+        if ( filesArray.length ) {
+
+          $externalJsContainer = document.createDocumentFragment();
+          el = document.createElement('script');
+          el.type = 'text/javascript';
+          el.onload = onloadScript;
+
+          for ( var i = 0; i < len; i++ ) {
+            scriptEl = el.cloneNode();
+            scriptEl.src = filesArray[i];
+            $externalJsContainer.appendChild(scriptEl);
+          }
+
+          document.body.appendChild($externalJsContainer);
+        } else {
+
+          // if no external js simple call cb
+          cb && cb.call(this);
+        }
+      },
+
+      addExternalCss: function ( filesArray ) {
+        var $externalCssContainer;
+
+        if ( filesArray.length ) {
+          $externalCssContainer = document.createDocumentFragment();
+          _.each(filesArray, function ( src ) {
+
+            var el = document.createElement('link');
+
+            el.rel = 'stylesheet';
+            el.href = src;
+
+            $externalCssContainer.appendChild(el);
+          });
+
+          document.body.appendChild($externalCssContainer);
+        }
+      },
+
+      addExternalFiles: function ( cb ) {
+        if ( this.externalJs.length ) {
+          this.addExternalJS(this.externalJs, cb);
+        }
+        if ( this.externalCss.length ) {
+          this.addExternalCss(this.externalCss);
+        }
+      },
+
+      legend: {}
+    }
+  };
 
     //TODO: For backward capability. Remove this.
-    SB.currentPlatform = SB;
+  SB.currentPlatform = SB;
 
-    window.SB = SB;
+  window.SB = SB;
 })(this);
