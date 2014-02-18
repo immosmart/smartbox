@@ -25,7 +25,7 @@ SB.readyForPlatform('mag', function () {
     {
 
         onEvent: function (data) {
-            $('body').prepend(data);
+
             data += '';
             if (data == '1') {
                 Player.trigger('complete');
@@ -35,7 +35,6 @@ SB.readyForPlatform('mag', function () {
                 Player.trigger('ready');
             }
             else if (data == '7') {
-                $('body').prepend(stb.GetVideoInfo());
                 var vi = eval(stb.GetVideoInfo());
                 Player.videoInfo.width = vi.pictureWidth;
                 Player.videoInfo.height = vi.pictureHeight;
@@ -50,6 +49,7 @@ SB.readyForPlatform('mag', function () {
         _init: function () {
             stb.InitPlayer();
             stb.SetViewport(1280, 720, 0, 0);
+            stb.SetTopWin(0);
 
         },
         _play: function (options) {

@@ -31,7 +31,7 @@
         textClass: 'smart_input-text'
       },
 
-      directKeyboardInput: true,
+      directKeyboardInput: false,
 
       max: 0,
 
