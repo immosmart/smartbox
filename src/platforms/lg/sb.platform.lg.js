@@ -1,118 +1,94 @@
 /**
- * Samsung platform
+ * LG platform
  */
-!(function (window, undefined) {
 
-    var platform = new window.SB.Platform('lg'),
-        platformObj;
+SB.createPlatform('lg', {
+    platformUserAgent: 'netcast',
 
-    platformObj = {
+    keys: {
+        ENTER: 13,
+        PAUSE: 19,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+        N0: 48,
+        N1: 49,
+        N2: 50,
+        N3: 51,
+        N4: 52,
+        N5: 53,
+        N6: 54,
+        N7: 55,
+        N8: 56,
+        N9: 57,
+        RED: 403,
+        GREEN: 404,
+        YELLOW: 405,
+        BLUE: 406,
+        RW: 412,
+        STOP: 413,
+        PLAY: 415,
+        FF: 417,
+        RETURN: 461,
+        CH_UP: 33,
+        CH_DOWN: 34
+    },
 
-        externalJs: [
-        ],
+    getNativeDUID: function () {
+        return this.device.serialNumber;
+    },
 
-        $plugins: {},
+    getMac: function () {
+        return this.device.net_macAddress.replace(/:/g, '');
+    },
 
-        platformUserAgent: 'netcast',
+    getSDI: $.noop,
 
-        keys: {
-            ENTER: 13,
-            PAUSE: 19,
-            LEFT: 37,
-            UP: 38,
-            RIGHT: 39,
-            DOWN: 40,
-            N0: 48,
-            N1: 49,
-            N2: 50,
-            N3: 51,
-            N4: 52,
-            N5: 53,
-            N6: 54,
-            N7: 55,
-            N8: 56,
-            N9: 57,
-            RED: 403,
-            GREEN: 404,
-            YELLOW: 405,
-            BLUE: 406,
-            RW: 412,
-            STOP: 413,
-            PLAY: 415,
-            FF: 417,
-            RETURN: 461,
-            CH_UP: 33,
-            CH_DOWN: 34
-        },
+    setPlugins: function () {
+        //this._listenGestureEvent();
 
-        initialise: function () {
-        },
+        $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+        this.device = $('#device')[0];
 
-        getNativeDUID: function () {
-            return this.device.serialNumber;
-        },
+        this.modelCode = this.device.version;
+        this.productCode = this.device.platform;
 
-        getMac: function () {
-            return this.device.net_macAddress.replace(/:/g, '');
-        },
-
-        getSDI: function () {
-
-        },
-
-        setPlugins: function () {
-            //this._listenGestureEvent();
-
-            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
-            this.device = $('#device')[0];
-
-            this.modelCode = this.device.version;
-            this.productCode = this.device.platform;
-
-            this.getDUID();
+        this.getDUID();
 
 
-            $(function () {
-                //Log.show('default');
-                setInterval(function () {
-                    //Log.show('default');
-                    var usedMemorySize;
-                    if (window.NetCastGetUsedMemorySize) {
-                        usedMemorySize = window.NetCastGetUsedMemorySize();
-                    }
-                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
-                }, 5000);
-            });
-
-            if (Player && Player.setPlugin) {
-                Player.setPlugin();
+        //Log.show('default');
+        setInterval(function () {
+            //Log.show('default');
+            var usedMemorySize;
+            if (window.NetCastGetUsedMemorySize) {
+                usedMemorySize = window.NetCastGetUsedMemorySize();
             }
-        },
+            //Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+        }, 5000);
 
-        volumeEnable: function () {
-        },
 
-        sendReturn: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastBack();
-        },
-        exit: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastExit();
-        },
-
-        getUsedMemory: function () {
-            return window.NetCastGetUsedMemorySize();
-        },
-        getChildlockPin: function () {
-            return 1234;
+        if (Player && Player.setPlugin) {
+            Player.setPlugin();
         }
+    },
 
-    };
+    sendReturn: function () {
+        if (Player) {
+            Player.stop(true);
+        }
+        window.NetCastBack();
+    },
 
-    _.extend(platform, platformObj);
-})(this);
+    exit: function () {
+        Player && Player.stop(true);
+        window.NetCastExit();
+    },
+
+    getUsedMemory: function () {
+        return window.NetCastGetUsedMemorySize();
+    },
+    getChildlockPin: function () {
+        return 1234;
+    }
+});

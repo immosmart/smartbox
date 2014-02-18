@@ -77,14 +77,6 @@
      display: block;
  }
 
-.keyboard_ru .kb-multilang .kbtn.space {
-    width: 335px;
-}
-
-.keyboard_ru .kb-multilang.kb-havenums .kbtn.space {
-    width: 275px;
-}
-
 .kb-havenums .kbtn.nums {
     display: block;
 }
@@ -110,6 +102,10 @@
 }
 
 .kbtn.space {
+    width: 315px;
+}
+
+.kb-multilang .space {
     width: 255px;
 }
 
@@ -119,6 +115,14 @@
 
 .keyboard_fullnum .space{
     width: 315px!important;
+}
+
+.keyboard_ru .kb-multilang .kbtn.space {
+    width: 335px;
+}
+
+.keyboard_ru .kb-multilang.kb-havenums .kbtn.space {
+    width: 275px;
 }
 
 .kbtn.complete {

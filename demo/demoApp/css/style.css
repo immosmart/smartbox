@@ -1,4 +1,4 @@
-html,body {
+html, body {
     width: 1280px;
     height: 720px;
     position: relative;
@@ -144,8 +144,8 @@ h2 {
     font-size: 38px;
     line-height: 80px;
     background: #e0ffb3;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
+    /*-webkit-border-radius: 10px;
+    -moz-border-radius: 10px;*/
     border-radius: 10px;
     text-align: center;
 }

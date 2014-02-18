@@ -1,6 +1,7 @@
 $(function () {
   "use strict";
 
+
   var $body = $(document.body),
     keys = window.$$legend.keys;
 

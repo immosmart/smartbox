@@ -6,8 +6,8 @@ SB.readyForPlatform('philips', function () {
     var ready = false;
 
     var startUpdate = function () {
+        var lastTime = 0;
         updateInterval = setInterval(function () {
-            var lastTime = 0;
             if (video.playPosition != lastTime) {
                 Player.videoInfo.currentTime = video.playPosition / 1000;
                 Player.trigger('update');

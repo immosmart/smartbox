@@ -3,32 +3,58 @@
  */
 (function ( window, undefined ) {
 
-  // save in case of overwrite
-  var document = window.document,
-    _inited = false,
-    _ready = false,
-    readyCallbacks = [];
+  var _ready = false,
+    readyCallbacks = [],
+    SB,
+    _running = false;
 
-  var SB = {
+  var userAgent = navigator.userAgent.toLowerCase();
 
-    config: {
-      /**
-       * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-       * ex: browser, samsung, lg
-       * @type: {String}
-       */
-      defaultPlatform: 'browser'
+  /**
+   * Detecting current platform
+   * @returns {boolean} true if running on current platform
+   */
+  function detect ( slug ) {
+    return userAgent.indexOf(slug) !== -1;
+  }
+
+  SB = {
+
+    platformName: '',
+
+    // TODO: refactor platform creating
+    // because platform can be overrided
+    createPlatform: function ( platformName, platformApi ) {
+
+      var isCurrent = platformApi.detect && platformApi.detect(),
+        platform;
+
+      if ( isCurrent || detect(platformApi.platformUserAgent) ) {
+        this.platformName = platformName;
+        _.extend(this, platformApi);
+
+        if (typeof platformApi.onDetect === 'function') {
+          this.onDetect();
+        }
+      }
     },
 
-    isInited: function () {
-      return _inited;
+    config: {
+      DUID: 'real'
     },
 
     /**
      * Main function
      * @param cb {Function} callback after initialization
+     * @param notRun {Boolean}
      */
-    ready: function ( cb ) {
+    ready: function ( cb, notRun ) {
+
+      // initializing on first calling ready func
+      if ( !notRun && !_running ) {
+        this.initialize();
+      }
+
       if ( _ready ) {
         cb.call(this);
       } else {
@@ -36,13 +62,32 @@
       }
     },
 
+    initialize: function () {
+      var self = this;
+
+      _running = true;
+
+      window.$$log = SB.utils.log.log;
+      window.$$error = SB.utils.error;
+
+      $(function () {
+        self.setPlugins();
+        self.getDUID();
+
+        // wait for calling others $()
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    },
+
     readyForPlatform: function ( platform, cb ) {
       var self = this;
       this.ready(function () {
-        if ( platform == self.currentPlatform.name ) {
+        if ( platform == self.platformName ) {
           cb.call(self);
         }
-      });
+      }, true);
     },
 
     /**
@@ -57,58 +102,103 @@
       }
     },
 
-    initialise: function () {
-      var self = this,
-        utils = this.utils;
+    utils: {
+      /**
+       * Show error message
+       * @param msg
+       */
+      error: function ( msg ) {
+        $$log(msg, 'error');
+      },
 
-      if ( _inited ) {
-        return;
-      }
+      /**
+       * Show messages in log
+       * all functionality in main.js
+       */
+      log: {
+        log: $.noop,
+        state: $.noop,
+        show: $.noop,
+        hide: $.noop,
+        startProfile: $.noop,
+        stopProfile: $.noop
+      },
 
-      window.$$log = utils.log.log;
-      window.$$error = utils.error;
+      /**
+       * Asynchroniosly adding javascript files
+       * @param filesArray {Array} array of sources of javascript files
+       * @param cb {Function} callback on load javascript files
+       */
+      addExternalJS: function ( filesArray, cb ) {
+        var $externalJsContainer,
+          loadedScripts = 0,
+          len = filesArray.length,
+          el,
+          scriptEl;
 
-      //$$log('!!!!!!!!!LOG: initialising SB');
+        function onloadScript () {
+          loadedScripts++;
 
-      SB.platforms.initialise(function ( currentPlatform ) {
-        self.currentPlatform = currentPlatform;
-        _inited = true;
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
 
-        //prevent calling before other dom ready callbacks
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
+        if ( filesArray.length ) {
+
+          $externalJsContainer = document.createDocumentFragment();
+          el = document.createElement('script');
+          el.type = 'text/javascript';
+          el.onload = onloadScript;
+
+          for ( var i = 0; i < len; i++ ) {
+            scriptEl = el.cloneNode();
+            scriptEl.src = filesArray[i];
+            $externalJsContainer.appendChild(scriptEl);
+          }
+
+          document.body.appendChild($externalJsContainer);
+        } else {
+
+          // if no external js simple call cb
+          cb && cb.call(this);
+        }
+      },
+
+      addExternalCss: function ( filesArray ) {
+        var $externalCssContainer;
+
+        if ( filesArray.length ) {
+          $externalCssContainer = document.createDocumentFragment();
+          _.each(filesArray, function ( src ) {
+
+            var el = document.createElement('link');
+
+            el.rel = 'stylesheet';
+            el.href = src;
+
+            $externalCssContainer.appendChild(el);
+          });
+
+          document.body.appendChild($externalCssContainer);
+        }
+      },
+
+      addExternalFiles: function ( cb ) {
+        if ( this.externalJs.length ) {
+          this.addExternalJS(this.externalJs, cb);
+        }
+        if ( this.externalCss.length ) {
+          this.addExternalCss(this.externalCss);
+        }
+      },
+
+      legend: {}
     }
   };
 
-  SB.utils = {
-    /**
-     * Show error message
-     * @param msg
-     */
-    error: function ( msg ) {
-      $$log(msg, 'error');
-    },
+    //TODO: For backward capability. Remove this.
+  SB.currentPlatform = SB;
 
-    /**
-     * Show messages in log
-     * all functionality in main.js
-     */
-    log: {
-      log: $.noop,
-      state: $.noop,
-      show: $.noop,
-      hide: $.noop,
-      startProfile: $.noop,
-      stopProfile: $.noop
-    },
-
-    legend: {}
-  };
-
-  $(function () {
-    SB.initialise();
-  });
   window.SB = SB;
 })(this);

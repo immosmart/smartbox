@@ -32,10 +32,6 @@
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
         _.extend(this, platformApi);
-
-        if (typeof platformApi.onDetect === 'function') {
-          this.onDetect();
-        }
       }
     },
 

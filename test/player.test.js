@@ -8,7 +8,6 @@ describe('Player', function () {
 
 
 
-
         it('supports ready', function () {
             var spy = jasmine.createSpy('ready handler');
             Player.on('ready', spy);
@@ -21,7 +20,7 @@ describe('Player', function () {
             });
             waitsFor(function () {
                 return spy.calls.length >= 1
-            }, 'ready have been triggered', 2000);
+            }, 'ready have been triggered', 5000);
 
             runs(function () {
                 expect(Player.state).toBe("play");
@@ -89,7 +88,7 @@ describe('Player', function () {
     });
 
 
-    describe('extended support', function () {
+    xdescribe('extended support', function () {
 
         var begin = jasmine.createSpy('bufferingEnd handler');
         var end = jasmine.createSpy('end handler');
@@ -169,12 +168,12 @@ describe('Player', function () {
 
             waitsFor(function () {
                 return update.calls.length == 1
-            }, 'update handler was called', 25000);
+            }, 'update handler was called', 5000);
 
             runs(function () {
                 expect(Player.videoInfo.currentTime).toBeGreaterThan(118);
                 expect(Player.videoInfo.currentTime).toBeLessThan(122);
-            }, 'seeking success', 15000);
+            });
         });
 
 

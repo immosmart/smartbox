@@ -110,10 +110,12 @@
       text = text || '';
 
       if (!text && this.isShown) {
-        this.$el.hide();
+        this.$el[0].style.display = 'none';
+        this.$el.removeClass('legend-item-visible');
         this.isShown = false;
       } else if (text && !this.isShown) {
-        this.$el.show();
+        this.$el[0].style.display = '';
+        this.$el.addClass('legend-item-visible');
         this.isShown = true;
       }
 

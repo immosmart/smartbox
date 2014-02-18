@@ -1,29 +1,31 @@
 describe('Platform', function () {
 
-    beforeEach(function () {
-        runs(function () {
-            SB.initialise();
+    it('Should supports ready', function () {
+        var spy1=jasmine.createSpy(), spy2=jasmine.createSpy();
+        runs(function(){
+            SB.ready(spy1);
+
         });
 
-        waitsFor(function () {
-            return SB.currentPlatform;
-        }, 'Should initialise platform');
-    });
+        waitsFor(function(){
+            return spy1.calls.length!=0;
+        }, 2000);
 
-    it('Should detect platform', function () {
-        runs(function () {
-            expect(SB.currentPlatform).toBeTruthy();
+
+        runs(function(){
+            SB.ready(spy2);
+            expect(spy2).toHaveBeenCalled();
         });
+
     });
 
     it('Should detect native DUID', function () {
-        runs(function () {
-            expect(SB.currentPlatform.getNativeDUID()).not.toBe('');
-        });
+        expect(SB.getNativeDUID()).not.toBe('');
     });
 
-    xit('Should detect samsung', function () {
-        expect(SB.platforms.getCurrentPlatform().name).toBe('samsung');
+    xit('Should detect platform', function () {
+        $('body').prepend('<div style="color: #ffffff; background: #000000">' + navigator.userAgent + '</div>')
+        expect(SB.platform).toBe('lg');
     });
 
     describe('Local storage', function () {
@@ -48,43 +50,4 @@ describe('Platform', function () {
         });
     });
 
-
-    describe('external files methods', function () {
-
-        it('addExternalJS load and execute script', function () {
-            expect(window.nonExists).not.toBeDefined();
-            var cb = jasmine.createSpy("external callback");
-            SB.Platform.prototype.addExternalJS(['test/external.js'], cb);
-            waitsFor(function () {
-                return cb.calls.length > 0;
-            });
-
-            runs(function () {
-                expect(window.nonExists).toBeDefined();
-                delete window.nonExists;
-            });
-        });
-
-
-        it('addExternalCSS apply styles', function () {
-
-            var $check = $('<div class="apply_check"></div>');
-
-            $('body').append($check);
-
-            expect($check.css("position")).toBe("static");
-
-            SB.Platform.prototype.addExternalCss(['test/external.css']);
-            waits(1000);
-
-            runs(function () {
-                var offset = $check.offset();
-                expect($check.css("position")).toBe("absolute");
-                expect(offset.left).toBe(123);
-                expect(offset.top).toBe(321);
-                $check.remove();
-            });
-        });
-
-    });
 });
