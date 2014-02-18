@@ -55,21 +55,14 @@ SB.createPlatform('browser', {
         return this.DUID;
     },
 
-    setData: function (name, val) {
-        // save data in string format
-        localStorage.setItem(name, JSON.stringify(val));
+    volumeUp: function () {
     },
 
-    getData: function (name) {
-        var result;
-        try {
-            result = JSON.parse(localStorage.getItem(name));
-        } catch (e) {}
-
-        return result;
+    volumeDown: function () {
     },
 
-    removeData: function (name) {
-        localStorage.removeItem(name);
+    getVolume: function () {
     }
+
+
 });
