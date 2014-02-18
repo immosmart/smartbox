@@ -40,7 +40,8 @@
     },
 
     config: {
-      DUID: 'real'
+      DUID: 'real',
+      logKey: 'tools'
     },
 
     /**

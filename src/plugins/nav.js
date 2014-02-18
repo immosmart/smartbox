@@ -1,12 +1,13 @@
 !(function ( window, undefined ) {
 
   var $body = null,
-    nav, invertedKeys;
+    nav, invertedKeys = {};
 
   SB.ready(function () {
-    invertedKeys = _(SB.keys).invert().mapValues(function ( a ) {
-      return a.toLowerCase();
-    }).value();
+    var keys = SB.keys;
+    for (var key in keys) {
+      invertedKeys[keys[key]] = key.toLowerCase();
+    }
   }, true);
 
   function Navigation () {
@@ -38,7 +39,6 @@
       }
 
       key = invertedKeys[keyCode];
-
       if ( key ) {
         if ( colorKeys.indexOf(key) > -1 ) {
           throttleEvent(key);

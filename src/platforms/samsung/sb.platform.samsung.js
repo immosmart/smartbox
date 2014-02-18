@@ -61,7 +61,7 @@
         },
 
         getSDI: function () {
-            this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+            this.SDI = this.$plugins.SDIPlugin.Execute('GetSDI_ID');
             return this.SDI;
         },
 
@@ -126,9 +126,7 @@
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = _.foldl(sf.key, function (sum, val, key) {
-                return sum[key.toLowerCase()] = val;
-            }, {});
+            this.keys = sf.key;
 
             document.body.onkeydown = function (event) {
                 var keyCode = event.keyCode;
@@ -144,7 +142,6 @@
                         break;
                 }
             }
-
         },
 
         /**

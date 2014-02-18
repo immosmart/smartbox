@@ -145,7 +145,8 @@
 })(this);
 
 $(function () {
-  $(document.body).on('nav_key:tools', function () {
+  var logKey = SB.config.logKey || 'tools';
+  $(document.body).on('nav_key:' + logKey, function () {
     SB.utils.log.show();
   });
 });

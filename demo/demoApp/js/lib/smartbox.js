@@ -32,11 +32,16 @@
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
         _.extend(this, platformApi);
+
+        if (typeof platformApi.onDetect === 'function') {
+          this.onDetect();
+        }
       }
     },
 
     config: {
-      DUID: 'real'
+      DUID: 'real',
+      logKey: 'tools'
     },
 
     /**
@@ -1418,7 +1423,8 @@ window.SB.keyboardPresets = {
 })(this);
 
 $(function () {
-  $(document.body).on('nav_key:tools', function () {
+  var logKey = SB.config.logKey || 'tools';
+  $(document.body).on('nav_key:' + logKey, function () {
     SB.utils.log.show();
   });
 });
@@ -1427,12 +1433,13 @@ $(function () {
 !(function ( window, undefined ) {
 
   var $body = null,
-    nav, invertedKeys;
+    nav, invertedKeys = {};
 
   SB.ready(function () {
-    invertedKeys = _(SB.keys).invert().mapValues(function ( a ) {
-      return a.toLowerCase();
-    }).value();
+    var keys = SB.keys;
+    for (var key in keys) {
+      invertedKeys[keys[key]] = key.toLowerCase();
+    }
   }, true);
 
   function Navigation () {
@@ -1464,7 +1471,6 @@ $(function () {
       }
 
       key = invertedKeys[keyCode];
-
       if ( key ) {
         if ( colorKeys.indexOf(key) > -1 ) {
           throttleEvent(key);
@@ -3650,7 +3656,7 @@ SB.readyForPlatform('samsung', function () {
         },
 
         getSDI: function () {
-            this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
+            this.SDI = this.$plugins.SDIPlugin.Execute('GetSDI_ID');
             return this.SDI;
         },
 
@@ -3715,9 +3721,7 @@ SB.readyForPlatform('samsung', function () {
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = _.foldl(sf.key, function (sum, val, key) {
-                return sum[key.toLowerCase()] = val;
-            }, {});
+            this.keys = sf.key;
 
             document.body.onkeydown = function (event) {
                 var keyCode = event.keyCode;
@@ -3733,7 +3737,6 @@ SB.readyForPlatform('samsung', function () {
                         break;
                 }
             }
-
         },
 
         /**
