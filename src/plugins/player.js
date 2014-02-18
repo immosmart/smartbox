@@ -176,15 +176,15 @@
             /**
              * Total video duration in seconds
              */
-            duration: 31,
+            duration: 0,
             /**
              * Video stream width in pixels
              */
-            width: 640,
+            width: 0,
             /**
              * Video stream height in pixels
              */
-            height: 360,
+            height: 0,
             /**
              * Current playback time in seconds
              */

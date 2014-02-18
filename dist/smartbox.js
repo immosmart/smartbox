@@ -2202,15 +2202,15 @@ $(function () {
             /**
              * Total video duration in seconds
              */
-            duration: 31,
+            duration: 0,
             /**
              * Video stream width in pixels
              */
-            width: 640,
+            width: 0,
             /**
              * Video stream height in pixels
              */
-            height: 360,
+            height: 0,
             /**
              * Current playback time in seconds
              */
@@ -2819,23 +2819,16 @@ SB.createPlatform('browser', {
         return this.DUID;
     },
 
-    setData: function (name, val) {
-        // save data in string format
-        localStorage.setItem(name, JSON.stringify(val));
+    volumeUp: function () {
     },
 
-    getData: function (name) {
-        var result;
-        try {
-            result = JSON.parse(localStorage.getItem(name));
-        } catch (e) {}
-
-        return result;
+    volumeDown: function () {
     },
 
-    removeData: function (name) {
-        localStorage.removeItem(name);
+    getVolume: function () {
     }
+
+
 });
 
 (function ($) {
@@ -3058,105 +3051,189 @@ SB.createPlatform('lg', {
         return 1234;
     }
 });
-SB.readyForPlatform('mag', function(){
+SB.readyForPlatform('mag', function () {
 
+
+    var updateInterval;
+
+
+    var startUpdate = function () {
+        var lastTime = 0;
+        updateInterval = setInterval(function () {
+            var position = stb.GetPosTime();
+            if (position != lastTime) {
+                Player.videoInfo.currentTime = position;
+                Player.trigger('update');
+            }
+            lastTime = position;
+        }, 500);
+    }
+
+    var stopUpdate = function () {
+        clearInterval(updateInterval);
+    }
+
+
+    window.stbEvent =
+    {
+
+        onEvent: function (data) {
+            $('body').prepend(data);
+            data += '';
+            if (data == '1') {
+                Player.trigger('complete');
+            } else if (data == '2') {
+                Player.videoInfo.duration = stb.GetMediaLen() + 1;
+                Player.videoInfo.currentTime = 0;
+                Player.trigger('ready');
+            }
+            else if (data == '7') {
+                $('body').prepend(stb.GetVideoInfo());
+                var vi = eval(stb.GetVideoInfo());
+                Player.videoInfo.width = vi.pictureWidth;
+                Player.videoInfo.height = vi.pictureHeight;
+            }
+        },
+        event: 0
+    };
+
+
+    var stb = window.gSTB;
     Player.extend({
         _init: function () {
+            stb.InitPlayer();
+            stb.SetViewport(1280, 720, 0, 0);
 
         },
         _play: function (options) {
-
+            stb.Play(options.url);
+            startUpdate();
         },
         _stop: function () {
-
+            stb.Stop();
+            stopUpdate();
         },
         pause: function () {
-
+            stb.Pause();
+            this.state = "pause";
+            stopUpdate();
         },
         resume: function () {
-
+            stb.Continue();
+            this.state = "play";
+            startUpdate();
         },
         seek: function (time) {
-
+            stb.setPosTime(time)
         },
         audio: {
 
             set: function (index) {
-
+                stb.SetAudioPID(index);
             },
             get: function () {
-
+                return stb.GetAudioPIDs();
             },
             cur: function () {
-
+                return stb.GetAudioPID();
             }
         }
     });
 });
 
-/**
- * Browser platform description
- */
-SB.createPlatform('mag', {
-    keys: {
-        RIGHT: 39,
-        LEFT: 37,
-        DOWN: 40,
-        UP: 38,
-        RETURN: 8,
-        EXIT: 27,
-        TOOLS: 122,
-        FF: 70,
-        RW: 66,
-        NEXT: 34,
-        PREV: 33,
-        ENTER: 13,
-        RED: 112,
-        GREEN: 113,
-        YELLOW: 114,
-        BLUE: 115,
-        CH_UP: 9,
-        CH_DOWN: 9,
-        N0: 48,
-        N1: 49,
-        N2: 50,
-        N3: 51,
-        N4: 52,
-        N5: 53,
-        N6: 54,
-        N7: 55,
-        N8: 56,
-        N9: 57,
-        PRECH: 116,
-        //SMART: 36,
-        PLAY: 82,
-        STOP: 83,
-        //PAUSE: 99,
-        //SUBT: 76,
-        INFO: 89
-        //REC: 82
-    },
+(function () {
 
-    detect: function () {
-        return !!window.gSTB;
-    },
+    var stb;
+    /**
+     * Mag set top box platform description
+     */
+    SB.createPlatform('mag', {
+        keys: {
+            RIGHT: 39,
+            LEFT: 37,
+            DOWN: 40,
+            UP: 38,
+            RETURN: 8,
+            EXIT: 27,
+            TOOLS: 122,
+            FF: 70,
+            RW: 66,
+            NEXT: 34,
+            PREV: 33,
+            ENTER: 13,
+            RED: 112,
+            GREEN: 113,
+            YELLOW: 114,
+            BLUE: 115,
+            CH_UP: 9,
+            CH_DOWN: 9,
+            N0: 48,
+            N1: 49,
+            N2: 50,
+            N3: 51,
+            N4: 52,
+            N5: 53,
+            N6: 54,
+            N7: 55,
+            N8: 56,
+            N9: 57,
+            PRECH: 116,
+            //SMART: 36,
+            PLAY: 82,
+            STOP: 83,
+            //PAUSE: 99,
+            //SUBT: 76,
+            INFO: 89
+            //REC: 82
+        },
 
-    initialise: function () {
-    },
+        onDetect: function () {
 
-    getNativeDUID: function () {
+            stb = window.gSTB;
 
-    },
+            window.moveTo(0, 0);
+            window.resizeTo(1280, 720);
 
-    volumeUp: function () {
-    },
 
-    volumeDown: function () {
-    },
+            window.localStorage = {
+                setItem: function (name, data) {
 
-    getVolume: function () {
-    }
-});
+                },
+                clear: function(){
+
+                },
+                getItem: function(){
+
+                },
+                removeItem: function(){
+
+                }
+            }
+        },
+
+        detect: function () {
+            return !!window.gSTB;
+        },
+
+        initialise: function () {
+        },
+
+        getNativeDUID: function () {
+
+        },
+
+        volumeUp: function () {
+        },
+
+        volumeDown: function () {
+        },
+
+        getVolume: function () {
+        }
+    });
+
+}());
+
 
 SB.readyForPlatform('philips', function () {
     var video;
@@ -3166,8 +3243,8 @@ SB.readyForPlatform('philips', function () {
     var ready = false;
 
     var startUpdate = function () {
+        var lastTime = 0;
         updateInterval = setInterval(function () {
-            var lastTime = 0;
             if (video.playPosition != lastTime) {
                 Player.videoInfo.currentTime = video.playPosition / 1000;
                 Player.trigger('update');
@@ -3631,7 +3708,6 @@ SB.readyForPlatform('samsung', function () {
         platformUserAgent: 'maple',
 
         onDetect: function () {
-            alert('ONDETECT!!!!')
             // non-standart inserting objects in DOM (i'm looking at you 2011 version)
             // in 2011 samsung smart tv's we can't add objects if document is ready
 
