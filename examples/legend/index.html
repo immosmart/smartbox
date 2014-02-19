@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="application/ce-html+xml; charset=UTF-8"/>
+    <title></title>
+    <link rel="stylesheet" href="../../css/legend.css"/>
+    <style type="text/css">
+        html,
+        body {
+            background: rgba(0,0,0,0.6);
+            margin: 0;
+            padding: 0;
+            width: 1280px;
+            height: 720px;
+        }
+
+        #legend {
+            display: block;
+            position: relative;
+            height: auto;
+            color: #fff;
+            margin-left: 15px;
+        }
+
+        .legend-item,
+        .legend-wrap {
+            float: none;
+        }
+
+        .legend-item {
+            margin-bottom: 5px;
+            font-size: 18px;
+            padding-left: 60px !important;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<script type="text/javascript" src="../../src/libs/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../../src/libs/lodash.compat.min.js"></script>
+<script type="text/javascript" src="../../dist/smartbox.js"></script>
+<script type="text/javascript">
+    (function () {
+        var keys = $$legend.keys;
+
+        for(var key in keys) {
+            keys[key](key);
+        }
+    })();
+</script>
+</body>
+</html>
