@@ -2453,6 +2453,9 @@ $(function () {
 
         },
         hide: function () {
+            if(!this.enabled()){
+                return;
+            }
             this._nativeTurnOff();
             $buble.hide();
             return this;
@@ -2797,10 +2800,10 @@ SB.readyForPlatform('browser', function(){
 
             },
             get: function () {
-
+                return [];
             },
             cur: function () {
-
+                return 0;
             }
         }
     });
