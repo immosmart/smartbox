@@ -32,6 +32,7 @@
       },
 
       directKeyboardInput: false,
+      directNumInput: false,
 
       max: 0,
 
@@ -145,9 +146,6 @@
         'nav_focus': function () {
           $$nav.current(self.$el);
         },
-        change: function () {
-          self.$text.html(this.value);
-        },
         'startBlink': function () {
           self.startBlink();
         },
@@ -163,6 +161,21 @@
           self.showKeyboard();
         }
       });
+
+      this.$el.on({
+        'nav_focus': function () {
+          self.$input.addClass('focus');
+        },
+        'nav_blur': function () {
+          self.$input.removeClass('focus');
+        }
+      });
+
+      if (opt.directNumInput && !opt.directKeyboardInput) {
+        this.$el.off('nav_key:num nav_key:red').on('nav_key:num nav_key:red', function ( e ) {
+          self.typeNum(e);
+        });
+      }
 
       $wrap.off('nav_focus nav_blur click');
 
@@ -218,6 +231,7 @@
 
     setText: function ( text ) {
       var opt = this.options,
+        formatText,
         max = opt.max,
         method;
 
@@ -227,12 +241,11 @@
         text = text.substr(0, max);
       }
 
-      if ( opt.formatText ) {
-        text = opt.formatText(text);
-      }
+      formatText = opt.formatText ? opt.formatText(text) : text;
 
-      this.$input.val(text).change();
+      this.$input.val(text).attr('data-value', text);
       this.text = text;
+      this.$text.html(formatText);
 
       // TODO: fix for Samsung 11
       if ( text.length > 1 ) {
@@ -241,6 +254,8 @@
       } else {
         this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
       }
+
+      this.$input.trigger('text_change');
     },
 
     type: function ( letter ) {
@@ -269,6 +284,18 @@
         $$nav.current(opt.next);
         $$nav.current().click();
       }
+    },
+
+    typeNum: function(e){
+      switch (e.keyName) {
+        case 'red':
+          this.type('backspace');
+          break;
+        default:
+          this.type(e.num);
+          break;
+      }
+      e.stopPropagation();
     },
 
     hideKeyboard: function ( isComplete ) {
@@ -376,7 +403,7 @@
         $.data(this, 'plugin_' + pluginName,
           new Plugin(this, options));
       } else if ( typeof instance[method] === 'function' ) {
-        instance[method](params);
+        instance[method].apply(instance, params);
       }
     });
   }
