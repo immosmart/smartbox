@@ -3,7 +3,11 @@ describe('Platform', function () {
     it('Should supports ready', function () {
         var spy1=jasmine.createSpy(), spy2=jasmine.createSpy();
         runs(function(){
-            SB.ready(spy1);
+            SB.ready(function(){
+                spy1();
+                $$nav.on();
+                $$log('log');
+            });
 
         });
 

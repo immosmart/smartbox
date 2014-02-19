@@ -3063,11 +3063,12 @@ SB.readyForPlatform('mag', function () {
         var lastTime = 0;
         updateInterval = setInterval(function () {
             var position = stb.GetPosTime();
-            if (position != lastTime) {
+            //if (position != lastTime) {
                 Player.videoInfo.currentTime = position;
                 Player.trigger('update');
-            }
-            lastTime = position;
+            SB.utils.log.state(position, 'position', 'player');
+            //}
+            //lastTime = position;
         }, 500);
     }
 
@@ -3088,6 +3089,9 @@ SB.readyForPlatform('mag', function () {
                 Player.videoInfo.duration = stb.GetMediaLen() + 1;
                 Player.videoInfo.currentTime = 0;
                 Player.trigger('ready');
+            }
+            else if (data == '4') {
+                Player.trigger('bufferingEnd');
             }
             else if (data == '7') {
                 var vi = eval(stb.GetVideoInfo());
@@ -3110,6 +3114,8 @@ SB.readyForPlatform('mag', function () {
         _play: function (options) {
             stb.Play(options.url);
             startUpdate();
+            stb.SetSpeed(2);
+            Player.trigger('bufferingBegin');
         },
         _stop: function () {
             stb.Stop();
@@ -3126,7 +3132,7 @@ SB.readyForPlatform('mag', function () {
             startUpdate();
         },
         seek: function (time) {
-            stb.setPosTime(time)
+            stb.SetPosTime(time)
         },
         audio: {
 
