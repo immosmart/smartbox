@@ -54,12 +54,10 @@ SB.readyForPlatform('mag', function () {
             stb.InitPlayer();
             stb.SetViewport(1280, 720, 0, 0);
             stb.SetTopWin(0);
-
         },
         _play: function (options) {
             stb.Play(options.url);
             startUpdate();
-            stb.SetSpeed(2);
             Player.trigger('bufferingBegin');
         },
         _stop: function () {
