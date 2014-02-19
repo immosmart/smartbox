@@ -13,17 +13,17 @@
             type: 'vod'
         },
         {
-            title: 'HLS test',
+            title: 'Europa plus',
             url: 'http://europaplus.cdnvideo.ru/europaplus-live/eptv_main.sdp/playlist.m3u8',
             type: 'hls'
         },
         {
-            title: 'HLS test 2',
+            title: 'PIK TV',
             url: 'http://phone.pik-tv.com/live/mp4:piktv3pik3tv/playlist.m3u8',
             type: 'hls'
         },
         {
-            title: 'HLS test 3',
+            title: 'Redbull',
             url: 'http://live.iphone.redbull.de.edgesuite.net/webtvHD.m3u8',
             type: 'hls'
         }
