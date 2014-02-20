@@ -33,7 +33,8 @@ Smartbox имеет три зависимости:
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
 * Легенда @todo_doc
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_player.md">Плеер</a>
+* Абстракция LocalStorage (хранение данных на клиентском устройстве) @todo_doc
+* <a href="https://github.com/immosmart/smartbox/blob/develop/docs/ru_player.md">Плеер</a>
 
 # Как пользоваться библиотекой
 
@@ -66,7 +67,7 @@ SB.ready будет выполнен после всех коллбеков jQue
 
 # Конфигурирование библиотеки
 
-Все конфигурации библиотеки находятся в объекте SB.platform
+Все конфигурации библиотеки находятся в объекте SB.config
 
             SB.config = {
               /**

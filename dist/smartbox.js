@@ -3,32 +3,59 @@
  */
 (function ( window, undefined ) {
 
-  // save in case of overwrite
-  var document = window.document,
-    _inited = false,
-    _ready = false,
-    readyCallbacks = [];
+  var _ready = false,
+    readyCallbacks = [],
+    SB,
+    _running = false;
 
-  var SB = {
+  var userAgent = navigator.userAgent.toLowerCase();
 
-    config: {
-      /**
-       * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-       * ex: browser, samsung, lg
-       * @type: {String}
-       */
-      defaultPlatform: 'browser'
+  /**
+   * Detecting current platform
+   * @returns {boolean} true if running on current platform
+   */
+  function detect ( slug ) {
+    return userAgent.indexOf(slug) !== -1;
+  }
+
+  SB = {
+
+    platformName: '',
+
+    // TODO: refactor platform creating
+    // because platform can be overrided
+    createPlatform: function ( platformName, platformApi ) {
+
+      var isCurrent = platformApi.detect && platformApi.detect(),
+        platform;
+
+      if ( isCurrent || detect(platformApi.platformUserAgent) ) {
+        this.platformName = platformName;
+        _.extend(this, platformApi);
+
+        if (typeof platformApi.onDetect === 'function') {
+          this.onDetect();
+        }
+      }
     },
 
-    isInited: function () {
-      return _inited;
+    config: {
+      DUID: 'real',
+      logKey: 'tools'
     },
 
     /**
      * Main function
      * @param cb {Function} callback after initialization
+     * @param notRun {Boolean}
      */
-    ready: function ( cb ) {
+    ready: function ( cb, notRun ) {
+
+      // initializing on first calling ready func
+      if ( !notRun && !_running ) {
+        this.initialize();
+      }
+
       if ( _ready ) {
         cb.call(this);
       } else {
@@ -36,13 +63,32 @@
       }
     },
 
+    initialize: function () {
+      var self = this;
+
+      _running = true;
+
+      window.$$log = SB.utils.log.log;
+      window.$$error = SB.utils.error;
+
+      $(function () {
+        self.setPlugins();
+        self.getDUID();
+
+        // wait for calling others $()
+        setTimeout(function () {
+          self._onReady();
+        });
+      });
+    },
+
     readyForPlatform: function ( platform, cb ) {
       var self = this;
       this.ready(function () {
-        if ( platform == self.currentPlatform.name ) {
+        if ( platform == self.platformName ) {
           cb.call(self);
         }
-      });
+      }, true);
     },
 
     /**
@@ -57,690 +103,605 @@
       }
     },
 
-    initialise: function () {
-      var self = this,
-        utils = this.utils;
+    utils: {
+      /**
+       * Show error message
+       * @param msg
+       */
+      error: function ( msg ) {
+        $$log(msg, 'error');
+      },
 
-      if ( _inited ) {
-        return;
-      }
+      /**
+       * Show messages in log
+       * all functionality in main.js
+       */
+      log: {
+        log: $.noop,
+        state: $.noop,
+        show: $.noop,
+        hide: $.noop,
+        startProfile: $.noop,
+        stopProfile: $.noop
+      },
 
-      window.$$log = utils.log.log;
-      window.$$error = utils.error;
+      /**
+       * Asynchroniosly adding javascript files
+       * @param filesArray {Array} array of sources of javascript files
+       * @param cb {Function} callback on load javascript files
+       */
+      addExternalJS: function ( filesArray, cb ) {
+        var $externalJsContainer,
+          loadedScripts = 0,
+          len = filesArray.length,
+          el,
+          scriptEl;
 
-      //$$log('!!!!!!!!!LOG: initialising SB');
+        function onloadScript () {
+          loadedScripts++;
 
-      SB.platforms.initialise(function ( currentPlatform ) {
-        self.currentPlatform = currentPlatform;
-        _inited = true;
+          if ( loadedScripts === len ) {
+            cb && cb.call();
+          }
+        }
 
-        //prevent calling before other dom ready callbacks
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
+        if ( filesArray.length ) {
+
+          $externalJsContainer = document.createDocumentFragment();
+          el = document.createElement('script');
+          el.type = 'text/javascript';
+          el.onload = onloadScript;
+
+          for ( var i = 0; i < len; i++ ) {
+            scriptEl = el.cloneNode();
+            scriptEl.src = filesArray[i];
+            $externalJsContainer.appendChild(scriptEl);
+          }
+
+          document.body.appendChild($externalJsContainer);
+        } else {
+
+          // if no external js simple call cb
+          cb && cb.call(this);
+        }
+      },
+
+      addExternalCss: function ( filesArray ) {
+        var $externalCssContainer;
+
+        if ( filesArray.length ) {
+          $externalCssContainer = document.createDocumentFragment();
+          _.each(filesArray, function ( src ) {
+
+            var el = document.createElement('link');
+
+            el.rel = 'stylesheet';
+            el.href = src;
+
+            $externalCssContainer.appendChild(el);
+          });
+
+          document.body.appendChild($externalCssContainer);
+        }
+      },
+
+      addExternalFiles: function ( cb ) {
+        if ( this.externalJs.length ) {
+          this.addExternalJS(this.externalJs, cb);
+        }
+        if ( this.externalCss.length ) {
+          this.addExternalCss(this.externalCss);
+        }
+      },
+
+      legend: {}
     }
   };
 
-  SB.utils = {
-    /**
-     * Show error message
-     * @param msg
-     */
-    error: function ( msg ) {
-      $$log(msg, 'error');
-    },
+    //TODO: For backward capability. Remove this.
+  SB.currentPlatform = SB;
 
-    /**
-     * Show messages in log
-     * all functionality in main.js
-     */
-    log: {
-      log: $.noop,
-      state: $.noop,
-      show: $.noop,
-      hide: $.noop,
-      startProfile: $.noop,
-      stopProfile: $.noop
-    },
-
-    legend: {}
-  };
-
-  $(function () {
-    SB.initialise();
-  });
   window.SB = SB;
 })(this);
 // global SB
 !(function ( window, undefined ) {
 
-	var platforms,
-		Platform,
-		PlatformPrototype,
-		_supportedPlatforms = {},
-		_platform = null,
-		_defaultPlatform = null;
+  var PlatformApi = {
+    externalCss: [],
+    externalJs: [],
+    keys: {},
 
-	// Object for all platforms
-	platforms = {
+    DUID: '',
 
-		// add supported platform
-		addPlatform: function ( platform ) {
-			if ( platform.name === SB.config.defaultPlatform ) {
-				_defaultPlatform = platform;
-			} else {
-				_supportedPlatforms[platform.name] = platform;
-			}
-		},
+    platformUserAgent: 'not found',
 
-		// return currentPlatform
-		getCurrentPlatform: function () {
-			return _platform;
-		},
+    /**
+     * Function called if running on current platform
+     */
+    initialise: $.noop,
 
-		// Detect & initialise platform
-		initialise: function (cb) {
-			var prevTime = new Date().getTime();
-
-			// get first platform, where detect() return true
-			var currentPlatform = _.find(_supportedPlatforms, function ( platform ) {
-				return platform.detect();
-			});
-
-			currentPlatform = currentPlatform || _defaultPlatform;
-			if ( !currentPlatform ) {
-				$$error('No Platform detected!');
-			} else {
-				//$$log('detect platform: ' + currentPlatform.name);
-				currentPlatform.addExternalFiles(function () {
-					//$$log('adding files callback');
-
-					currentPlatform.setPlugins();
-					currentPlatform.refreshKeys();
-					currentPlatform.initialise();
-
-					_platform = currentPlatform;
-					cb && cb.call(this, currentPlatform);
-				});
-			}
-		}
-	};
-
-	/**
-	 * Master class for platform
-	 * @param name
-	 * @constructor
-	 */
-	Platform = function ( name ) {
-		this.name = name;
-		var _keys = {};
-
-
-		this.refreshKeys = function refreshKeys() {
-			_keys = {};
-			for(var keyName in this.keys) {
-				_keys[this.keys[keyName]] = keyName.toLowerCase();
-			}
-		};
-
-		/**
-		 * Returns key name by key code
-		 * @param keyCode
-		 * @returns {string} key name
-		 */
-		this.getKeyByKeyCode = function ( keyCode) {
-			return _keys[keyCode];
-		};
-
-		SB.platforms.addPlatform(this);
-	};
-
-	PlatformPrototype = {
-		externalCss: [],
-		externalJs: [],
-		keys: {},
-
-		DUID: '',
-        DUIDSettings: 'real',
-
-        platformUserAgent: 'not found',
-
-		/**
-		 * Detecting current platform
-		 * @returns {boolean} true if running on current platform
-		 */
-		detect: function () {
-            var userAgent = navigator.userAgent.toLowerCase();
-            return (userAgent.indexOf(this.platformUserAgent) !== -1);
-		},
-
-		/**
-		 * Function called if running on current platform
-		 */
-		initialise: function () {},
-
-		/**
-		 * Get DUID in case of Config
-		 * @return {string} DUID
-		 */
-		getDUID: function () {
-            switch (this.DUIDSettings) {
-                case 'real':
-                    this.DUID = this.getNativeDUID();
-                    break;
-                case 'mac':
-                    this.DUID = this.getMac();
-                    break;
-                case 'random':
-                    this.DUID = this.getRandomDUID();
-                    break;
-                /*case 'local_random':
-                    this.DUID = this.getLocalRandomDUID();
-                    break;*/
-                default:
-                    this.DUID = Config.DUIDSettings;
-                    break;
-            }
-            //this.formattedDUID = _.formatText(this.DUID, 4, '-');
-            //this.formattedDUID = this.formattedDUID.split('').reverse().join('').replace('-', '').split('').reverse().join('');
-
-
-            return this.DUID;
-		},
-
-		/**
-		 * Returns random DUID for platform
-		 * @returns {string}
-		 */
-		getRandomDUID: function () {
-			return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
-		},
-
-        /**
-         * Returns native DUID for platform if exist
-         * @returns {string}
-         */
-        getMac: function () {
-            return '';
-        },
-
-		/**
-		 * Returns native DUID for platform if exist
-		 * @returns {string}
-		 */
-		getNativeDUID: function () {
-			return '';
-		},
-
-		/**
-		 * Set custom plugins
-		 */
-		setPlugins: function () {},
-
-		// TODO: volume for all platforms
-		volumeUp: function() {},
-		volumeDown: function () {},
-		getVolume: function () {},
-
-		setData: function () {},
-
-		getData: function () {},
-
-		removeData: function () {},
-
-		addExternalFiles: function (cb) {
-			this.addExternalJS(this.externalJs, cb);
-			this.addExternalCss(this.externalCss);
-		},
-
-		/**
-		 * Asynchroniosly adding platform files
-     * @param filesArray {Array} array of sources of javascript files
-		 * @param cb {Function} callback on load javascript files
-		 */
-    addExternalJS: function ( filesArray, cb ) {
-      var $externalJsContainer,
-        loadedScripts = 0,
-        len = filesArray.length,
-        el,
-        scriptEl;
-
-      function onloadScript () {
-        loadedScripts++;
-
-        if ( loadedScripts === len ) {
-          cb && cb.call();
-        }
+    /**
+     * Get DUID in case of Config
+     * @return {string} DUID
+     */
+    getDUID: function () {
+      switch (SB.config.DUID) {
+        case 'real':
+          this.DUID = this.getNativeDUID();
+          break;
+        case 'mac':
+          this.DUID = this.getMac();
+          break;
+        case 'random':
+          this.DUID = this.getRandomDUID();
+          break;
+        /*case 'local_random':
+         this.DUID = this.getLocalRandomDUID();
+         break;*/
+        default:
+          this.DUID = Config.DUIDSettings;
+          break;
       }
 
-      if ( filesArray.length ) {
-
-        $externalJsContainer = document.createDocumentFragment();
-        el = document.createElement('script');
-        el.type = 'text/javascript';
-        el.onload = onloadScript;
-
-        for ( var i = 0; i < len; i++ ) {
-          scriptEl = el.cloneNode();
-          scriptEl.src = filesArray[i];
-          $externalJsContainer.appendChild(scriptEl);
-        }
-
-        document.body.appendChild($externalJsContainer);
-      } else {
-
-        // if no external js simple call cb
-        cb && cb.call(this);
-      }
+      return this.DUID;
     },
 
-		addExternalCss: function (filesArray) {
-			var $externalCssContainer;
+    getSDI: function () {
+      return '';
+    },
 
-			if (filesArray.length) {
-				$externalCssContainer = document.createDocumentFragment();
-				_.each(filesArray, function ( src ) {
+    /**
+     * Returns random DUID for platform
+     * @returns {string}
+     */
+    getRandomDUID: function () {
+      return (new Date()).getTime().toString(16) + Math.floor(Math.random() * parseInt("10000", 16)).toString(16);
+    },
 
-					var el = document.createElement('link');
+    /**
+     * Returns native DUID for platform if exist
+     * @returns {string}
+     */
+    getMac: function () {
+      return '';
+    },
 
-					el.rel = 'stylesheet';
-					el.href = src;
+    /**
+     * Returns native DUID for platform if exist
+     * @returns {string}
+     */
+    getNativeDUID: function () {
+      return '';
+    },
 
-					$externalCssContainer.appendChild(el);
-				});
+    /**
+     * Set custom plugins
+     */
+    setPlugins: $.noop,
 
-				document.body.appendChild($externalCssContainer);
-			}
-		},
+    // TODO: volume for all platforms
+    volumeUp: $.noop,
+    volumeDown: $.noop,
+    getVolume: $.noop,
+    setData: $.noop,
+    getData: $.noop,
+    removeData: $.noop,
+    exit: $.noop
+  };
 
-		exit: function () {}
-	};
-
-	_(Platform.prototype).extend(PlatformPrototype);
-
-	SB.platforms = platforms;
-	SB.Platform = Platform;
+  _.extend(SB, PlatformApi);
 })(this);
 /**
  * Keyboard Plugin
  */
-;(function ( $, window, document, undefined ) {
+;
+(function ( $, window, document, undefined ) {
 
+  var pluginName = 'SBInput',
+    defaultOptions = {
+      keyboard: {
+        type: 'fulltext_ru',
+        firstLayout: 'ru'
+      },
 
-	var pluginName = 'SBInput',
-		defaultOptions = {
-			keyboard: {
-				type: 'fulltext_ru',
-				firstLayout: 'ru'
-			},
+      /**
+       * Format function
+       * @param text
+       */
+      formatText: null,
+      bindKeyboard: null,
 
-			/**
-			 * Format function
-			 * @param text
-			 */
-			formatText: null,
-			bindKeyboard: null,
+      input: {
+        template: '<div class="smart_input-container">' +
+                  '<div class="smart_input-wrap">' +
+                  '<span class="smart_input-text"></span>' +
+                  '<span class="smart_input-cursor"></span>' +
+                  '</div>' +
+                  '</div>',
+        elClass: 'smart_input-container',
+        wrapperClass: 'smart_input-wrap',
+        cursorClass: 'smart_input-cursor',
+        textClass: 'smart_input-text'
+      },
 
-			input: {
-				template: '<div class="smart_input-container">' +
-										'<div class="smart_input-wrap">' +
-											'<span class="smart_input-text"></span>' +
-											'<span class="smart_input-cursor"></span>' +
-										'</div>' +
-									'</div>',
-				elClass: 'smart_input-container',
-				wrapperClass: 'smart_input-wrap',
-				cursorClass: 'smart_input-cursor',
-				textClass: 'smart_input-text'
-			},
+      directKeyboardInput: false,
+      directNumInput: false,
 
-			directKeyboardInput: true,
+      max: 0,
 
-			max: 0,
+      next: null
+    },
+    pluginPrototype,
+    $keyboardOverlay,
+    $keyboardPopup,
+  // in app can be only one blink cursor
+    blinkInterval;
 
-			next: null
-		},
-		pluginPrototype,
-		$keyboardOverlay,
-		$keyboardPopup,
-		// in app can be only one blink cursor
-		blinkInterval;
+  /**
+   * Generate input element
+   * @param opt  input options
+   * @returns {*}  jQuery el
+   */
+  function generateInput ( opt ) {
+    var div = $(document.createElement('div'));
+    div.html(opt.template);
+    return div.find('.' + opt.elClass);
+  }
 
-	/**
-	 * Generate input element
-	 * @param opt  input options
-	 * @returns {*}  jQuery el
-	 */
-	function generateInput(opt) {
-		var div = $(document.createElement('div'));
-		div.html(opt.template);
-		return div.find('.' + opt.elClass);
-	}
+  /**
+   * generate popup for input keyboards
+   */
+  function generateKeyboardPopup () {
+    $keyboardOverlay = $(document.createElement('div')).attr('id', 'keyboard_overlay');
+    $keyboardPopup = $(document.createElement('div')).attr({
+      'id': 'keyboard_popup',
+      'class': 'keyboard_popup_wrapper'
+    });
+    $keyboardOverlay.append($keyboardPopup);
+    $(document.body).append($keyboardOverlay);
+  }
 
-	/**
-	 * generate popup for input keyboards
-	 */
-	function generateKeyboardPopup() {
-		$keyboardOverlay = $(document.createElement('div')).attr('id', 'keyboard_overlay');
-		$keyboardPopup = $(document.createElement('div')).attr({
-			'id': 'keyboard_popup',
-			'class': 'keyboard_popup_wrapper'
-		});
-		$keyboardOverlay.append($keyboardPopup);
-		$(document.body).append($keyboardOverlay);
-	}
+  // The actual plugin constructor
+  function Plugin ( element, options ) {
+    this.$input = $(element);
+    this.initialise(options);
+    this.stopBlink();
+    this.setText(element.value);
+  }
 
-	// The actual plugin constructor
-	function Plugin( element, options ) {
-		this.$input = $(element);
-		this.initialise(options);
-		this.stopBlink();
-		this.setText(element.value);
-	}
+  pluginPrototype = {
+    isInited: false,
+    _generatedKeyboard: false,
+    isKeyboardActive: false,
+    text: '',
+    initialise: function ( options ) {
+      var $el;
+      if ( this.isInited ) {
+        return this;
+      }
 
-	pluginPrototype = {
-		isInited: false,
-		_generatedKeyboard: false,
-		isKeyboardActive: false,
-		text: '',
-		initialise: function (options) {
-			var $el;
-			if (this.isInited) {
-				return this;
-			}
+      options = $.extend({}, defaultOptions, options);
+      options.next = this.$input.attr('data-next') || options.next;
+      options.max = this.$input.attr('data-max') || options.max || 0;
 
-			options = $.extend({}, defaultOptions, options);
-			options.next = this.$input.attr('data-next') || options.next;
-			options.max = this.$input.attr('data-max') || options.max || 0;
+      this.options = options;
 
-			this.options = options;
+      this.$input.attr({
+        'data-value': '',
+        'data-max': options.max
+      });
 
-			this.$input.attr({
-				'data-value': '',
-				'data-max': options.max
-			});
+      $el = generateInput(options.input);
+      $el.addClass(this.$input[0].className);
 
-			$el = generateInput(options.input);
-			$el.addClass(this.$input[0].className);
+      this.$input.hide().after($el);
 
-			this.$input.hide().after($el);
+      this.$el = $el;
+      this.$text = $el.find('.' + options.input.textClass);
+      this.$cursor = $el.find('.' + options.input.cursorClass);
+      this.$wrapper = $el.find('.' + options.input.wrapperClass);
 
-			this.$el = $el;
-			this.$text = $el.find('.' + options.input.textClass);
-			this.$cursor = $el.find('.' + options.input.cursorClass);
-			this.$wrapper = $el.find('.' + options.input.wrapperClass);
+      if ( options.directKeyboardInput ) {
+        this.addDirectKeyboardEvents();
+      }
 
-			if ( options.directKeyboardInput ) {
-				this.addDirectKeyboardEvents();
-			}
+      this.addEvents();
+      this.isInited = true;
+      return this;
+    },
 
-			this.addEvents();
-			this.isInited = true;
-			return this;
-		},
+    startBlink: function () {
+      var self = this,
+        hiddenClass = this.options.input.cursorClass + '_hidden';
 
-		startBlink: function () {
-			var self = this,
-				hiddenClass = this.options.input.cursorClass + '_hidden';
+      if ( blinkInterval ) {
+        clearInterval(blinkInterval);
+      }
+      blinkInterval = setInterval(function () {
+        self.$cursor.toggleClass(hiddenClass);
+      }, 500);
+    },
 
-			if ( blinkInterval ) {
-				clearInterval(blinkInterval);
-			}
-			blinkInterval = setInterval(function () {
-				self.$cursor.toggleClass(hiddenClass);
-			}, 500);
-		},
+    stopBlink: function () {
+      var hiddenClass = this.options.input.cursorClass + '_hidden';
+      if ( blinkInterval ) {
+        clearInterval(blinkInterval);
+      }
+      this.$cursor.addClass(hiddenClass);
+    },
 
-		stopBlink: function () {
-			var hiddenClass = this.options.input.cursorClass + '_hidden';
-			if ( blinkInterval ) {
-				clearInterval(blinkInterval);
-			}
-			this.$cursor.addClass(hiddenClass);
-		},
+    addEvents: function () {
+      var $wrap = this.$wrapper,
+        opt = this.options,
+        self = this;
 
-		addEvents: function () {
-			var $wrap = this.$wrapper,
-				opt = this.options,
-				self = this;
+      this.$input.on({
+        'nav_focus': function () {
+          $$nav.current(self.$el);
+        },
+        'startBlink': function () {
+          self.startBlink();
+        },
+        'stopBlink': function () {
+          self.stopBlink();
+        },
+        'hideKeyboard': function () {
+          if ( $wrap.hasClass('smart-input-active') ) {
+            self.hideKeyboard();
+          }
+        },
+        'showKeyboard': function () {
+          self.showKeyboard();
+        }
+      });
 
-			this.$input.on({
-				change: function () {
-					self.$text.html(this.value);
-				},
-				'startBlink': function () {
-					self.startBlink();
-				},
-				'stopBlink': function () {
-					self.stopBlink();
-				},
-				'hideKeyboard': function () {
-					if ( $wrap.hasClass('smart-input-active') ) {
-						self.hideKeyboard();
-					}
-				},
-				'showKeyboard': function () {
-					self.showKeyboard();
-				}
-			});
+      this.$el.on({
+        'nav_focus': function () {
+          self.$input.addClass('focus');
+        },
+        'nav_blur': function () {
+          self.$input.removeClass('focus');
+        }
+      });
 
-			$wrap.off('nav_focus nav_blur click');
+      if (opt.directNumInput && !opt.directKeyboardInput) {
+        this.$el.off('nav_key:num nav_key:red').on('nav_key:num nav_key:red', function ( e ) {
+          self.typeNum(e);
+        });
+      }
 
-			if (opt.bindKeyboard) {
-				opt.keyboard = false;
-				opt.bindKeyboard
-					.off('type backspace delall')
-					.on('type',function ( e ) {
-						self.type(e.letter);
-					})
-					.on('backspace',function () {
-						self.type('backspace');
-					})
-					.on('delall', function () {
-						self.type('delall');
-					});
-			}
+      $wrap.off('nav_focus nav_blur click');
 
-			if (opt.keyboard) {
-				this.$el.on('click', function () {
-					self.startBlink();
-					self.showKeyboard();
-				})
-			}
-		},
+      if ( opt.bindKeyboard ) {
+        opt.keyboard = false;
+        opt.bindKeyboard
+          .off('type backspace delall')
+          .on('type', function ( e ) {
+            self.type(e.letter);
+          })
+          .on('backspace', function () {
+            self.type('backspace');
+          })
+          .on('delall', function () {
+            self.type('delall');
+          });
+      }
 
-		addDirectKeyboardEvents: function () {
-			var self = this;
+      if ( opt.keyboard ) {
+        this.$el.on('click', function () {
+          self.startBlink();
+          self.showKeyboard();
+        })
+      }
+    },
 
-			this.$el.on({
-				nav_focus: function () {
-					self.startBlink();
-					$(document.body).on('keypress.SBInput', function ( e ) {
-						if ( e.charCode ) {
-							e.preventDefault();
-							self.type(String.fromCharCode(e.charCode));
-						} else {
-							switch ( e.keyCode ) {
-								case 8:
-									e.preventDefault();
-									self.type('backspace');
-									break;
-							}
-						}
-					});
-				},
-				nav_blur: function () {
-					self.stopBlink();
-					$(document.body).off('keypress.SBInput');
-				}
-			});
-		},
+    addDirectKeyboardEvents: function () {
+      var self = this;
 
-		setText: function (text) {
-			var opt = this.options,
-				max = opt.max,
-				method;
+      this.$el.on({
+        nav_focus: function () {
+          self.startBlink();
+          $(document.body).on('keypress.SBInput', function ( e ) {
+            if ( e.charCode ) {
+              e.preventDefault();
+              self.type(String.fromCharCode(e.charCode));
+            } else {
+              switch ( e.keyCode ) {
+                case 8:
+                  e.preventDefault();
+                  self.type('backspace');
+                  break;
+              }
+            }
+          });
+        },
+        nav_blur: function () {
+          self.stopBlink();
+          $(document.body).off('keypress.SBInput');
+        }
+      });
+    },
 
-			if ( text.length > max && max != 0 ) {
-				text = text.substr(0, max);
-			}
+    setText: function ( text ) {
+      var opt = this.options,
+        formatText,
+        max = opt.max,
+        method;
 
-			if (opt.formatText) {
-				text = opt.formatText(text);
-			}
+      text = text || '';
 
-			this.$input.val(text).change();
-			this.text = text;
+      if ( text.length > max && max != 0 ) {
+        text = text.substr(0, max);
+      }
 
-			// TODO: fix for Samsung 11
-			if ( text.length > 1 ) {
-				method = (this.$text.width() > this.$wrapper.width()) ? 'add' : 'remove';
-				this.$wrapper[ method + 'Class']('.' + opt.input.wrapperClass + '_right');
-			} else {
-				this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
-			}
-		},
+      formatText = opt.formatText ? opt.formatText(text) : text;
 
-		type: function ( letter ) {
-			var text = this.text || '',
-				opt = this.options;
+      this.$input.val(text).attr('data-value', text);
+      this.text = text;
+      this.$text.html(formatText);
 
-			switch (letter) {
-				case 'backspace':
-					text = text.substr(0, text.length - 1);
-					break;
-				case 'delall':
-					text = '';
-					break;
-				default:
-					text += letter;
-					break;
-			}
+      // TODO: fix for Samsung 11
+      if ( text.length > 1 ) {
+        method = (this.$text.width() > this.$wrapper.width()) ? 'add' : 'remove';
+        this.$wrapper[ method + 'Class']('.' + opt.input.wrapperClass + '_right');
+      } else {
+        this.$wrapper.removeClass('.' + opt.input.wrapperClass + '_right');
+      }
 
-			this.setText(text);
+      this.$input.trigger('text_change');
+    },
 
-			//jump to next input if is set
-			if ( text.length === opt.max &&
-					 opt.next &&
-					 opt.max != 0 ) {
-				this.hideKeyboard();
-				$$nav.current(opt.next);
-				$$nav.current().click();
-			}
-		},
+    type: function ( letter ) {
+      var text = this.text || '',
+        opt = this.options;
 
-		hideKeyboard: function ( isComplete ) {
-			var $wrapper = this.$wrapper;
-			$wrapper.removeClass('smart-input-active');
-			this.$input.trigger('keyboard_hide');
+      switch ( letter ) {
+        case 'backspace':
+          text = text.substr(0, text.length - 1);
+          break;
+        case 'delall':
+          text = '';
+          break;
+        default:
+          text += letter;
+          break;
+      }
 
-			$keyboardOverlay && $keyboardOverlay.hide();
+      this.setText(text);
 
-			$$nav.restore();
-			$$voice.restore();
+      //jump to next input if is set
+      if ( text.length === opt.max &&
+           opt.next &&
+           opt.max != 0 ) {
+        this.hideKeyboard();
+        $$nav.current(opt.next);
+        $$nav.current().click();
+      }
+    },
 
-			this.isKeyboardActive = false;
-			if ( isComplete ) {
-				this.$input.trigger('keyboard_complete');
-			}
-			else {
-				this.$input.trigger('keyboard_cancel');
-			}
-			$keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
-		},
+    typeNum: function(e){
+      switch (e.keyName) {
+        case 'red':
+          this.type('backspace');
+          break;
+        default:
+          this.type(e.num);
+          break;
+      }
+      e.stopPropagation();
+    },
 
-		showKeyboard: function () {
-			var $wrapper = this.$wrapper,
-				keyboardOpt = this.options.keyboard,
-				self = this;
+    hideKeyboard: function ( isComplete ) {
+      var $wrapper = this.$wrapper;
+      $wrapper.removeClass('smart-input-active');
+      this.$input.trigger('keyboard_hide');
 
-			this.isKeyboardActive = true;
-			$wrapper.addClass('smart-input-active');
+      $keyboardOverlay && $keyboardOverlay.hide();
 
-			var h = this.$el.outerHeight();
-			var o = this.$el.offset();
-			var top = o.top + h;
+      $$nav.restore();
+      $$voice.restore();
 
-			if (!$keyboardOverlay) {
-				generateKeyboardPopup();
-			}
+      this.isKeyboardActive = false;
+      if ( isComplete ) {
+        this.$input.trigger('keyboard_complete');
+      }
+      else {
+        this.$input.trigger('keyboard_cancel');
+      }
+      $keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
+    },
 
-			if (!this._generatedKeyboard) {
-				$keyboardPopup.SBKeyboard(keyboardOpt);
-				this._generatedKeyboard = true;
-			}
+    showKeyboard: function () {
+      var $wrapper = this.$wrapper,
+        keyboardOpt = this.options.keyboard,
+        self = this;
 
-			$keyboardPopup.SBKeyboard('changeKeyboard', keyboardOpt.type)
-				.css({
-					'left': o.left,
-					'top': top
-				})
-				.off('type backspace delall complete cancel')
-				.on('type',function ( e ) {
-					self.type(e.letter);
-				})
-				.on('backspace',function () {
-					self.type('backspace');
-				})
-				.on('delall',function () {
-					self.type('delall');
-				})
-				.on('complete cancel', function ( e ) {
-					var isComplete = false;
-					if ( e.type === 'complete' ) {
-						isComplete = true;
-					}
-					self.stopBlink();
-					self.hideKeyboard(isComplete);
-				});
+      this.isKeyboardActive = true;
+      $wrapper.addClass('smart-input-active');
 
-			$keyboardOverlay.show();
+      var h = this.$el.outerHeight();
+      var o = this.$el.offset();
+      var top = o.top + h;
 
-			var kh = $keyboardPopup.height();
-			var kw = $keyboardPopup.width();
+      if ( !$keyboardOverlay ) {
+        generateKeyboardPopup();
+      }
 
-			if ( top + kh > 680 ) {
-				$keyboardPopup.css({
-					'top': top - kh - h
-				})
-			}
-			if ( o.left + kw > 1280 ) {
-				$keyboardPopup.css({
-					'left': 1280 - kw - 20
-				})
-			}
-			$$voice.save();
-			$$nav.save();
-			$$nav.on('#keyboard_popup');
-			$keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
-			this.$el.addClass($$nav.higlight_class);
-			this.$input.trigger('keyboard_show');
-			this.startBlink();
-		}
-	};
+      if ( !this._generatedKeyboard ) {
+        $keyboardPopup.SBKeyboard(keyboardOpt);
+        this._generatedKeyboard = true;
+      }
 
-	$.extend(Plugin.prototype, pluginPrototype);
-	pluginPrototype = null;
+      $keyboardPopup.SBKeyboard('changeKeyboard', keyboardOpt.type)
+        .css({
+          'left': o.left,
+          'top': top
+        })
+        .off('type backspace delall complete cancel')
+        .on('type', function ( e ) {
+          self.type(e.letter);
+        })
+        .on('backspace', function () {
+          self.type('backspace');
+        })
+        .on('delall', function () {
+          self.type('delall');
+        })
+        .on('complete cancel', function ( e ) {
+          var isComplete = false;
+          if ( e.type === 'complete' ) {
+            isComplete = true;
+          }
+          self.stopBlink();
+          self.hideKeyboard(isComplete);
+        });
 
-	$.fn.SBInput = function () {
-		var args = Array.prototype.slice.call(arguments),
-			method = (typeof args[0] == 'string') && args[0],
-			options = (typeof args[0] == 'object') && args[0],
-			params = args.slice(1);
+      $keyboardOverlay.show();
 
-		return this.each(function () {
-			var instance = $.data(this, 'plugin_' + pluginName);
-			if (!instance) {
-				$.data(this, 'plugin_' + pluginName,
-					new Plugin( this, options ));
-			} else if (typeof instance[method] === 'function'){
-				instance[method](params);
-			}
-		});
-	}
+      var kh = $keyboardPopup.height();
+      var kw = $keyboardPopup.width();
 
-})( jQuery, window, document );
+      if ( top + kh > 680 ) {
+        $keyboardPopup.css({
+          'top': top - kh - h
+        })
+      }
+      if ( o.left + kw > 1280 ) {
+        $keyboardPopup.css({
+          'left': 1280 - kw - 20
+        })
+      }
+      $$voice.save();
+      $$nav.save();
+      $$nav.on('#keyboard_popup');
+      $keyboardPopup.SBKeyboard('refreshVoice').voiceLink();
+      this.$el.addClass($$nav.higlight_class);
+      this.$input.trigger('keyboard_show');
+      this.startBlink();
+    }
+  };
+
+  $.extend(Plugin.prototype, pluginPrototype);
+  pluginPrototype = null;
+
+  $.fn.SBInput = function () {
+    var args = Array.prototype.slice.call(arguments),
+      method = (typeof args[0] == 'string') && args[0],
+      options = (typeof args[0] == 'object') && args[0],
+      params = args.slice(1);
+
+    return this.each(function () {
+      var instance = $.data(this, 'plugin_' + pluginName);
+      if ( !instance ) {
+        $.data(this, 'plugin_' + pluginName,
+          new Plugin(this, options));
+      } else if ( typeof instance[method] === 'function' ) {
+        instance[method].apply(instance, params);
+      }
+    });
+  }
+
+})(jQuery, window, document);
 /**
  * Keyboard Plugin
  */
@@ -785,15 +746,17 @@
 			var board = '',
 				preset,
 				haveNums = false,
-				type;
+				type,
 
-			preset = SB.keyboardPresets[this.type];
+                _type=_.result(this, 'type');
+
+			preset = SB.keyboardPresets[_type];
 
 			this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
 
 			if ( typeof preset === 'function' ) {
-				this.presets.push(this.type);
-				board = this.generateBoard(this.type);
+				this.presets.push(_type);
+				board = this.generateBoard(_type);
 			} else if ( preset.length ) {
 				this.presets = preset;
 				haveNums = (preset.indexOf('fullnum') !== -1);
@@ -802,7 +765,7 @@
 
 			this.$wrap
 				.append(board)
-			 	.addClass('kekekey_' + this.type);
+			 	.addClass('kekekey_' + _type);
 
 			this.$el.append(this.$wrap);
 			this.setEvents();
@@ -1065,12 +1028,12 @@
 		},
 		show: function () {
 			this.$wrap.show();
-			this.$el.addClass(this.type + '_wrap').addClass('keyboard_' + this.currentLayout);
+			this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
 			return this;
 		},
 		hide: function () {
 			this.$wrap.hide();
-			this.$el.removeClass(this.type + '_wrap').removeClass('keyboard_' + this.currentLayout);
+			this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
 		}
 	};
 
@@ -1233,59 +1196,74 @@ window.SB.keyboardPresets = {
     wrap.innerHTML = allKeysHtml;
     legendEl.appendChild(wrap);
 
-    return legendEl;
+    return $(legendEl);
   }
 
-  Legend = {
-    keys: {},
-    init: function () {
-      var el;
-      if (!_isInited) {
-        el = _renderLegend();
-        this.$el = $(el);
+  Legend = function() {
+    var self = this;
+    this.$el = _renderLegend();
+    this.keys = {};
 
-        for (var i = 0; i < icons.length; i++) {
-          this.initKey(icons[i]);
-        }
-
-        _isInited = true;
-      }
-      return this;
-    },
-    initKey: function ( key ) {
+    var initKey = function ( key ) {
       var $keyEl;
-      if(!this.keys[key]) {
-        $keyEl = this.$el.find('.legend-item-' + key);
-        this.keys[key] = new LegendKey($keyEl);
+      if ( !self.keys[key] ) {
+        $keyEl = self.$el.find('.legend-item-' + key);
+        self.keys[key] = new LegendKey($keyEl);
       }
-    },
-    show: function () {
+    };
+
+    for ( var i = 0; i < icons.length; i++ ) {
+      initKey(icons[i]);
+    }
+
+    this.addKey = function ( keyName, isClickable ) {
+      var keyHtml;
+
+      if (typeof isClickable === 'undefined') {
+        isClickable = true;
+      }
+
+      if (!isClickable) {
+        notClickableKeys.push(keyName);
+      }
+
+      keyHtml = renderKey(keyName);
+
+      this.$el.find('.legend-wrap').append(keyHtml);
+      initKey(keyName);
+    };
+
+    this.show = function () {
       this.$el.show();
-    },
-    hide: function () {
+    };
+
+    this.hide = function () {
       this.$el.hide();
-    },
-    clear: function () {
-      for (var key in this.keys) {
+    };
+
+    this.clear = function () {
+      for ( var key in this.keys ) {
         this.keys[key]('');
       }
-    },
-    save: function () {
-      for (var key in this.keys) {
+    };
+
+    this.save = function () {
+      for ( var key in this.keys ) {
         savedLegend[key] = this.keys[key]();
       }
-    },
-    restore: function () {
-      _.each(icons, function (key) {
+    };
+
+    this.restore = function () {
+      _.each(icons, function ( key ) {
         Legend[key](savedLegend[key]);
       });
 
-      for (var key in savedLegend) {
+      for ( var key in savedLegend ) {
         this.keys[key](savedLegend[key]);
       }
 
       savedLegend = [];
-    }
+    };
   };
 
   LegendKey = function ($el) {
@@ -1303,10 +1281,12 @@ window.SB.keyboardPresets = {
       text = text || '';
 
       if (!text && this.isShown) {
-        this.$el.hide();
+        this.$el[0].style.display = 'none';
+        this.$el.removeClass('legend-item-visible');
         this.isShown = false;
       } else if (text && !this.isShown) {
-        this.$el.show();
+        this.$el[0].style.display = '';
+        this.$el.addClass('legend-item-visible');
         this.isShown = true;
       }
 
@@ -1316,11 +1296,11 @@ window.SB.keyboardPresets = {
   };
 
 
-  window.$$legend = Legend.init();
+  window.$$legend = new Legend();
 
   $(function () {
-    Legend.$el.appendTo(document.body);
-    Legend.$el.on('click', '.legend-clickable', function () {
+    $$legend.$el.appendTo(document.body);
+    $$legend.$el.on('click', '.legend-clickable', function () {
       var key = $(this).attr('data-key'),
         ev, commonEvent;
 
@@ -1340,746 +1320,752 @@ window.SB.keyboardPresets = {
 })(this);
 (function ( window, undefined ) {
 
-	var profiles = {},
-		logs = {},
-		logNames = [],
-		curPanelIndex = 0,
-		// максимум логов на странице
-		maxLogCount = 20,
-		$logWrap,
-		$logRow,
-		Log,
-		LogPanel;
+  var profiles = {},
+    logs = {},
+    logNames = [],
+    curPanelIndex = 0,
+  // максимум логов на странице
+    maxLogCount = 20,
+    $logWrap,
+    $logRow,
+    Log,
+    LogPanel;
 
+  // append log wrapper to body
+  $logWrap = $('<div></div>', {
+    id: 'log'
+  });
 
-	// append log wrapper to body
-	$logWrap = $('<div></div>', {
-		id: 'log'
-	});
+  $(function () {
+    $logWrap.appendTo(document.body);
+  });
 
-    $(function(){
-        $logWrap.appendTo(document.body);
-    });
+  $logRow = $('<div></div>', {
+    'class': 'log-row'
+  });
 
+  /**
+   * LogPanel constructor
+   * @param logName {String} name of log panel
+   * @constructor
+   */
+  LogPanel = function ( logName ) {
+    this.name = logName;
+    this.logs = 0;
+    this.states = {};
 
-	$logRow = $('<div></div>', {
-		'class': 'log-row'
-	});
+    var $wrapper = $('#log_' + this.name);
 
-	/**
-	 * LogPanel constructor
-	 * @param logName {String} name of log panel
-	 * @constructor
-	 */
-	LogPanel = function ( logName ) {
-		this.name = logName;
-		this.logs = 0;
-		this.states = {};
+    this.$content = $wrapper.find('.log_content');
+    this.$state = $wrapper.find('.log_states');
 
-		var $wrapper = $('#log_' + this.name);
+    // no need anymore
+    $wrapper = null;
+  };
 
-		this.$content = $wrapper.find('.log_content');
-		this.$state = $wrapper.find('.log_states');
+  _.extend(LogPanel.prototype, {
+    log: function log ( msg ) {
+      var logRow = $logRow.clone(),
+        $rows, length;
+      this.logs++;
+      msg = _.escape(msg);
 
-		// no need anymore
-		$wrapper = null;
-	};
+      logRow.html(msg).appendTo(this.$content);
+      if ( this.logs > maxLogCount ) {
+        $rows = this.$content.find(".log-row");
+        length = $rows.length;
+        $rows.slice(0, length - maxLogCount).remove();
+        this.logs = $rows.length;
+      }
+    },
 
-	_.extend(LogPanel.prototype, {
-		log: function log ( msg ) {
-			var logRow = $logRow.clone(),
-				$rows, length;
-			this.logs++;
-			msg = _.escape(msg);
+    state: function state ( value, stateName ) {
+      var state = this.states[stateName] || this.createState(stateName);
+      state.textContent = stateName + ': ' + value;
+    },
 
-			logRow.html(msg).appendTo(this.$content);
-			if ( this.logs > maxLogCount ) {
-				$rows = this.$content.find(".log-row");
-				length = $rows.length;
-				$rows.slice(0, length - maxLogCount).remove();
-				this.logs = $rows.length;
-			}
-		},
+    createState: function ( stateName ) {
+      var $state = document.createElement('div');
+      $state.id = '#log_' + this.name + '_' + stateName;
+      this.states[stateName] = $state;
+      this.$state.append($state);
 
-		state: function state ( value, stateName ) {
-			var state = this.states[stateName] || this.createState(stateName);
-			state.textContent = stateName + ': ' + value;
-		},
+      return $state;
+    }
+  });
 
-		createState: function ( stateName ) {
-			var $state = document.createElement('div');
-			$state.id = '#log_' + this.name + '_' + stateName;
-			this.states[stateName] = $state;
-			this.$state.append($state);
+  var logPanelTemplate = '<div class="log_pane" id="log_<%=name%>">' +
+                           '<div class="log_name">Log: <%=name%></div>' +
+                           '<div class="log_content_wrap">' +
+                            '<div class="log_content"></div>' +
+                           '</div>' +
+                           '<div class="log_states"></div>' +
+                         '</div>';
 
-			return $state;
-		}
-	});
+  Log = {
 
-	var logPanelTemplate = _.template('<div class="log_pane" id="log_<%= name %>">' +
-																			'<div class="log_name">Log: <%=name%></div>' +
-																			'<div class="log_content_wrap">' +
-																				'<div class="log_content"></div>' +
-																			'</div>' +
-																			'<div class="log_states"></div>' +
-																		'</div>');
+    create: function ( logName ) {
+      var logHtml = logPanelTemplate.replace(/<%=name%>/g, logName);
+      $logWrap.append(logHtml);
+      logs[logName] = new LogPanel(logName);
+      logNames.push(logName);
+      return logs[logName];
+    },
 
-	Log = {
+    getPanel: function ( logName ) {
+      logName = logName || 'default';
+      return (logs[logName] || this.create(logName));
+    }
+  };
 
-		create: function ( logName ) {
-			$logWrap.append(logPanelTemplate({
-				name: logName
-			}));
-			logs[logName] = new LogPanel(logName);
-			logNames.push(logName);
-			return logs[logName];
-		},
+  /**
+   * Public log API
+   */
+  window.SB.utils.log = {
+    log: function ( msg, logName ) {
+      Log.getPanel(logName).log(msg);
+    },
 
-		getPanel: function ( logName ) {
-			logName = logName || 'default';
-			return (logs[logName] || this.create(logName));
-		}
-	};
+    state: function ( msg, state, logName ) {
+      Log.getPanel(logName).state(msg, state);
+    },
 
-	/**
-	 * Public log API
-	 */
-	window.SB.utils.log = {
-		log: function ( msg, logName ) {
-			Log.getPanel(logName).log(msg);
-		},
+    show: function ( logName ) {
+      logName = logName || logNames[curPanelIndex];
 
-		state: function ( msg, state, logName ) {
-			Log.getPanel(logName).state(msg, state);
-		},
+      if ( !logName ) {
+        curPanelIndex = 0;
+        this.hide();
+      } else {
+        curPanelIndex++;
+        $logWrap.show();
+        $('.log_pane').hide();
+        $('#log_' + logName).show();
+      }
+    },
 
-		show: function ( logName ) {
-			logName = logName || logNames[curPanelIndex];
+    hide: function () {
+      $logWrap.hide();
+    },
 
-			if ( !logName ) {
-				curPanelIndex = 0;
-				this.hide();
-			} else {
-				curPanelIndex++;
-				$logWrap.show();
-				$('.log_pane').hide();
-				$('#log_' + logName).show();
-			}
-		},
+    startProfile: function ( profileName ) {
+      if ( profileName ) {
+        profiles[profileName] = (new Date()).getTime();
+      }
+    },
 
-		hide: function () {
-			$logWrap.hide();
-		},
+    stopProfile: function ( profileName ) {
+      if ( profiles[profileName] ) {
+        this.log(profileName + ': ' + ((new Date()).getTime() - profiles[profileName]) + 'ms', 'profiler');
+        delete profiles[profileName];
+      }
+    }
+  };
 
-		startProfile: function ( profileName ) {
-			if ( profileName ) {
-				profiles[profileName] = (new Date()).getTime();
-			}
-		},
-
-		stopProfile: function ( profileName ) {
-			if ( profiles[profileName] ) {
-				this.log(profileName + ': ' + ((new Date()).getTime() - profiles[profileName]) + 'ms', 'profiler');
-				delete profiles[profileName];
-			}
-		}
-	};
 })(this);
 
-$(function(){
-    $(document.body).on('nav_key:tools', function () {
-        SB.utils.log.show();
-    });
+$(function () {
+  var logKey = SB.config.logKey || 'tools';
+  $(document.body).on('nav_key:' + logKey, function () {
+    SB.utils.log.show();
+  });
 });
 
 
 !(function ( window, undefined ) {
 
-	var $body = null,
-		nav;
+  var $body = null,
+    nav, invertedKeys = {};
 
-	function Navigation () {
+  SB.ready(function () {
+    var keys = SB.keys;
+    for (var key in keys) {
+      invertedKeys[keys[key]] = key.toLowerCase();
+    }
+  }, true);
+
+  function Navigation () {
 
 
-		// for methods save и restore
-		var savedNavs = [],
+    // for methods save и restore
+    var savedNavs = [],
 
-		// object for store throttled color keys  methods
-			throttledMethods = {},
+    // object for store throttled color keys  methods
+      throttledMethods = {},
 
-		// current el in focus
-			navCur = null,
+    // current el in focus
+      navCur = null,
 
-		// arrays
-			numsKeys = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9'],
-			colorKeys = ['green', 'red', 'yellow', 'red'],
+    // arrays
+      numsKeys = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9'],
+      colorKeys = ['green', 'red', 'yellow', 'blue'],
 
-		// pause counter
-			paused = 0;
+    // pause counter
+      paused = 0;
 
-		function onKeyDown ( e ) {
-			var key,
-				data = {},
-				keyCode = e.keyCode;
+    function onKeyDown ( e ) {
+      var key,
+        data = {},
+        keyCode = e.keyCode;
 
-			if ( paused || !navCur ) {
-				return;
-			}
+      if ( paused || !navCur ) {
+        return;
+      }
 
-			key = SB.currentPlatform.getKeyByKeyCode(keyCode);
+      key = invertedKeys[keyCode];
+      if ( key ) {
+        if ( colorKeys.indexOf(key) > -1 ) {
+          throttleEvent(key);
+        } else {
+          if ( numsKeys.indexOf(key) > -1 ) {
+            data.num = key[1];
+            key = 'num';
+          }
 
-			if ( colorKeys.indexOf(key) > -1 ) {
-				throttleEvent(key);
-			} else {
-				if ( numsKeys.indexOf(key) > -1 ) {
-					data.num = key[1];
-					key = 'num';
-				}
+          triggerKeyEvent(key, data);
+        }
+      }
+    }
 
-				triggerKeyEvent(key, data);
-			}
-		}
+    /**
+     * 'nav_key:' event trigger
+     * @param key key name
+     * @param data event data
+     */
+    function triggerKeyEvent ( key, data ) {
+      var ev,
+        commonEvent;
+      if ( navCur ) {
+        ev = $.Event("nav_key:" + key, data || {});
+        commonEvent = $.Event("nav_key");
 
-		/**
-		 * 'nav_key:' event trigger
-		 * @param key key name
-		 * @param data event data
-		 */
-		function triggerKeyEvent ( key, data ) {
-			var ev,
-				commonEvent;
-			if ( navCur ) {
-				ev = $.Event("nav_key:" + key, data || {});
-				commonEvent = $.Event("nav_key");
+        ev.keyName = key;
+        commonEvent.keyName = key;
+        navCur.trigger(ev);
+        //первый trigger мог уже сменить текщий элемент
+        navCur && navCur.trigger(commonEvent);
+      }
+    }
 
-				ev.keyName = key;
-				commonEvent.keyName = key;
-				navCur.trigger(ev);
-				//первый trigger мог уже сменить текщий элемент
-				navCur && navCur.trigger(commonEvent);
-			}
-		}
+    function throttleEvent ( key ) {
+      var keyMethod = throttledMethods[key];
 
-		function throttleEvent ( key ) {
-			var keyMethod = throttledMethods[key];
+      // lazy init
+      if ( !keyMethod ) {
+        keyMethod = throttledMethods[key] = _.throttle(function () {
+          triggerKeyEvent(key);
+        }, 800, {
+          leading: true
+        });
+      }
 
-			// lazy init
-			if ( !keyMethod ) {
-				keyMethod = throttledMethods[key] = _.throttle(function () {
-					triggerKeyEvent(key);
-				}, 800, {
-					leading: true
-				});
-			}
+      keyMethod(key);
+    }
 
-			keyMethod(key);
-		}
+    /**
+     * trigger click on current element
+     */
+    function onClick () {
+      navCur && navCur.click();
+    }
 
-		/**
-		 * trigger click on current element
-		 */
-		function onClick () {
-			navCur && navCur.click();
-		}
+    return {
 
-		return {
+      // nav els selector
+      area_selector: '.nav-item',
 
-			// nav els selector
-			area_selector: '.nav-item',
+      /**
+       * Current el class
+       * @type {string}
+       */
+      higlight_class: 'focus',
 
-			/**
-			 * Current el class
-			 * @type {string}
-			 */
-			higlight_class: 'focus',
+      /**
+       * navigation container
+       * @type {jQuery}
+       */
+      $container: null,
 
-			/**
-			 * navigation container
-			 * @type {jQuery}
-			 */
-			$container: null,
+      /**
+       * Current looping type
+       * false/hbox/vbox
+       * @type {boolean|string}
+       */
+      loopType: null,
 
-			/**
-			 * Current looping type
-			 * false/hbox/vbox
-			 * @type {boolean|string}
-			 */
-			loopType: null,
+      /**
+       * Phantom els selector
+       * @type {string}
+       */
+      phantom_selector: '[data-nav-phantom]',
 
-			/**
-			 * Phantom els selector
-			 * @type {string}
-			 */
-			phantom_selector: '[data-nav-phantom]',
+      /**
+       * Returns current navigation state
+       * @returns {boolean}
+       */
+      isPaused: function () {
+        return !!paused;
+      },
 
-			/**
-			 * Returns current navigation state
-			 * @returns {boolean}
-			 */
-			isPaused: function () {
-				return !!paused;
-			},
+      /**
+       * Stop navigation. Increase pause counter
+       * @returns {Navigation}
+       */
+      pause: function () {
+        paused++;
+        return this;
+      },
 
-			/**
-			 * Stop navigation. Increase pause counter
-			 * @returns {Navigation}
-			 */
-			pause: function () {
-				paused++;
-				return this;
-			},
+      /**
+       * Resume navigation if force or pause counter is zero
+       * @param force {Boolean} force navigation resume
+       * @returns {Navigation}
+       */
+      resume: function ( force ) {
+        paused--;
+        if ( paused < 0 || force ) {
+          paused = 0;
+        }
+        return this;
+      },
 
-			/**
-			 * Resume navigation if force or pause counter is zero
-			 * @param force {Boolean} force navigation resume
-			 * @returns {Navigation}
-			 */
-			resume: function ( force ) {
-				paused--;
-				if ( paused < 0 || force ) {
-					paused = 0;
-				}
-				return this;
-			},
+      /**
+       * Save current navigation state
+       * @returns {Navigation}
+       */
+      save: function () {
 
-			/**
-			 * Save current navigation state
-			 * @returns {Navigation}
-			 */
-			save: function () {
+        savedNavs.push({
+          navCur: navCur,
+          area_selector: this.area_selector,
+          higlight_class: this.higlight_class,
+          $container: this.$container
+        });
+        return this;
+      },
 
-				savedNavs.push({
-					navCur: navCur,
-					area_selector: this.area_selector,
-					higlight_class: this.higlight_class,
-					$container: this.$container
-				});
-				return this;
-			},
+      /**
+       * Restore navigation state
+       * @returns {Navigation}
+       */
+      restore: function () {
+        if ( savedNavs.length ) {
+          this.off();
+          var foo = savedNavs.pop();
+          this.area_selector = foo.area_selector;
+          this.higlight_class = foo.higlight_class;
+          this.on(foo.$container, foo.navCur);
+        }
 
-			/**
-			 * Restore navigation state
-			 * @returns {Navigation}
-			 */
-			restore: function () {
-				if ( savedNavs.length ) {
-					this.off();
-					var foo = savedNavs.pop();
-					this.area_selector = foo.area_selector;
-					this.higlight_class = foo.higlight_class;
-					this.on(foo.$container, foo.navCur);
-				}
+        return this;
+      },
 
-				return this;
-			},
+      /**
+       * Setting focus on element
+       * @param element {*} - HTMLElement, selector or Jquery object
+       * @param originEvent {string} - event source(nav_key, mousemove, voice etc.)
+       * @return {Navigation}
+       */
+      current: function ( element, originEvent ) {
+        if ( !element ) {
+          return navCur;
+        }
 
-			/**
-			 * Setting focus on element
-			 * @param element {*} - HTMLElement, selector or Jquery object
-			 * @param originEvent {string} - event source(nav_key, mousemove, voice etc.)
-			 * @return {Navigation}
-			 */
-			current: function ( element, originEvent ) {
-				if ( !element ) {
-					return navCur;
-				}
+        originEvent = originEvent || 'nav_key';
 
-				originEvent = originEvent || 'nav_key';
+        var $el = $(element);
+        if ( $el.is(this.phantom_selector) ) {
+          $el = $($($el.attr('data-nav-phantom'))[0]);
+        }
+        if ( $el.length > 1 ) {
+          throw new Error('Focused element must be only one!');
+        }
+        if ( !$el.length ) {
+          return this;
+        }
+        var old = navCur;
+        if ( navCur ) {
+          navCur.removeClass(this.higlight_class).trigger('nav_blur', [originEvent, $el]);
+        }
 
-				var $el = $(element);
-				if ( $el.is(this.phantom_selector) ) {
-					$el = $($($el.attr('data-nav-phantom'))[0]);
-				}
-				if ( $el.length > 1 ) {
-					throw new Error('Focused element must be only one!');
-				}
-				if ( !$el.length ) {
-					return this;
-				}
-				var old = navCur;
-				if ( navCur ) {
-					navCur.removeClass(this.higlight_class).trigger('nav_blur', [originEvent, $el]);
-				}
+        navCur = $el;
 
-				navCur = $el;
+        $el.addClass(this.higlight_class).trigger('nav_focus', [originEvent, old]);
+        return this;
+      },
 
-				$el.addClass(this.higlight_class).trigger('nav_focus', [originEvent, old]);
-				return this;
-			},
+      /**
+       * Turn on navigation in container, turn off previous navigation
+       * @param container - HTMLElement, selector or Jquery object (body by default)
+       * @param cur - HTMLElement, selector or Jquery object(first nav el by default)
+       * @return {Navigation}
+       */
+      on: function ( container, cur ) {
 
-			/**
-			 * Turn on navigation in container, turn off previous navigation
-			 * @param container - HTMLElement, selector or Jquery object (body by default)
-			 * @param cur - HTMLElement, selector or Jquery object(first nav el by default)
-			 * @return {Navigation}
-			 */
-			on: function ( container, cur ) {
+        var self = this,
+          $navTypeEls;
 
-				var self = this,
-					$navTypeEls;
+        $body = $body || $(document.body);
 
-				$body = $body || $(document.body);
+        this.off();
 
-				this.off();
+        this.$container = container ? $(container) : $body;
 
-				this.$container = container ? $(container) : $body;
+        if ( SB.platform != 'philips' ) {
+          this.$container.on('mouseenter.nav', this.area_selector, function ( e ) {
+            if ( !$(this).is(self.phantom_selector) ) {
+              self.current(this, 'mouseenter');
+            }
+          });
+        }
 
-                if (SB.currentPlatform.name != 'philips') {
-                    this.$container.on('mouseenter.nav', this.area_selector, function (e) {
-                        if (!$(this).is(self.phantom_selector)) {
-                            self.current(this, 'mouseenter');
-                        }
-                    });
+        $navTypeEls = this.$container.find('[data-nav_type]');
+
+        if ( this.$container.attr('data-nav_type') ) {
+          $navTypeEls = $navTypeEls.add(this.$container);
+        }
+
+        $navTypeEls.each(function () {
+          var $el = $(this);
+          var navType = $el.attr("data-nav_type");
+          $el.removeAttr('data-nav_type');
+          //self.setLoop($el);
+          var loop = $el.attr("data-nav_loop");
+
+          self.siblingsTypeNav($el, navType, loop);
+        });
+
+        $body
+          .bind('keydown.navigation', onKeyDown)
+          .bind('nav_key:enter.navigation', onClick);
+
+        if ( !cur ) {
+          cur = this.$container.find(this.area_selector).filter(':visible')[0];
+        }
+        this.current(cur);
+        return this;
+      },
+
+      siblingsTypeNav: function ( $container, type, loop ) {
+        var self = this;
+        $container.on('nav_key:left nav_key:right nav_key:up nav_key:down', this.area_selector,
+          function ( e ) {
+            var last = 'last',
+              cur = self.current(),
+              next,
+              fn;
+
+            //check if direction concur with declared
+            if ( (type == 'hbox' && e.keyName == 'left') ||
+                 (type == 'vbox' && e.keyName == 'up') ) {
+              fn = 'prev';
+            } else if ( (type == 'hbox' && e.keyName == 'right') ||
+                        (type == 'vbox' && e.keyName == 'down') ) {
+              fn = 'next';
+            }
+
+            if ( fn == 'next' ) {
+              last = 'first';
+            }
+
+            if ( fn ) {
+              next = cur[fn](self.area_selector);
+
+              while ( next.length && !next.is(':visible') ) {
+                next = next[fn](self.area_selector);
+              }
+
+              if ( !next.length && loop ) {
+                next = $container.find(self.area_selector).filter(':visible')[last]();
+              }
+
+              if ( next.length ) {
+                nav.current(next);
+                return false;
+              }
+            }
+          });
+      },
+
+      /**
+       * Turn off navigation from container, disable navigation from current element
+       * @return {Navigation}
+       */
+      off: function () {
+        if ( navCur ) {
+          navCur.removeClass(this.higlight_class).trigger('nav_blur');
+        }
+        this.$container && this.$container.off('mouseenter.nav').off('.loop');
+        $body.unbind('.navigation');
+        navCur = null;
+        return this;
+      },
+
+      /**
+       * Find first nav el & set navigation on them
+       */
+      findSome: function () {
+        var cur;
+
+        if ( !(navCur && navCur.is(':visible')) ) {
+          cur = this.$container.find(this.area_selector).filter(':visible').eq(0);
+          this.current(cur);
+        }
+
+        return this;
+      },
+
+      /**
+       * Find closest to $el element by dir direction
+       * @param $el {jQuery} - source element
+       * @param dir {string} - direction up, right, down, left
+       * @param navs {jQuery} - object, contains elements to search
+       * @returns {*}
+       */
+      findNav: function ( $el, dir, navs ) {
+        var user_defined = this.checkUserDefined($el, dir);
+
+        if ( user_defined ) {
+          return user_defined;
+        }
+
+        var objBounds = $el[0].getBoundingClientRect(),
+          arr = [],
+          curBounds = null,
+          cond1, cond2, i , l;
+
+        for ( i = 0, l = navs.length; i < l; i++ ) {
+          curBounds = navs[i].getBoundingClientRect();
+
+          if ( curBounds.left == objBounds.left &&
+               curBounds.top == objBounds.top ) {
+            continue;
+          }
+
+          switch ( dir ) {
+            case 'left':
+              cond1 = objBounds.left > curBounds.left;
+              break;
+            case 'right':
+              cond1 = objBounds.right < curBounds.right;
+              break;
+            case 'up':
+              cond1 = objBounds.top > curBounds.top;
+              break;
+            case 'down':
+              cond1 = objBounds.bottom < curBounds.bottom;
+              break;
+            default:
+              break;
+          }
+
+          if ( cond1 ) {
+            arr.push({
+              'obj': navs[i],
+              'bounds': curBounds
+            });
+          }
+        }
+
+        var min_dy = 9999999, min_dx = 9999999, min_d = 9999999, max_intersection = 0;
+        var dy = 0, dx = 0, d = 0;
+
+        function isIntersects ( b1, b2, dir ) {
+          var temp = null;
+          switch ( dir ) {
+            case 'left':
+            case 'right':
+              if ( b1.top > b2.top ) {
+                temp = b2;
+                b2 = b1;
+                b1 = temp;
+              }
+              if ( b1.bottom > b2.top ) {
+                if ( b1.top > b2.right ) {
+                  return b2.top - b1.right;
                 }
+                else {
+                  return b2.height;
+                }
+              }
+              break;
+            case 'up':
+            case 'down':
+              if ( b1.left > b2.left ) {
+                temp = b2;
+                b2 = b1;
+                b1 = temp;
+              }
+              if ( b1.right > b2.left ) {
+                if ( b1.left > b2.right ) {
+                  return b2.left - b1.right;
+                }
+                else {
+                  return b2.width;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+          return false;
+        }
 
+        var intersects_any = false;
+        var found = false;
 
+        for ( i = 0, l = arr.length; i < l; i++ ) {
+          if ( !this.checkEntryPoint(arr[i].obj, dir) ) {
+            continue;
+          }
 
-				$navTypeEls = this.$container.find('[data-nav_type]');
+          var b = arr[i].bounds;
+          var intersects = isIntersects(objBounds, b, dir);
+          dy = Math.abs(b.top - objBounds.top);
+          dx = Math.abs(b.left - objBounds.left);
+          d = Math.sqrt(dy * dy + dx * dx);
+          if ( intersects_any && !intersects ) {
+            continue;
+          }
+          if ( intersects && !intersects_any ) {
+            min_dy = dy;
+            min_dx = dx;
+            max_intersection = intersects;
+            found = arr[i].obj;
+            intersects_any = true;
+            continue;
+          }
 
-				if (this.$container.attr('data-nav_type')) {
-					$navTypeEls = $navTypeEls.add(this.$container);
-				}
+          switch ( dir ) {
+            case 'left':
+            case 'right':
+              if ( intersects_any ) {
+                cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
+              }
+              else {
+                cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
+              }
+              break;
+            case 'up':
+            case 'down':
+              if ( intersects_any ) {
+                cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
+              }
+              else {
+                cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
+              }
+              break;
+            default:
+              break;
+          }
+          if ( cond2 ) {
+            min_dy = dy;
+            min_dx = dx;
+            min_d = d;
+            found = arr[i].obj;
+          }
+        }
 
-				$navTypeEls.each(function () {
-					var $el = $(this);
-					var navType = $el.attr("data-nav_type");
-					$el.removeAttr('data-nav_type');
-					//self.setLoop($el);
-					var loop = $el.attr("data-nav_loop");
+        return found;
+      },
 
-					self.siblingsTypeNav($el, navType, loop);
-				});
+      /**
+       * Return element defied by user
+       * Если юзером ничего не определено или направление равно 0, то возвращает false
+       * Если направление определено как none, то переход по этому направлению запрещен
+       *
+       * @param $el - current element
+       * @param dir - direction
+       * @returns {*}
+       */
+      checkUserDefined: function ( $el, dir ) {
+        var ep = $el.attr('data-nav_ud'),
+          result = false,
+          res = $el.attr('data-nav_ud_' + dir);
 
-				$body
-					.bind('keydown.navigation', onKeyDown)
-					.bind('nav_key:enter.navigation', onClick);
+        if ( !(ep && res) ) {
+          return false;
+        }
 
-				if ( !cur ) {
-					cur = this.$container.find(this.area_selector).filter(':visible')[0];
-				}
-				this.current(cur);
-				return this;
-			},
+        if ( !res ) {
+          var sides = ep.split(','),
+            dirs = ['up', 'right', 'left', 'bottom'];
 
-			siblingsTypeNav: function ( $container, type, loop ) {
-				var self = this;
-				$container.on('nav_key:left nav_key:right nav_key:up nav_key:down', this.area_selector,
-					function ( e ) {
-						var last = 'last',
-							cur = self.current(),
-							fn;
+          $el.attr({
+            'data-nav_ud_up': sides[0],
+            'data-nav_ud_right': sides[1],
+            'data-nav_ud_down': sides[2],
+            'data-nav_ud_left': sides[3]
+          });
 
-						//check if direction concur with declared
-						if ( (type == 'hbox' && e.keyName == 'left') ||
-								 (type == 'vbox' && e.keyName == 'up') ) {
-							fn = 'prev';
-						} else if ((type == 'hbox' && e.keyName == 'right') ||
-												(type == 'vbox' && e.keyName == 'down')) {
-							fn = 'next';
-						}
+          res = sides[dirs.indexOf(dir)];
+        }
 
-						if ( fn == 'next' ) {
-							last = 'first';
-						}
+        if ( res == 'none' ) {
+          result = 'none';
+        } else if ( res ) {
+          result = $(res).first();
+        }
 
-						if ( fn ) {
-							var next = cur[fn](self.area_selector);
+        return result;
+      },
 
-							while ( next.length && !next.is(':visible') ) {
-								next = next[fn](self.area_selector);
-							}
+      /**
+       * Проверяет можно ли войти в элемент с определенной стороны.
+       * Работает если у элемента задан атрибут data-nav_ep. Точки входа задаются в атрибуте с помощью 0 и 1 через запятые
+       * 0 - входить нельзя
+       * 1 - входить можно
+       * Стороны указываются в порядке CSS - top, right, bottom, left
+       *
+       * data-nav_ep="0,0,0,0" - в элемент зайти нельзя, поведение такое же как у элемента не являющегося элементом навигации
+       * data-nav_ep="1,1,1,1" - поведение по умолчанию, как без задания этого атрибута
+       * data-nav_ep="0,1,0,0" - в элемент можно зайти справа
+       * data-nav_ep="1,1,0,1" - в элемент нельзя зайти снизу
+       * data-nav_ep="0,1,0,1" - можно зайти слева и справа, но нельзя сверху и снизу
+       *
+       * @param elem -  проверяемый элемент
+       * @param dir - направление
+       * @returns {boolean}
+       */
+      checkEntryPoint: function ( elem, dir ) {
+        var $el = $(elem),
+          ep = $el.attr('data-nav_ep'),
+          res = null;
 
-							if ( !next.length && loop ) {
-								next = $container.find(self.area_selector).filter(':visible')[last]();
-							}
+        if ( !ep ) {
+          return true;
+        }
 
-							if ( next.length ) {
-								nav.current(next);
-								return false;
-							}
-						}
-					});
-			},
+        res = $el.attr('data-nav_ep_' + dir);
 
-			/**
-			 * Turn off navigation from container, disable navigation from current element
-			 * @return {Navigation}
-			 */
-			off: function () {
-				if ( navCur ) {
-					navCur.removeClass(this.higlight_class).trigger('nav_blur');
-				}
-				this.$container && this.$container.off('mouseenter.nav').off('.loop');
-				$body.unbind('.navigation');
-				navCur = null;
-				return this;
-			},
+        if ( res === undefined ) {
+          var sides = ep.split(',');
+          $el.attr('data-nav_ep_top', sides[0]);
+          $el.attr('data-nav_ep_right', sides[1]);
+          $el.attr('data-nav_ep_bottom', sides[2]);
+          $el.attr('data-nav_ep_left', sides[3]);
+          res = $el.attr('data-nav_ep_' + dir);
+        }
 
-			/**
-			 * Find first nav el & set navigation on them
-			 */
-			findSome: function () {
-				var cur;
+        return !!parseInt(res);
+      }
+    };
+  }
 
-				if ( !(navCur && navCur.is(':visible')) ) {
-					cur = this.$container.find(this.area_selector).filter(':visible').eq(0);
-					this.current(cur);
-				}
+  nav = window.$$nav = new Navigation();
 
-				return this;
-			},
+  $(function () {
+    // Navigation events handler
+    $(document.body).bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
+      var cur = nav.current(),
+        $navs,
+        n;
 
-			/**
-			 * Find closest to $el element by dir direction
-			 * @param $el {jQuery} - source element
-			 * @param dir {string} - direction up, right, down, left
-			 * @param navs {jQuery} - object, contains elements to search
-			 * @returns {*}
-			 */
-			findNav: function ( $el, dir, navs ) {
-				var user_defined = this.checkUserDefined($el, dir);
-
-				if ( user_defined ) {
-					return user_defined;
-				}
-
-				var objBounds = $el[0].getBoundingClientRect(),
-					arr = [],
-					curBounds = null,
-					cond1, cond2, i , l;
-
-				for ( i = 0, l = navs.length; i < l; i++ ) {
-					curBounds = navs[i].getBoundingClientRect();
-
-					if ( curBounds.left == objBounds.left &&
-							 curBounds.top == objBounds.top ) {
-						continue;
-					}
-
-					switch ( dir ) {
-						case 'left':
-							cond1 = objBounds.left > curBounds.left;
-							break;
-						case 'right':
-							cond1 = objBounds.right < curBounds.right;
-							break;
-						case 'up':
-							cond1 = objBounds.top > curBounds.top;
-							break;
-						case 'down':
-							cond1 = objBounds.bottom < curBounds.bottom;
-							break;
-						default:
-							break;
-					}
-
-					if ( cond1 ) {
-						arr.push({
-							'obj': navs[i],
-							'bounds': curBounds
-						});
-					}
-				}
-
-				var min_dy = 9999999, min_dx = 9999999, min_d = 9999999, max_intersection = 0;
-				var dy = 0, dx = 0, d = 0;
-
-				function isIntersects ( b1, b2, dir ) {
-					var temp = null;
-					switch ( dir ) {
-						case 'left':
-						case 'right':
-							if ( b1.top > b2.top ) {
-								temp = b2;
-								b2 = b1;
-								b1 = temp;
-							}
-							if ( b1.bottom > b2.top ) {
-								if ( b1.top > b2.right ) {
-									return b2.top - b1.right;
-								}
-								else {
-									return b2.height;
-								}
-							}
-							break;
-						case 'up':
-						case 'down':
-							if ( b1.left > b2.left ) {
-								temp = b2;
-								b2 = b1;
-								b1 = temp;
-							}
-							if ( b1.right > b2.left ) {
-								if ( b1.left > b2.right ) {
-									return b2.left - b1.right;
-								}
-								else {
-									return b2.width;
-								}
-							}
-							break;
-						default:
-							break;
-					}
-					return false;
-				}
-
-				var intersects_any = false;
-				var found = false;
-
-				for ( i = 0, l = arr.length; i < l; i++ ) {
-					if ( !this.checkEntryPoint(arr[i].obj, dir) ) {
-						continue;
-					}
-
-					var b = arr[i].bounds;
-					var intersects = isIntersects(objBounds, b, dir);
-					dy = Math.abs(b.top - objBounds.top);
-					dx = Math.abs(b.left - objBounds.left);
-					d = Math.sqrt(dy * dy + dx * dx);
-					if ( intersects_any && !intersects ) {
-						continue;
-					}
-					if ( intersects && !intersects_any ) {
-						min_dy = dy;
-						min_dx = dx;
-						max_intersection = intersects;
-						found = arr[i].obj;
-						intersects_any = true;
-						continue;
-					}
-
-					switch ( dir ) {
-						case 'left':
-						case 'right':
-							if ( intersects_any ) {
-								cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
-							}
-							else {
-								cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
-							}
-							break;
-						case 'up':
-						case 'down':
-							if ( intersects_any ) {
-								cond2 = dy < min_dy || (dy == min_dy && dx < min_dx);
-							}
-							else {
-								cond2 = dx < min_dx || (dx == min_dx && dy < min_dy);
-							}
-							break;
-						default:
-							break;
-					}
-					if ( cond2 ) {
-						min_dy = dy;
-						min_dx = dx;
-						min_d = d;
-						found = arr[i].obj;
-					}
-				}
-
-				return found;
-			},
-
-			/**
-			 * Return element defied by user
-			 * Если юзером ничего не определено или направление равно 0, то возвращает false
-			 * Если направление определено как none, то переход по этому направлению запрещен
-			 *
-			 * @param $el - current element
-			 * @param dir - direction
-			 * @returns {*}
-			 */
-			checkUserDefined: function ( $el, dir ) {
-				var ep = $el.attr('data-nav_ud'),
-					result = false,
-					res = $el.attr('data-nav_ud_' + dir);
-
-				if ( !(ep && res) ) {
-					return false;
-				}
-
-				if ( !res ) {
-					var sides = ep.split(','),
-						dirs = ['up', 'right', 'left', 'bottom'];
-
-					$el.attr({
-						'data-nav_ud_up': sides[0],
-						'data-nav_ud_right': sides[1],
-						'data-nav_ud_down': sides[2],
-						'data-nav_ud_left': sides[3]
-					});
-
-					res = sides[dirs.indexOf(dir)];
-				}
-
-				if ( res == 'none' ) {
-					result = 'none';
-				} else if ( res ) {
-					result = $(res).first();
-				}
-
-				return result;
-			},
-
-			/**
-			 * Проверяет можно ли войти в элемент с определенной стороны.
-			 * Работает если у элемента задан атрибут data-nav_ep. Точки входа задаются в атрибуте с помощью 0 и 1 через запятые
-			 * 0 - входить нельзя
-			 * 1 - входить можно
-			 * Стороны указываются в порядке CSS - top, right, bottom, left
-			 *
-			 * data-nav_ep="0,0,0,0" - в элемент зайти нельзя, поведение такое же как у элемента не являющегося элементом навигации
-			 * data-nav_ep="1,1,1,1" - поведение по умолчанию, как без задания этого атрибута
-			 * data-nav_ep="0,1,0,0" - в элемент можно зайти справа
-			 * data-nav_ep="1,1,0,1" - в элемент нельзя зайти снизу
-			 * data-nav_ep="0,1,0,1" - можно зайти слева и справа, но нельзя сверху и снизу
-			 *
-			 * @param elem -  проверяемый элемент
-			 * @param dir - направление
-			 * @returns {boolean}
-			 */
-			checkEntryPoint: function ( elem, dir ) {
-				var $el = $(elem),
-					ep = $el.attr('data-nav_ep'),
-					res = null;
-
-				if ( !ep ) {
-					return true;
-				}
-
-				res = $el.attr('data-nav_ep_' + dir);
-
-				if ( res === undefined ) {
-					var sides = ep.split(',');
-					$el.attr('data-nav_ep_top', sides[0]);
-					$el.attr('data-nav_ep_right', sides[1]);
-					$el.attr('data-nav_ep_bottom', sides[2]);
-					$el.attr('data-nav_ep_left', sides[3]);
-					res = $el.attr('data-nav_ep_' + dir);
-				}
-
-				return !!parseInt(res);
-			}
-		};
-	}
-
-	nav = window.$$nav = new Navigation();
-
-	$(function () {
-		// Navigation events handler
-		$('body').bind('nav_key:left nav_key:right nav_key:up nav_key:down', function ( e ) {
-			var cur = nav.current(),
-				$navs,
-				n;
-
-			$navs = nav.$container.find(nav.area_selector).filter(':visible');
-			n = nav.findNav(cur, e.keyName, $navs);
-			n && nav.current(n);
-		});
-	});
+      $navs = nav.$container.find(nav.area_selector).filter(':visible');
+      n = nav.findNav(cur, e.keyName, $navs);
+      n && nav.current(n);
+    });
+  });
 
 })(this);
 /**
@@ -2110,7 +2096,7 @@ $(function(){
         }, 500);
     }
 
-    var inited=false;
+    var inited = false;
 
     var Player = window.Player = {
 
@@ -2148,13 +2134,13 @@ $(function(){
          * }); // => runs stream
          */
         play: function (options) {
-            if(!inited){
+            if (!inited) {
                 this._init();
-                inited=true;
+                inited = true;
             }
 
-            if(typeof options=="string"){
-                options={
+            if (typeof options == "string") {
+                options = {
                     url: options
                 }
             }
@@ -2260,15 +2246,15 @@ $(function(){
             /**
              * Total video duration in seconds
              */
-            duration: 31,
+            duration: 0,
             /**
              * Video stream width in pixels
              */
-            width: 640,
+            width: 0,
             /**
              * Video stream height in pixels
              */
-            height: 360,
+            height: 0,
             /**
              * Current playback time in seconds
              */
@@ -2319,6 +2305,17 @@ $(function(){
              */
             cur: function () {
                 return curAudio;
+            },
+            toggle: function () {
+                var l = this.get().length;
+                var cur = this.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = 0;
+                    }
+                    this.set(cur);
+                }
             }
         }
     };
@@ -2348,7 +2345,6 @@ $(function(){
     Player.extend(eventProto);
 
 
-
 }(this));
 (function ($) {
     "use strict";
@@ -2363,6 +2359,22 @@ $(function(){
         $moreDiv = $('<div/>'),
 
         paused = false;
+
+
+
+    var init= function(){
+        if (!inited) {
+
+            enabled = $$voice._nativeCheckSupport();
+            if (!enabled) {
+                return;
+            }
+
+            $$voice._init();
+            $buble = $('#voice_buble');
+            inited = true;
+        }
+    }
 
 
     var defaults = {
@@ -2397,7 +2409,7 @@ $(function(){
                 //чтобы обновлял подсказки если был вызван голосовой поиск смотри баг #966
                 if (typeof voiceServer == 'function') {
                     voiceServer = false;
-                    $.voice.restore();
+                    $$voice.restore();
                 }
 
 
@@ -2413,6 +2425,7 @@ $(function(){
         },
         helpbarVisible: false,
         enabled: function () {
+            init();
             return enabled;
         },
         _setVoiceHelp: function (voicehelp) {
@@ -2676,17 +2689,8 @@ $(function(){
             return;
         }
 
-        if (!inited) {
+        init()
 
-            enabled = $$voice._nativeCheckSupport();
-            if (!enabled) {
-                return;
-            }
-
-            $$voice._init();
-            $buble = $('#voice_buble');
-            inited = true;
-        }
 
         currentVoiceState = {
             self: this,
@@ -2805,96 +2809,72 @@ SB.readyForPlatform('browser', function(){
 /**
  * Browser platform description
  */
-!(function ( window, undefined  ) {
+SB.createPlatform('browser', {
+    keys: {
+        RIGHT: 39,
+        LEFT: 37,
+        DOWN: 40,
+        UP: 38,
+        RETURN: 27,//esc
+        EXIT: 46,//delete
+        TOOLS: 32,//space
+        FF: 33,//page up
+        RW: 34,//page down
+        NEXT: 107,//num+
+        PREV: 109,//num-
+        ENTER: 13,
+        RED: 65,//A
+        GREEN: 66,//B
+        YELLOW: 67,//C
+        BLUE: 68,//D
+        CH_UP: 221, // ]
+        CH_DOWN: 219, // [
+        N0: 48,
+        N1: 49,
+        N2: 50,
+        N3: 51,
+        N4: 52,
+        N5: 53,
+        N6: 54,
+        N7: 55,
+        N8: 56,
+        N9: 57,
+        PRECH: 45,//ins
+        SMART: 36,//home
+        PLAY: 97,//numpad 1
+        STOP: 98,//numpad 2
+        PAUSE: 99,//numpad 3
+        SUBT: 76,//l,
+        INFO: 73,//i
+        REC: 82//r
+    },
 
-	var platform = new window.SB.Platform('browser'),
-		platformObj;
+    detect: function () {
+        // always true for browser platform
+        return true;
+    },
 
-	platformObj = {
+    getNativeDUID: function () {
+        if (navigator.userAgent.indexOf('Chrome') != -1) {
+            this.DUID = 'CHROMEISFINETOO';
+        } else {
+            this.DUID = 'FIREFOXISBEST';
+        }
+        return this.DUID;
+    },
 
-		keys: {
-			RIGHT: 39,
-			LEFT: 37,
-			DOWN: 40,
-			UP: 38,
-			RETURN: 27,//esc
-			EXIT: 46,//delete
-			TOOLS: 32,//space
-			FF: 33,//page up
-			RW: 34,//page down
-			NEXT: 107,//num+
-			PREV: 109,//num-
-			ENTER: 13,
-			RED: 65,//A
-			GREEN: 66,//B
-			YELLOW: 67,//C
-			BLUE: 68,//D
-			CH_UP: 221, // ]
-			CH_DOWN: 219, // [
-			N0: 48,
-			N1: 49,
-			N2: 50,
-			N3: 51,
-			N4: 52,
-			N5: 53,
-			N6: 54,
-			N7: 55,
-			N8: 56,
-			N9: 57,
-			PRECH: 45,//ins
-			SMART: 36,//home
-			PLAY: 97,//numpad 1
-			STOP: 98,//numpad 2
-			PAUSE: 99,//numpad 3
-			SUBT: 76,//l,
-			INFO: 73,//i
-			REC: 82//r
-		},
+    volumeUp: function () {
+    },
 
-		detect: function () {
-			// always true for browser platform
-			return false;
-		},
+    volumeDown: function () {
+    },
 
-		initialise: function () {},
+    getVolume: function () {
+    }
 
-		getNativeDUID: function () {
-			if (navigator.userAgent.indexOf('Chrome') != -1) {
-				this.DUID = 'CHROMEISFINETOO';
-			} else {
-				this.DUID = 'FIREFOXISBEST';
-			}
-			return this.DUID;
-		},
 
-		volumeUp: function() {},
+});
 
-		volumeDown: function () {},
-
-		getVolume: function () {},
-
-		setData: function (name, val) {
-			// save data in string format
-			localStorage.setItem(name, JSON.stringify(val));
-		},
-
-		getData: function (name) {
-			var result;
-			try {
-				result = JSON.parse(localStorage.getItem(name));
-			} catch (e) {}
-
-			return result;
-		},
-
-		removeData: function (name) {
-			localStorage.removeItem(name);
-		}
-	};
-
-	_(platform).extend(platformObj);
-
-})(this);
 (function ($) {
     "use strict";
 
@@ -3022,29 +3002,219 @@ SB.readyForPlatform('lg', function () {
     });
 });
 /**
- * Samsung platform
+ * LG platform
  */
-!(function (window, undefined) {
 
-    var platform = new window.SB.Platform('lg'),
-        platformObj;
+SB.createPlatform('lg', {
+    platformUserAgent: 'netcast',
 
-    platformObj = {
+    keys: {
+        ENTER: 13,
+        PAUSE: 19,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40,
+        N0: 48,
+        N1: 49,
+        N2: 50,
+        N3: 51,
+        N4: 52,
+        N5: 53,
+        N6: 54,
+        N7: 55,
+        N8: 56,
+        N9: 57,
+        RED: 403,
+        GREEN: 404,
+        YELLOW: 405,
+        BLUE: 406,
+        RW: 412,
+        STOP: 413,
+        PLAY: 415,
+        FF: 417,
+        RETURN: 461,
+        CH_UP: 33,
+        CH_DOWN: 34
+    },
 
-        externalJs: [
-        ],
+    getNativeDUID: function () {
+        return this.device.serialNumber;
+    },
 
-        $plugins: {},
+    getMac: function () {
+        return this.device.net_macAddress.replace(/:/g, '');
+    },
 
-        platformUserAgent: 'netcast',
+    getSDI: $.noop,
 
+    setPlugins: function () {
+        //this._listenGestureEvent();
+
+        $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
+        this.device = $('#device')[0];
+
+        this.modelCode = this.device.version;
+        this.productCode = this.device.platform;
+
+        this.getDUID();
+
+
+        //Log.show('default');
+        setInterval(function () {
+            //Log.show('default');
+            var usedMemorySize;
+            if (window.NetCastGetUsedMemorySize) {
+                usedMemorySize = window.NetCastGetUsedMemorySize();
+            }
+            //Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
+        }, 5000);
+
+
+        if (Player && Player.setPlugin) {
+            Player.setPlugin();
+        }
+    },
+
+    sendReturn: function () {
+        if (Player) {
+            Player.stop(true);
+        }
+        window.NetCastBack();
+    },
+
+    exit: function () {
+        Player && Player.stop(true);
+        window.NetCastExit();
+    },
+
+    getUsedMemory: function () {
+        return window.NetCastGetUsedMemorySize();
+    },
+    getChildlockPin: function () {
+        return 1234;
+    }
+});
+SB.readyForPlatform('mag', function () {
+
+
+    var updateInterval;
+
+
+    var startUpdate = function () {
+        var lastTime = 0;
+        updateInterval = setInterval(function () {
+            var position = stb.GetPosTime();
+            //if (position != lastTime) {
+                Player.videoInfo.currentTime = position;
+                Player.trigger('update');
+            SB.utils.log.state(position, 'position', 'player');
+            //}
+            //lastTime = position;
+        }, 500);
+    }
+
+    var stopUpdate = function () {
+        clearInterval(updateInterval);
+    }
+
+
+    window.stbEvent =
+    {
+
+        onEvent: function (data) {
+
+            data += '';
+            if (data == '1') {
+                Player.trigger('complete');
+            } else if (data == '2') {
+                Player.videoInfo.duration = stb.GetMediaLen() + 1;
+                Player.videoInfo.currentTime = 0;
+                Player.trigger('ready');
+            }
+            else if (data == '4') {
+                Player.trigger('bufferingEnd');
+            }
+            else if (data == '7') {
+                var vi = eval(stb.GetVideoInfo());
+                Player.videoInfo.width = vi.pictureWidth;
+                Player.videoInfo.height = vi.pictureHeight;
+            }
+        },
+        event: 0
+    };
+
+
+    var stb = window.gSTB;
+    Player.extend({
+        _init: function () {
+            stb.InitPlayer();
+            stb.SetViewport(1280, 720, 0, 0);
+            stb.SetTopWin(0);
+        },
+        _play: function (options) {
+            stb.Play(options.url);
+            startUpdate();
+            Player.trigger('bufferingBegin');
+        },
+        _stop: function () {
+            stb.Stop();
+            stopUpdate();
+        },
+        pause: function () {
+            stb.Pause();
+            this.state = "pause";
+            stopUpdate();
+        },
+        resume: function () {
+            stb.Continue();
+            this.state = "play";
+            startUpdate();
+        },
+        seek: function (time) {
+            stb.SetPosTime(time)
+        },
+        audio: {
+
+            set: function (index) {
+                stb.SetAudioPID(index);
+            },
+            get: function () {
+                return stb.GetAudioPIDs();
+            },
+            cur: function () {
+                return stb.GetAudioPID();
+            }
+        }
+    });
+});
+
+(function () {
+
+    var stb;
+    /**
+     * Mag set top box platform description
+     */
+    SB.createPlatform('mag', {
         keys: {
-            ENTER: 13,
-            PAUSE: 19,
-            LEFT: 37,
-            UP: 38,
             RIGHT: 39,
+            LEFT: 37,
             DOWN: 40,
+            UP: 38,
+            RETURN: 8,
+            EXIT: 27,
+            TOOLS: 122,
+            FF: 70,
+            RW: 66,
+            NEXT: 34,
+            PREV: 33,
+            ENTER: 13,
+            RED: 112,
+            GREEN: 113,
+            YELLOW: 114,
+            BLUE: 115,
+            CH_UP: 9,
+            CH_DOWN: 9,
             N0: 48,
             N1: 49,
             N2: 50,
@@ -3055,90 +3225,64 @@ SB.readyForPlatform('lg', function () {
             N7: 55,
             N8: 56,
             N9: 57,
-            RED: 403,
-            GREEN: 404,
-            YELLOW: 405,
-            BLUE: 406,
-            RW: 412,
-            STOP: 413,
-            PLAY: 415,
-            FF: 417,
-            RETURN: 461,
-            CH_UP: 33,
-            CH_DOWN: 34
+            PRECH: 116,
+            //SMART: 36,
+            PLAY: 82,
+            STOP: 83,
+            //PAUSE: 99,
+            //SUBT: 76,
+            INFO: 89
+            //REC: 82
+        },
+
+        onDetect: function () {
+
+            stb = window.gSTB;
+
+            window.moveTo(0, 0);
+            window.resizeTo(1280, 720);
+
+
+            window.localStorage = {
+                setItem: function (name, data) {
+
+                },
+                clear: function(){
+
+                },
+                getItem: function(){
+
+                },
+                removeItem: function(){
+
+                }
+            }
+        },
+
+        detect: function () {
+            return !!window.gSTB;
         },
 
         initialise: function () {
         },
 
         getNativeDUID: function () {
-            return this.device.serialNumber;
-        },
-
-        getMac: function () {
-            return this.device.net_macAddress.replace(/:/g, '');
-        },
-
-        getSDI: function () {
 
         },
 
-        setPlugins: function () {
-            //this._listenGestureEvent();
-
-            $('body').append('<object type="application/x-netcast-info" id="device" width="0" height="0"></object>');
-            this.device = $('#device')[0];
-
-            this.modelCode = this.device.version;
-            this.productCode = this.device.platform;
-
-            this.getDUID();
-
-
-            $(function () {
-                //Log.show('default');
-                setInterval(function () {
-                    //Log.show('default');
-                    var usedMemorySize;
-                    if (window.NetCastGetUsedMemorySize) {
-                        usedMemorySize = window.NetCastGetUsedMemorySize();
-                    }
-                    Log.state(Math.floor(usedMemorySize * 100 / (1024 * 1024)) / 100, 'memory', 'profiler');
-                }, 5000);
-            });
-
-            if (Player && Player.setPlugin) {
-                Player.setPlugin();
-            }
+        volumeUp: function () {
         },
 
-        volumeEnable: function () {
+        volumeDown: function () {
         },
 
-        sendReturn: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastBack();
-        },
-        exit: function () {
-            if (Player) {
-                Player.stop(true);
-            }
-            window.NetCastExit();
-        },
-
-        getUsedMemory: function () {
-            return window.NetCastGetUsedMemorySize();
-        },
-        getChildlockPin: function () {
-            return 1234;
+        getVolume: function () {
         }
+    });
 
-    };
+}());
 
-    _.extend(platform, platformObj);
-})(this);
+
 SB.readyForPlatform('philips', function () {
     var video;
 
@@ -3147,8 +3291,8 @@ SB.readyForPlatform('philips', function () {
     var ready = false;
 
     var startUpdate = function () {
+        var lastTime = 0;
         updateInterval = setInterval(function () {
-            var lastTime = 0;
             if (video.playPosition != lastTime) {
                 Player.videoInfo.currentTime = video.playPosition / 1000;
                 Player.trigger('update');
@@ -3242,75 +3386,42 @@ SB.readyForPlatform('philips', function () {
     });
 });
 /**
- * Samsung platform
+ * Philips platform
  */
-!(function ( window, undefined ) {
-
-  var platform = new window.SB.Platform('philips'),
-    platformObj;
-
-  platformObj = {
-
-    externalJs: [
-    ],
-
-    $plugins: {},
+SB.createPlatform('philips', {
     platformUserAgent: 'nettv',
-
-    initialise: function () {
-    },
-
-    getNativeDUID: function () {
-    },
-
-    getMac: function () {
-    },
-
-    getSDI: function () {
-    },
-
     setPlugins: function () {
-      this.setKeys();
-    },
-
-    volumeEnable: function () {
-    },
-
-    setKeys: function () {
-      this.keys = {
-        ENTER: VK_ENTER,
-        PAUSE: VK_PAUSE,
-        LEFT: VK_LEFT,
-        UP: VK_UP,
-        RIGHT: VK_RIGHT,
-        DOWN: VK_DOWN,
-        N0: VK_0,
-        N1: VK_1,
-        N2: VK_2,
-        N3: VK_3,
-        N4: VK_4,
-        N5: VK_5,
-        N6: VK_6,
-        N7: VK_7,
-        N8: VK_8,
-        N9: VK_9,
-        RED: VK_RED,
-        GREEN: VK_GREEN,
-        YELLOW: VK_YELLOW,
-        BLUE: VK_BLUE,
-        RW: VK_REWIND,
-        STOP: VK_STOP,
-        PLAY: VK_PLAY,
-        FF: VK_FAST_FWD,
-        RETURN: VK_BACK,
-        CH_UP: VK_PAGE_UP,
-        CH_DOWN: VK_PAGE_DOWN
-      };
+        this.keys = {
+            ENTER: VK_ENTER,
+            PAUSE: VK_PAUSE,
+            LEFT: VK_LEFT,
+            UP: VK_UP,
+            RIGHT: VK_RIGHT,
+            DOWN: VK_DOWN,
+            N0: VK_0,
+            N1: VK_1,
+            N2: VK_2,
+            N3: VK_3,
+            N4: VK_4,
+            N5: VK_5,
+            N6: VK_6,
+            N7: VK_7,
+            N8: VK_8,
+            N9: VK_9,
+            RED: VK_RED,
+            GREEN: VK_GREEN,
+            YELLOW: VK_YELLOW,
+            BLUE: VK_BLUE,
+            RW: VK_REWIND,
+            STOP: VK_STOP,
+            PLAY: VK_PLAY,
+            FF: VK_FAST_FWD,
+            RETURN: VK_BACK,
+            CH_UP: VK_PAGE_UP,
+            CH_DOWN: VK_PAGE_DOWN
+        };
     }
-  };
-
-  _.extend(platform, platformObj);
-})(this);
+});
 (function () {
 
 	var localStorage = window.localStorage,
@@ -3384,420 +3495,402 @@ SB.readyForPlatform('philips', function () {
 		}
 	}
 }());
-if (navigator.userAgent.toLowerCase().indexOf('maple') != -1) {
-    (function () {
-        var curAudio = 0;
+SB.readyForPlatform('samsung', function () {
+    var curAudio = 0;
 
 
-        var safeApply = function (self, method, args) {
-            try {
-                switch (args.length) {
-                    case 0:
-                        return self[method]();
-                    case 1:
-                        return self[method](args[0]);
-                    case 2:
-                        return self[method](args[0], args[1]);
-                    case 3:
-                        return self[method](args[0], args[1], args[2]);
-                    case 4:
-                        return self[method](args[0], args[1], args[2], args[3]);
-                    case 5:
-                        return self[method](args[0], args[1], args[2], args[3], args[4]);
-                    case 6:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5]);
-                    case 7:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-                    case 8:
-                        return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+    var safeApply = function (self, method, args) {
+        try {
+            switch (args.length) {
+                case 0:
+                    return self[method]();
+                case 1:
+                    return self[method](args[0]);
+                case 2:
+                    return self[method](args[0], args[1]);
+                case 3:
+                    return self[method](args[0], args[1], args[2]);
+                case 4:
+                    return self[method](args[0], args[1], args[2], args[3]);
+                case 5:
+                    return self[method](args[0], args[1], args[2], args[3], args[4]);
+                case 6:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5]);
+                case 7:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+                case 8:
+                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 
-                }
-            } catch (e) {
-                throw e;
             }
+        } catch (e) {
+            throw e;
         }
-        Player.extend({
-            usePlayerObject: true,
-            _init: function () {
-                var self = this;
-                //document.body.onload=function(){
-                if (self.usePlayerObject) {
-                    //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
-                    self.plugin = document.getElementById('pluginPlayer');
-                    $('body').append(self.$plugin);
+    }
+    Player.extend({
+        usePlayerObject: true,
+        _init: function () {
+            var self = this;
+            //document.body.onload=function(){
+            if (self.usePlayerObject) {
+                //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
+                self.plugin = document.getElementById('pluginPlayer');
+                $('body').append(self.$plugin);
 
 
+            } else {
+                self.plugin = sf.core.sefplugin('Player');
+            }
+
+
+            if (!self.plugin) {
+                throw new Error('failed to set plugin');
+            }
+
+            self.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
+            self.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
+            self.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
+            self.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
+            self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
+            //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
+            self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
+            //self.plugin.OnConnectionFailed = 'Player.onError';
+            //self.plugin.OnNetworkDisconnected = 'Player.onError';
+            //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
+
+            self.plugin.OnEvent = 'Player.onEvent';
+            //}
+
+        },
+        seek: function (time) {
+            if (time <= 0) {
+                time = 0;
+            }
+            /*if ( this.duration <= time + 1 ) {
+             this.videoInfo.currentTime = this.videoInfo.duration;
+             }
+             else {*/
+            var jump = Math.floor(time - this.videoInfo.currentTime - 1);
+            this.videoInfo.currentTime = time;
+            alert('jump: ' + jump);
+            if (jump < 0) {
+                this.doPlugin('JumpBackward', -jump);
+            }
+            else {
+                this.doPlugin('JumpForward', jump);
+            }
+            //  this.currentTime = time;
+            //}
+        },
+        onEvent: function (event, arg1, arg2) {
+
+            // alert('playerEvent: ' + event);
+            switch (event) {
+                case 9:
+                    this.OnStreamInfoReady();
+                    break;
+
+                case 4:
+                    //this.onError();
+                    break;
+
+                case 8:
+                    this.OnRenderingComplete();
+                    break;
+                case 14:
+                    this.OnCurrentPlayTime(arg1);
+                    break;
+                case 13:
+                    //this.OnBufferingProgress(arg1);
+                    break;
+                case 12:
+                    this.OnBufferingComplete();
+                    break;
+                case 11:
+                    this.OnBufferingStart();
+                    break;
+            }
+        },
+        OnRenderingComplete: function () {
+            alert('PLAYER COMPLETE');
+            Player.trigger('complete');
+        },
+        OnStreamInfoReady: function () {
+            var duration, width, height, resolution;
+
+            try {
+                duration = this.doPlugin('GetDuration');
+            } catch (e) {
+                alert('######## ' + e.message);
+            }
+
+            duration = Math.ceil(duration / 1000);
+            //this.jumpLength = Math.floor(this.duration / 30);
+
+            if (this.usePlayerObject) {
+                width = this.doPlugin('GetVideoWidth');
+                height = this.doPlugin('GetVideoHeight');
+            } else {
+                resolution = this.doPlugin('GetVideoResolution');
+                if (resolution == -1) {
+                    width = 0;
+                    height = 0;
                 } else {
-                    self.plugin = sf.core.sefplugin('Player');
+                    var arrResolution = resolution.split('|');
+                    width = arrResolution[0];
+                    height = arrResolution[1];
                 }
+            }
+
+            this.videoInfo.duration = duration;
+            this.videoInfo.width = width * 1;
+            this.videoInfo.height = height * 1;
+            this.trigger('ready');
+        },
+        OnBufferingStart: function () {
+            this.trigger('bufferingBegin');
+        },
+        OnBufferingComplete: function () {
+            this.trigger('bufferingEnd');
+        },
+        OnCurrentPlayTime: function (millisec) {
+            if (this.state == 'play') {
+                alert(millisec / 1000);
+                this.videoInfo.currentTime = millisec / 1000;
+                this.trigger('update');
+            }
+        },
+        _play: function (options) {
+            var url = options.url;
+            switch (options.type) {
+                case 'hls':
+                    url += '|COMPONENT=HLS'
+            }
+            this.doPlugin('InitPlayer', url);
+            this.doPlugin('StartPlayback', options.from || 0);
+        },
+        _stop: function () {
+            this.doPlugin('Stop');
+        },
+        doPlugin: function () {
+            var result,
+                plugin = this.plugin,
+                methodName = arguments[0],
+                args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
+
+            if (this.usePlayerObject) {
 
 
-                if (!self.plugin) {
-                    throw new Error('failed to set plugin');
+                result = safeApply(plugin, methodName, args);
+
+            }
+            else {
+                if (methodName.indexOf('Buffer') != -1) {
+                    methodName += 'Size';
                 }
+                args.unshift(methodName);
+                result = safeApply(plugin, 'Execute', args);
+            }
 
-                self.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
-                self.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
-                self.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
-                self.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
-                self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
-                //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
-                self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
-                //self.plugin.OnConnectionFailed = 'Player.onError';
-                //self.plugin.OnNetworkDisconnected = 'Player.onError';
-                //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
-
-                self.plugin.OnEvent = 'Player.onEvent';
-                //}
-
+            return result;
+        },
+        audio: {
+            set: function (index) {
+                /*one is for audio*/
+                //http://www.samsungdforum.com/SamsungDForum/ForumView/f0cd8ea6961d50c3?forumID=63d211aa024c66c9
+                Player.doPlugin('SetStreamID', 1, index);
+                curAudio = index;
             },
-            seek: function (time) {
-                if (time <= 0) {
-                    time = 0;
+            get: function () {
+                /*one is for audio*/
+                var len = Player.doPlugin('GetTotalNumOfStreamID', 1);
+
+                var result = [];
+                for (var i = 0; i < len; i++) {
+                    result.push(Player.doPlugin('GetStreamLanguageInfo', 1, i));
                 }
-                /*if ( this.duration <= time + 1 ) {
-                 this.videoInfo.currentTime = this.videoInfo.duration;
-                 }
-                 else {*/
-                var jump = Math.floor(time - this.videoInfo.currentTime - 1);
-                this.videoInfo.currentTime = time;
-                alert('jump: ' + jump);
-                if (jump < 0) {
-                    this.doPlugin('JumpBackward', -jump);
-                }
-                else {
-                    this.doPlugin('JumpForward', jump);
-                }
-                //  this.currentTime = time;
-                //}
-            },
-            onEvent: function (event, arg1, arg2) {
-
-               // alert('playerEvent: ' + event);
-                switch (event) {
-                    case 9:
-                        this.OnStreamInfoReady();
-                        break;
-
-                    case 4:
-                        //this.onError();
-                        break;
-
-                    case 8:
-                        this.OnRenderingComplete();
-                        break;
-                    case 14:
-                        this.OnCurrentPlayTime(arg1);
-                        break;
-                    case 13:
-                        //this.OnBufferingProgress(arg1);
-                        break;
-                    case 12:
-                        this.OnBufferingComplete();
-                        break;
-                    case 11:
-                        this.OnBufferingStart();
-                        break;
-                }
-            },
-            OnRenderingComplete: function () {
-                alert('PLAYER COMPLETE');
-                Player.trigger('complete');
-            },
-            OnStreamInfoReady: function () {
-                var duration, width, height, resolution;
-
-                try {
-                    duration = this.doPlugin('GetDuration');
-                } catch (e) {
-                    alert('######## ' + e.message);
-                }
-
-                duration = Math.ceil(duration / 1000);
-                //this.jumpLength = Math.floor(this.duration / 30);
-
-                if (this.usePlayerObject) {
-                    width = this.doPlugin('GetVideoWidth');
-                    height = this.doPlugin('GetVideoHeight');
-                } else {
-                    resolution = this.doPlugin('GetVideoResolution');
-                    if (resolution == -1) {
-                        width = 0;
-                        height = 0;
-                    } else {
-                        var arrResolution = resolution.split('|');
-                        width = arrResolution[0];
-                        height = arrResolution[1];
-                    }
-                }
-
-                this.videoInfo.duration = duration;
-                this.videoInfo.width = width * 1;
-                this.videoInfo.height = height * 1;
-                this.trigger('ready');
-            },
-            OnBufferingStart: function () {
-                this.trigger('bufferingBegin');
-            },
-            OnBufferingComplete: function () {
-                this.trigger('bufferingEnd');
-            },
-            OnCurrentPlayTime: function (millisec) {
-                if (this.state == 'play') {
-                    alert(millisec / 1000);
-                    this.videoInfo.currentTime = millisec / 1000;
-                    this.trigger('update');
-                }
-            },
-            _play: function (options) {
-                var url = options.url;
-                switch (options.type) {
-                    case 'hls':
-                        url += '|COMPONENT=HLS'
-                }
-                this.doPlugin('InitPlayer', url);
-                this.doPlugin('StartPlayback', options.from || 0);
-            },
-            _stop: function () {
-                this.doPlugin('Stop');
-            },
-            doPlugin: function () {
-                var result,
-                    plugin = this.plugin,
-                    methodName = arguments[0],
-                    args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
-
-                if (this.usePlayerObject) {
-
-
-                    result = safeApply(plugin, methodName, args);
-
-                }
-                else {
-                    if (methodName.indexOf('Buffer') != -1) {
-                        methodName += 'Size';
-                    }
-                    args.unshift(methodName);
-                    result = safeApply(plugin, 'Execute', args);
-                }
-
                 return result;
             },
-            audio: {
-                set: function (index) {
-                    /*one is for audio*/
-                    //http://www.samsungdforum.com/SamsungDForum/ForumView/f0cd8ea6961d50c3?forumID=63d211aa024c66c9
-                    Player.doPlugin('SetStreamID', 1, index);
-                    curAudio = index;
-                },
-                get: function () {
-                    /*one is for audio*/
-                    var len = Player.doPlugin('GetTotalNumOfStreamID', 1);
-
-                    var result = [];
-                    for (var i = 0; i < len; i++) {
-                        result.push(Player.doPlugin('GetStreamLanguageInfo', 1, i));
-                    }
-                    return result;
-                },
-                cur: function () {
-                    return curAudio;
-                }
+            cur: function () {
+                return curAudio;
             }
-        });
-    }());
-
-}
-
+        }
+    });
+});
 /**
  * Samsung platform
  */
-!(function ( window, undefined ) {
+!(function (window, undefined) {
 
-  var platform = new window.SB.Platform('samsung'),
-    /**
-     * Native plugins
-     * id: clsid (DOM element id : CLSID)
-     * @type {{object}}
-     */
-      plugins = {
-        audio: 'SAMSUNG-INFOLINK-AUDIO',
-        pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
-        pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
-        pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
-        pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
-        pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
-      },
-    samsungFiles = [
-      '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
-      '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
-      '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
-      '$MANAGER_WIDGET/Common/Define.js',
-      '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
-      '$MANAGER_WIDGET/Common/API/Widget.js',
-      '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-      '$MANAGER_WIDGET/Common/API/Plugin.js',
-      'src/platforms/samsung/localstorage.js'
-    ],
-    platformObj,
-    detectResult = false;
 
-  detectResult = navigator.userAgent.search(/Maple/) > -1;
+    var
+        document=window.document,
+        /**
+         * Native plugins
+         * id: clsid (DOM element id : CLSID)
+         * @type {{object}}
+         */
+            plugins = {
+            audio: 'SAMSUNG-INFOLINK-AUDIO',
+            pluginObjectTV: 'SAMSUNG-INFOLINK-TV',
+            pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
+            pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
+            pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
+            pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
+        },
+        samsungFiles = [
+            '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
+            '$MANAGER_WIDGET/Common/af/../webapi/1.0/serviceapis.js',
+            '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
+            '$MANAGER_WIDGET/Common/Define.js',
+            '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+            '$MANAGER_WIDGET/Common/API/Widget.js',
+            '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
+            '$MANAGER_WIDGET/Common/API/Plugin.js',
+            'src/platforms/samsung/localstorage.js'
+        ];
 
-  // non-standart inserting objects in DOM (i'm looking at you 2011 version)
-  // in 2011 samsung smart tv's we can't add objects if document is ready
-  if ( detectResult ) {
-    var htmlString = '';
-    for ( var i = 0; i < samsungFiles.length; i++ ) {
-      htmlString += '<script type="text/javascript" src="'+ samsungFiles[i] +'"></script>';
-    }
-    for ( var id in plugins ) {
-      htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
-    }
-    document.write(htmlString);
-  }
 
-  platformObj = {
+    SB.createPlatform('samsung', {
 
-    keys: {
+        $plugins: {},
+        platformUserAgent: 'maple',
 
-    },
+        onDetect: function () {
+            // non-standart inserting objects in DOM (i'm looking at you 2011 version)
+            // in 2011 samsung smart tv's we can't add objects if document is ready
 
-    externalJs: [
-    ],
+            var htmlString = '';
+            for (var i = 0; i < samsungFiles.length; i++) {
+                htmlString += '<script type="text/javascript" src="' + samsungFiles[i] + '"></script>';
+            }
+            for (var id in plugins) {
+                htmlString += '<object id=' + id + ' border=0 classid="clsid:' + plugins[id] + '" style="opacity:0.0;background-color:#000000;width:0px;height:0px;"></object>';
+            }
+            document.write(htmlString);
+        },
 
-    $plugins: {},
 
-    detect: function () {
-      return detectResult;
-    },
+        getNativeDUID: function () {
+            return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
+        },
 
-    initialise: function () {
-    },
+        getMac: function () {
+            return this.$plugins.pluginObjectNetwork.GetMAC();
+        },
 
-    getNativeDUID: function () {
-      return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
-    },
+        getSDI: function () {
+            this.SDI = this.$plugins.SDIPlugin.Execute('GetSDI_ID');
+            return this.SDI;
+        },
 
-    getMac: function () {
-      return this.$plugins.pluginObjectNetwork.GetMAC();
-    },
+        /**
+         * Return hardware version for 2013 samsung only
+         * @returns {*}
+         */
+        getHardwareVersion: function () {
+            var version = this.firmware.match(/\d{4}/) || [];
+            if (version[0] === '2013') {
+                this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
+            } else {
+                this.hardwareVersion = null;
+            }
+            return this.hardwareVersion;
+        },
 
-    getSDI: function () {
-      this.SDI = this.SDIPlugin.Execute('GetSDI_ID');
-      return this.SDI;
-    },
+        setPlugins: function () {
+            var self = this,
+                tvKey;
 
-    /**
-     * Return hardware version for 2013 samsung only
-     * @returns {*}
-     */
-    getHardwareVersion: function () {
-      var version = this.firmware.match(/\d{4}/) || [];
-      if ( version[0] === '2013' ) {
-        this.hardwareVersion = sf.core.sefplugin('Device').Execute('Firmware');
-      } else {
-        this.hardwareVersion = null;
-      }
-      return this.hardwareVersion;
-    },
+            _.each(plugins, function (clsid, id) {
+                self.$plugins[id] = document.getElementById(id);
+            });
 
-    setPlugins: function () {
-      var self = this,
-        tvKey;
+            this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
+            this.$plugins.tvKey = new Common.API.TVKeyValue();
 
-      _.each(plugins, function ( clsid, id ) {
-        self.$plugins[id] = document.getElementById(id);
-      });
+            var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
+                TVPlugin = this.$plugins.pluginObjectTV;
 
-      this.$plugins.SDIPlugin = sf.core.sefplugin('ExternalWidgetInterface');
-      this.$plugins.tvKey = new Common.API.TVKeyValue();
+            this.modelCode = NNAVIPlugin.GetModelCode();
+            this.firmware = NNAVIPlugin.GetFirmware();
+            this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
+            this.productCode = TVPlugin.GetProductCode(1);
 
-      var NNAVIPlugin = this.$plugins.pluginObjectNNavi,
-        TVPlugin = this.$plugins.pluginObjectTV;
+            this.pluginAPI = new Common.API.Plugin();
+            this.widgetAPI = new Common.API.Widget();
 
-      this.modelCode = NNAVIPlugin.GetModelCode();
-      this.firmware = NNAVIPlugin.GetFirmware();
-      this.systemVersion = NNAVIPlugin.GetSystemVersion(0);
-      this.productCode = TVPlugin.GetProductCode(1);
+            this.productType = TVPlugin.GetProductType();
 
-      this.pluginAPI = new Common.API.Plugin();
-      this.widgetAPI = new Common.API.Widget();
+            tvKey = new Common.API.TVKeyValue();
 
-      this.productType = TVPlugin.GetProductType();
+            this.setKeys();
 
-      tvKey = new Common.API.TVKeyValue();
+            // enable standart volume indicator
+            this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
+            this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
+            this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+            this.widgetAPI.sendReadyEvent();
 
-      this.setKeys();
+            this.volumeEnable();
 
-      // enable standart volume indicator
-      this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
-      this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
-      this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
-      this.widgetAPI.sendReadyEvent();
+            NNAVIPlugin.SetBannerState(2);
+        },
 
-      this.volumeEnable();
+        volumeEnable: function () {
+            sf.service.setVolumeControl(true);
+        },
 
-      NNAVIPlugin.SetBannerState(2);
-    },
+        /**
+         * Set keys for samsung platform
+         */
+        setKeys: function () {
+            this.keys = sf.key;
 
-    volumeEnable: function () {
-      sf.service.setVolumeControl(true);
-    },
+            document.body.onkeydown = function (event) {
+                var keyCode = event.keyCode;
 
-    /**
-     * Set keys for samsung platform
-     */
-    setKeys: function () {
-      this.keys = sf.key;
+                switch (keyCode) {
+                    case sf.key.RETURN:
+                    case sf.key.EXIT:
+                    case 147:
+                    case 261:
+                        sf.key.preventDefault();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },
 
-      document.body.onkeydown = function(event){
-        var keyCode = event.keyCode;
+        /**
+         * Start screensaver
+         * @param time
+         */
+        enableScreenSaver: function (time) {
+            time = time || false;
+            sf.service.setScreenSaver(true, time);
+        },
 
-        switch (keyCode) {
-          case sf.key.RETURN:
-          case sf.key.EXIT:
-          case 147:
-          case 261:
+        /**
+         * Disable screensaver
+         */
+        disableScreenSaver: function () {
+            sf.service.setScreenSaver(false);
+        },
+
+        exit: function () {
+            sf.core.exit(false);
+        },
+
+        sendReturn: function () {
+            sf.core.exit(true);
+        },
+
+        blockNavigation: function () {
             sf.key.preventDefault();
-            break;
-          default:
-            break;
         }
-      }
+    });
 
-    },
-
-    /**
-     * Start screensaver
-     * @param time
-     */
-    enableScreenSaver: function ( time ) {
-      time = time || false;
-      sf.service.setScreenSaver(true, time);
-    },
-
-    /**
-     * Disable screensaver
-     */
-    disableScreenSaver: function () {
-      sf.service.setScreenSaver(false);
-    },
-
-    exit: function () {
-      sf.core.exit(false);
-    },
-
-    sendReturn: function(){
-        sf.core.exit(true);
-    },
-
-    blockNavigation: function () {
-      sf.key.preventDefault();
-    }
-  };
-
-  _.extend(platform, platformObj);
 })(this);
 (function ($) {
     "use strict";
