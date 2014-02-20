@@ -1196,59 +1196,74 @@ window.SB.keyboardPresets = {
     wrap.innerHTML = allKeysHtml;
     legendEl.appendChild(wrap);
 
-    return legendEl;
+    return $(legendEl);
   }
 
-  Legend = {
-    keys: {},
-    init: function () {
-      var el;
-      if (!_isInited) {
-        el = _renderLegend();
-        this.$el = $(el);
+  Legend = function() {
+    var self = this;
+    this.$el = _renderLegend();
+    this.keys = {};
 
-        for (var i = 0; i < icons.length; i++) {
-          this.initKey(icons[i]);
-        }
-
-        _isInited = true;
-      }
-      return this;
-    },
-    initKey: function ( key ) {
+    var initKey = function ( key ) {
       var $keyEl;
-      if(!this.keys[key]) {
-        $keyEl = this.$el.find('.legend-item-' + key);
-        this.keys[key] = new LegendKey($keyEl);
+      if ( !self.keys[key] ) {
+        $keyEl = self.$el.find('.legend-item-' + key);
+        self.keys[key] = new LegendKey($keyEl);
       }
-    },
-    show: function () {
+    };
+
+    for ( var i = 0; i < icons.length; i++ ) {
+      initKey(icons[i]);
+    }
+
+    this.addKey = function ( keyName, isClickable ) {
+      var keyHtml;
+
+      if (typeof isClickable === 'undefined') {
+        isClickable = true;
+      }
+
+      if (!isClickable) {
+        notClickableKeys.push(keyName);
+      }
+
+      keyHtml = renderKey(keyName);
+
+      this.$el.find('.legend-wrap').append(keyHtml);
+      initKey(keyName);
+    };
+
+    this.show = function () {
       this.$el.show();
-    },
-    hide: function () {
+    };
+
+    this.hide = function () {
       this.$el.hide();
-    },
-    clear: function () {
-      for (var key in this.keys) {
+    };
+
+    this.clear = function () {
+      for ( var key in this.keys ) {
         this.keys[key]('');
       }
-    },
-    save: function () {
-      for (var key in this.keys) {
+    };
+
+    this.save = function () {
+      for ( var key in this.keys ) {
         savedLegend[key] = this.keys[key]();
       }
-    },
-    restore: function () {
-      _.each(icons, function (key) {
+    };
+
+    this.restore = function () {
+      _.each(icons, function ( key ) {
         Legend[key](savedLegend[key]);
       });
 
-      for (var key in savedLegend) {
+      for ( var key in savedLegend ) {
         this.keys[key](savedLegend[key]);
       }
 
       savedLegend = [];
-    }
+    };
   };
 
   LegendKey = function ($el) {
@@ -1281,11 +1296,11 @@ window.SB.keyboardPresets = {
   };
 
 
-  window.$$legend = Legend.init();
+  window.$$legend = new Legend();
 
   $(function () {
-    Legend.$el.appendTo(document.body);
-    Legend.$el.on('click', '.legend-clickable', function () {
+    $$legend.$el.appendTo(document.body);
+    $$legend.$el.on('click', '.legend-clickable', function () {
       var key = $(this).attr('data-key'),
         ev, commonEvent;
 
@@ -2438,6 +2453,9 @@ $(function () {
 
         },
         hide: function () {
+            if(!this.enabled()){
+                return;
+            }
             this._nativeTurnOff();
             $buble.hide();
             return this;
@@ -2782,10 +2800,10 @@ SB.readyForPlatform('browser', function(){
 
             },
             get: function () {
-
+                return [];
             },
             cur: function () {
-
+                return 0;
             }
         }
     });
@@ -3136,12 +3154,10 @@ SB.readyForPlatform('mag', function () {
             stb.InitPlayer();
             stb.SetViewport(1280, 720, 0, 0);
             stb.SetTopWin(0);
-
         },
         _play: function (options) {
             stb.Play(options.url);
             startUpdate();
-            stb.SetSpeed(2);
             Player.trigger('bufferingBegin');
         },
         _stop: function () {
@@ -3188,8 +3204,8 @@ SB.readyForPlatform('mag', function () {
             LEFT: 37,
             DOWN: 40,
             UP: 38,
-            RETURN: 8,
-            EXIT: 27,
+            RETURN: 27,
+            EXIT: 8,
             TOOLS: 122,
             FF: 70,
             RW: 66,
@@ -3234,13 +3250,13 @@ SB.readyForPlatform('mag', function () {
                 setItem: function (name, data) {
 
                 },
-                clear: function(){
+                clear: function () {
 
                 },
-                getItem: function(){
+                getItem: function () {
 
                 },
-                removeItem: function(){
+                removeItem: function () {
 
                 }
             }
@@ -3248,6 +3264,16 @@ SB.readyForPlatform('mag', function () {
 
         detect: function () {
             return !!window.gSTB;
+        },
+
+        exit: function () {
+            $$log('try to location change');
+            Player.stop(true);
+            window.location = 'file:///home/web/services.html';
+        },
+
+        sendReturn: function () {
+            this.exit();
         },
 
         initialise: function () {

@@ -38,6 +38,9 @@
         },
         'nav_key:pause': function () {
           Player.togglePause();
+        },
+        'nav_key:exit': function(){
+          SB.exit();
         }
       });
 
@@ -50,6 +53,8 @@
         $bg.show();
         $$log('player stop');
       });
+
+
     },
 
     toggleView: function () {
