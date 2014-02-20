@@ -87,10 +87,10 @@ SB.readyForPlatform('browser', function(){
 
             },
             get: function () {
-
+                return [];
             },
             cur: function () {
-
+                return 0;
             }
         }
     });

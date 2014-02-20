@@ -2440,6 +2440,9 @@ $(function () {
 
         },
         hide: function () {
+            if(!this.enabled()){
+                return;
+            }
             this._nativeTurnOff();
             $buble.hide();
             return this;
@@ -2784,10 +2787,10 @@ SB.readyForPlatform('browser', function(){
 
             },
             get: function () {
-
+                return [];
             },
             cur: function () {
-
+                return 0;
             }
         }
     });
@@ -3188,8 +3191,8 @@ SB.readyForPlatform('mag', function () {
             LEFT: 37,
             DOWN: 40,
             UP: 38,
-            RETURN: 8,
-            EXIT: 27,
+            RETURN: 27,
+            EXIT: 8,
             TOOLS: 122,
             FF: 70,
             RW: 66,
@@ -3234,13 +3237,13 @@ SB.readyForPlatform('mag', function () {
                 setItem: function (name, data) {
 
                 },
-                clear: function(){
+                clear: function () {
 
                 },
-                getItem: function(){
+                getItem: function () {
 
                 },
-                removeItem: function(){
+                removeItem: function () {
 
                 }
             }
@@ -3248,6 +3251,16 @@ SB.readyForPlatform('mag', function () {
 
         detect: function () {
             return !!window.gSTB;
+        },
+
+        exit: function () {
+            $$log('try to location change');
+            Player.stop(true);
+            window.location = 'file:///home/web/services.html';
+        },
+
+        sendReturn: function () {
+            this.exit();
         },
 
         initialise: function () {
