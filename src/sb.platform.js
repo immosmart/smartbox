@@ -11,11 +11,6 @@
     platformUserAgent: 'not found',
 
     /**
-     * Function called if running on current platform
-     */
-    initialise: $.noop,
-
-    /**
      * Get DUID in case of Config
      * @return {string} DUID
      */
@@ -70,7 +65,7 @@
     },
 
     /**
-     * Set custom plugins
+     * Set custom plugins for platform
      */
     setPlugins: $.noop,
 

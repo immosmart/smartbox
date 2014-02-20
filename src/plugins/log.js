@@ -142,6 +142,8 @@
     }
   };
 
+  window.$$log = SB.utils.log.log;
+
 })(this);
 
 $(function () {

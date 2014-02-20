@@ -1,14 +1,20 @@
-/**
- * Main smartbox file
- */
-(function ( window, undefined ) {
-
-  var _ready = false,
+;(function () {
+  var Smartbox,
+    _ready = false,
     readyCallbacks = [],
-    SB,
-    _running = false;
+    userAgent = navigator.userAgent.toLowerCase(),
+    SmartboxAPI;
 
-  var userAgent = navigator.userAgent.toLowerCase();
+  //private func for applying all ready callbacks
+  var onReady = function () {
+    _ready = true;
+
+    for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+      readyCallbacks[i].call(this);
+    }
+    // no need anymore
+    readyCallbacks = null;
+  };
 
   /**
    * Detecting current platform
@@ -18,16 +24,34 @@
     return userAgent.indexOf(slug) !== -1;
   }
 
-  SB = {
+  Smartbox = function ( platform, cb ) {
+    if ( typeof platform === 'string' ) {
+      Smartbox.readyForPlatform(platform, cb);
+    } else if ( typeof platform === 'function' ) {
+      // first arg - function
+      Smartbox.ready(platform);
+    }
+  };
 
+  //public smartbox API
+  SmartboxAPI = {
     platformName: '',
 
-    // TODO: refactor platform creating
-    // because platform can be overrided
-    createPlatform: function ( platformName, platformApi ) {
+    userAgent: userAgent,
 
-      var isCurrent = platformApi.detect && platformApi.detect(),
-        platform;
+    initialise: function () {
+      this.setPlugins();
+      this.getDUID();
+
+      // wait for calling others $()
+      setTimeout(function () {
+        onReady();
+        onReady = null;
+      }, 10);
+    },
+
+    createPlatform: function ( platformName, platformApi ) {
+      var isCurrent = platformApi.detect && platformApi.detect();
 
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
@@ -39,23 +63,8 @@
       }
     },
 
-    config: {
-      DUID: 'real',
-      logKey: 'tools'
-    },
-
-    /**
-     * Main function
-     * @param cb {Function} callback after initialization
-     * @param notRun {Boolean}
-     */
-    ready: function ( cb, notRun ) {
-
-      // initializing on first calling ready func
-      if ( !notRun && !_running ) {
-        this.initialize();
-      }
-
+    // calling cb after library initialise
+    ready: function ( cb ) {
       if ( _ready ) {
         cb.call(this);
       } else {
@@ -63,47 +72,18 @@
       }
     },
 
-    initialize: function () {
-      var self = this;
-
-      _running = true;
-
-      window.$$log = SB.utils.log.log;
-      window.$$error = SB.utils.error;
-
-      $(function () {
-        self.setPlugins();
-        self.getDUID();
-
-        // wait for calling others $()
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
-    },
-
+    // calling cb after library initialise if platform is current
     readyForPlatform: function ( platform, cb ) {
       var self = this;
       this.ready(function () {
         if ( platform == self.platformName ) {
           cb.call(self);
         }
-      }, true);
-    },
-
-    /**
-     * Applying all ready callbacks
-     * @private
-     */
-    _onReady: function () {
-      _ready = true;
-
-      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-        readyCallbacks[i].call(this);
-      }
+      });
     },
 
     utils: {
+
       /**
        * Show error message
        * @param msg
@@ -192,14 +172,24 @@
         if ( this.externalCss.length ) {
           this.addExternalCss(this.externalCss);
         }
-      },
-
-      legend: {}
+      }
     }
   };
 
-    //TODO: For backward capability. Remove this.
-  SB.currentPlatform = SB;
+  Smartbox.config = {
+    DUID: 'real'
+  };
 
-  window.SB = SB;
-})(this);
+  _.extend(Smartbox, SmartboxAPI);
+
+  // exporting library to global
+  window.SB = Smartbox;
+
+  // initialize library
+  $(function () {
+    SB.initialise();
+
+    // we don't need initialise func anymore
+    SB.initialise = null;
+  });
+})();

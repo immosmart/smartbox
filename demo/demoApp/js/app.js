@@ -82,5 +82,5 @@
   };
 
   // main app initialize when smartbox ready
-  SB.ready(_.bind(App.initialize, App));
+  SB(_.bind(App.initialize, App));
 })();

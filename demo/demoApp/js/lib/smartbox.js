@@ -1,14 +1,20 @@
-/**
- * Main smartbox file
- */
-(function ( window, undefined ) {
-
-  var _ready = false,
+;(function () {
+  var Smartbox,
+    _ready = false,
     readyCallbacks = [],
-    SB,
-    _running = false;
+    userAgent = navigator.userAgent.toLowerCase(),
+    SmartboxAPI;
 
-  var userAgent = navigator.userAgent.toLowerCase();
+  //private func for applying all ready callbacks
+  var onReady = function () {
+    _ready = true;
+
+    for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+      readyCallbacks[i].call(this);
+    }
+    // no need anymore
+    readyCallbacks = null;
+  };
 
   /**
    * Detecting current platform
@@ -18,16 +24,34 @@
     return userAgent.indexOf(slug) !== -1;
   }
 
-  SB = {
+  Smartbox = function ( platform, cb ) {
+    if ( typeof platform === 'string' ) {
+      Smartbox.readyForPlatform(platform, cb);
+    } else if ( typeof platform === 'function' ) {
+      // first arg - function
+      Smartbox.ready(platform);
+    }
+  };
 
+  //public smartbox API
+  SmartboxAPI = {
     platformName: '',
 
-    // TODO: refactor platform creating
-    // because platform can be overrided
-    createPlatform: function ( platformName, platformApi ) {
+    userAgent: userAgent,
 
-      var isCurrent = platformApi.detect && platformApi.detect(),
-        platform;
+    initialise: function () {
+      this.setPlugins();
+      this.getDUID();
+
+      // wait for calling others $()
+      setTimeout(function () {
+        onReady();
+        onReady = null;
+      }, 10);
+    },
+
+    createPlatform: function ( platformName, platformApi ) {
+      var isCurrent = platformApi.detect && platformApi.detect();
 
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
@@ -39,23 +63,8 @@
       }
     },
 
-    config: {
-      DUID: 'real',
-      logKey: 'tools'
-    },
-
-    /**
-     * Main function
-     * @param cb {Function} callback after initialization
-     * @param notRun {Boolean}
-     */
-    ready: function ( cb, notRun ) {
-
-      // initializing on first calling ready func
-      if ( !notRun && !_running ) {
-        this.initialize();
-      }
-
+    // calling cb after library initialise
+    ready: function ( cb ) {
       if ( _ready ) {
         cb.call(this);
       } else {
@@ -63,47 +72,18 @@
       }
     },
 
-    initialize: function () {
-      var self = this;
-
-      _running = true;
-
-      window.$$log = SB.utils.log.log;
-      window.$$error = SB.utils.error;
-
-      $(function () {
-        self.setPlugins();
-        self.getDUID();
-
-        // wait for calling others $()
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
-    },
-
+    // calling cb after library initialise if platform is current
     readyForPlatform: function ( platform, cb ) {
       var self = this;
       this.ready(function () {
         if ( platform == self.platformName ) {
           cb.call(self);
         }
-      }, true);
-    },
-
-    /**
-     * Applying all ready callbacks
-     * @private
-     */
-    _onReady: function () {
-      _ready = true;
-
-      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-        readyCallbacks[i].call(this);
-      }
+      });
     },
 
     utils: {
+
       /**
        * Show error message
        * @param msg
@@ -192,17 +172,27 @@
         if ( this.externalCss.length ) {
           this.addExternalCss(this.externalCss);
         }
-      },
-
-      legend: {}
+      }
     }
   };
 
-    //TODO: For backward capability. Remove this.
-  SB.currentPlatform = SB;
+  Smartbox.config = {
+    DUID: 'real'
+  };
 
-  window.SB = SB;
-})(this);
+  _.extend(Smartbox, SmartboxAPI);
+
+  // exporting library to global
+  window.SB = Smartbox;
+
+  // initialize library
+  $(function () {
+    SB.initialise();
+
+    // we don't need initialise func anymore
+    SB.initialise = null;
+  });
+})();
 // global SB
 !(function ( window, undefined ) {
 
@@ -214,11 +204,6 @@
     DUID: '',
 
     platformUserAgent: 'not found',
-
-    /**
-     * Function called if running on current platform
-     */
-    initialise: $.noop,
 
     /**
      * Get DUID in case of Config
@@ -275,7 +260,7 @@
     },
 
     /**
-     * Set custom plugins
+     * Set custom plugins for platform
      */
     setPlugins: $.noop,
 
@@ -1196,59 +1181,74 @@ window.SB.keyboardPresets = {
     wrap.innerHTML = allKeysHtml;
     legendEl.appendChild(wrap);
 
-    return legendEl;
+    return $(legendEl);
   }
 
-  Legend = {
-    keys: {},
-    init: function () {
-      var el;
-      if (!_isInited) {
-        el = _renderLegend();
-        this.$el = $(el);
+  Legend = function() {
+    var self = this;
+    this.$el = _renderLegend();
+    this.keys = {};
 
-        for (var i = 0; i < icons.length; i++) {
-          this.initKey(icons[i]);
-        }
-
-        _isInited = true;
-      }
-      return this;
-    },
-    initKey: function ( key ) {
+    var initKey = function ( key ) {
       var $keyEl;
-      if(!this.keys[key]) {
-        $keyEl = this.$el.find('.legend-item-' + key);
-        this.keys[key] = new LegendKey($keyEl);
+      if ( !self.keys[key] ) {
+        $keyEl = self.$el.find('.legend-item-' + key);
+        self.keys[key] = new LegendKey($keyEl);
       }
-    },
-    show: function () {
+    };
+
+    for ( var i = 0; i < icons.length; i++ ) {
+      initKey(icons[i]);
+    }
+
+    this.addKey = function ( keyName, isClickable ) {
+      var keyHtml;
+
+      if (typeof isClickable === 'undefined') {
+        isClickable = true;
+      }
+
+      if (!isClickable) {
+        notClickableKeys.push(keyName);
+      }
+
+      keyHtml = renderKey(keyName);
+
+      this.$el.find('.legend-wrap').append(keyHtml);
+      initKey(keyName);
+    };
+
+    this.show = function () {
       this.$el.show();
-    },
-    hide: function () {
+    };
+
+    this.hide = function () {
       this.$el.hide();
-    },
-    clear: function () {
-      for (var key in this.keys) {
+    };
+
+    this.clear = function () {
+      for ( var key in this.keys ) {
         this.keys[key]('');
       }
-    },
-    save: function () {
-      for (var key in this.keys) {
+    };
+
+    this.save = function () {
+      for ( var key in this.keys ) {
         savedLegend[key] = this.keys[key]();
       }
-    },
-    restore: function () {
-      _.each(icons, function (key) {
+    };
+
+    this.restore = function () {
+      _.each(icons, function ( key ) {
         Legend[key](savedLegend[key]);
       });
 
-      for (var key in savedLegend) {
+      for ( var key in savedLegend ) {
         this.keys[key](savedLegend[key]);
       }
 
       savedLegend = [];
-    }
+    };
   };
 
   LegendKey = function ($el) {
@@ -1281,11 +1281,11 @@ window.SB.keyboardPresets = {
   };
 
 
-  window.$$legend = Legend.init();
+  window.$$legend = new Legend();
 
   $(function () {
-    Legend.$el.appendTo(document.body);
-    Legend.$el.on('click', '.legend-clickable', function () {
+    $$legend.$el.appendTo(document.body);
+    $$legend.$el.on('click', '.legend-clickable', function () {
       var key = $(this).attr('data-key'),
         ev, commonEvent;
 
@@ -1446,6 +1446,8 @@ window.SB.keyboardPresets = {
       }
     }
   };
+
+  window.$$log = SB.utils.log.log;
 
 })(this);
 
@@ -3136,12 +3138,10 @@ SB.readyForPlatform('mag', function () {
             stb.InitPlayer();
             stb.SetViewport(1280, 720, 0, 0);
             stb.SetTopWin(0);
-
         },
         _play: function (options) {
             stb.Play(options.url);
             startUpdate();
-            stb.SetSpeed(2);
             Player.trigger('bufferingBegin');
         },
         _stop: function () {
