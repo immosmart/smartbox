@@ -3269,6 +3269,7 @@ SB.readyForPlatform('mag', function () {
         exit: function () {
             $$log('try to location change');
             Player.stop(true);
+            gSTB.DeinitPlayer();
             window.location = 'file:///home/web/services.html';
         },
 
