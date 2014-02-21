@@ -73,10 +73,25 @@
     volumeUp: $.noop,
     volumeDown: $.noop,
     getVolume: $.noop,
-    setData: $.noop,
-    getData: $.noop,
-    removeData: $.noop,
-    exit: $.noop
+    exit: $.noop,
+      setData: function (name, val) {
+          // save data in string format
+          localStorage.setItem(name, JSON.stringify(val));
+      },
+
+      getData: function (name) {
+          var result;
+          try {
+              result = JSON.parse(localStorage.getItem(name));
+          } catch (e) {
+          }
+
+          return result;
+      },
+
+      removeData: function (name) {
+          localStorage.removeItem(name);
+      }
   };
 
   _.extend(SB, PlatformApi);
