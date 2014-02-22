@@ -74,10 +74,13 @@
                     url: options
                 }
             }
-
-            this.stop();
-            this.state = 'play';
-            this._play(options);
+            if(options !== undefined) {
+                this.stop();
+                this.state = 'play';
+                this._play(options);
+            } else if(options === undefined && this.state === 'pause') {
+                this.resume();
+            }
         },
         _play: function () {
             var self = this;

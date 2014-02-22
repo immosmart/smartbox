@@ -174,6 +174,14 @@ SB.readyForPlatform('samsung', function () {
         _stop: function () {
             this.doPlugin('Stop');
         },
+        pause: function () {
+            this.doPlugin('Pause');
+            this.state = "pause";
+        },
+        resume: function () {
+            this.doPlugin('Resume');
+            this.state = "play";
+        },
         doPlugin: function () {
             var result,
                 plugin = this.plugin,
