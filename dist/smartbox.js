@@ -292,29 +292,6 @@
   _.extend(SB, PlatformApi);
 })(this);
 /**
- * Plugin constructor
- */
-(function () {
-
-  var allPlugins = [];
-
-  // plugin constructor
-  var Plugin = function (pluginApi) {
-    _.extend(this, pluginApi);
-    this.init();
-    return this;
-  };
-
-  Plugin.prototype.start = $.noop;
-
-
-  SB.createPlugin = function ( name, pluginApi ) {
-    var pluginName = '$$' + name;
-    window[pluginName] = this[pluginName] = new Plugin(pluginApi);
-    allPlugins.push(this[pluginName]);
-  };
-})();
-/**
  * Keyboard Plugin
  */
 ;
@@ -2039,35 +2016,36 @@ $(function () {
        * @returns {*}
        */
       checkUserDefined: function ( $el, dir ) {
-        var ep = $el.attr('data-nav_ud'),
-          result = false,
-          res = $el.attr('data-nav_ud_' + dir);
+          var ep = $el.data('nav_ud'),
+              result = false,
+              res = $el.data('nav_ud_' + dir);
+          if (!ep && !res) {
+              return false;
+          }
 
-        if ( !(ep && res) ) {
-          return false;
-        }
+          if ( !res ) {
+              var sides = ep.split(','),
+                  dirs = ['up', 'right', 'down', 'left'];
+              if(sides.length !== 4) {
+                  return false;
+              }
 
-        if ( !res ) {
-          var sides = ep.split(','),
-            dirs = ['up', 'right', 'left', 'bottom'];
+              $el.data({
+                  'nav_ud_up': sides[0],
+                  'nav_ud_right': sides[1],
+                  'nav_ud_down': sides[2],
+                  'nav_ud_left': sides[3]
+              });
 
-          $el.attr({
-            'data-nav_ud_up': sides[0],
-            'data-nav_ud_right': sides[1],
-            'data-nav_ud_down': sides[2],
-            'data-nav_ud_left': sides[3]
-          });
+              res = sides[dirs.indexOf(dir)];
+          }
 
-          res = sides[dirs.indexOf(dir)];
-        }
-
-        if ( res == 'none' ) {
-          result = 'none';
-        } else if ( res ) {
-          result = $(res).first();
-        }
-
-        return result;
+          if ( res == 'none' ) {
+              result = 'none';
+          } else if ( res ) {
+              result = $(res).first();
+          }
+          return result;
       },
 
       /**
