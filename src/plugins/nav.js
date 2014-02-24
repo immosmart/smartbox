@@ -8,7 +8,7 @@
     for (var key in keys) {
       invertedKeys[keys[key]] = key.toLowerCase();
     }
-  }, true);
+  });
 
   function Navigation () {
 

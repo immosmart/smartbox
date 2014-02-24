@@ -105,6 +105,10 @@
     width: 315px;
 }
 
+.keyboard_ru .space {
+    width: 395px;
+}
+
 .kb-multilang .space {
     width: 255px;
 }

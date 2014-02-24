@@ -22,7 +22,6 @@ Smartbox имеет три зависимости:
 
 # Плагины библиотеки
 
-
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">Методы отдельных платформ</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_log.md">Консоль Лог</a>
 * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_legend.md">Легенда</a>
