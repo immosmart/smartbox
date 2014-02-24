@@ -741,7 +741,7 @@
     keyRegExp = /([^{]+){{([^}]*)}}/,
     defaults = {
       type: 'en',
-      firstLayout: 'en'
+      firstLayout: null
     },
     pluginPrototype = {},
     keyboardPrototype = {},
@@ -797,6 +797,9 @@
       } else if ( preset.length ) {
         this.presets = preset;
         haveNums = (preset.indexOf('fullnum') !== -1);
+        if ( haveNums ) {
+          this.presets = _.without(this.presets, 'fullnum');
+        }
         board = this.generateFull(this.presets, haveNums);
       }
 
@@ -813,8 +816,8 @@
         this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
       }
 
-      if ( haveNums ) {
-        this.presets = _.without(this.presets, 'fullnum')
+      if (haveNums) {
+        this.$layouts['fullnum'] = this.$wrap.find('.keyboard_generated_fullnum');
       }
 
       if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
@@ -839,13 +842,14 @@
         this.$wrap.addClass('kb-multilang');
       }
 
-      if ( haveNums ) {
-        this.$wrap.addClass('kb-havenums');
-      }
-
       for ( var i = 0; i < types.length; i++ ) {
         type = types[i];
         wrapHtml += this.generateBoard(type);
+      }
+
+      if ( haveNums ) {
+        this.$wrap.addClass('kb-havenums');
+        wrapHtml += this.generateBoard('fullnum');
       }
 
       return wrapHtml;
@@ -1203,9 +1207,9 @@ window.SB.keyboardPresets = {
     ]
   },
 
-  fulltext_ru: ['en', 'ru'],
+  fulltext_ru: ['ru','en'],
   fulltext_en: ['en'],
-  fulltext_ru_nums: ['en', 'ru', 'fullnum'],
+  fulltext_ru_nums: ['ru', 'en', 'fullnum'],
   fulltext_en_nums: ['en', 'fullnum']
 };
 (function (window) {
