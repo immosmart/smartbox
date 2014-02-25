@@ -78,7 +78,6 @@ SB.readyForPlatform('mag', function () {
             stb.SetPosTime(time)
         },
         audio: {
-
             set: function (index) {
                 stb.SetAudioPID(index);
             },
@@ -87,6 +86,17 @@ SB.readyForPlatform('mag', function () {
             },
             cur: function () {
                 return stb.GetAudioPID();
+            }
+        },
+        subtitle: {
+            set: function (index) {
+                stb.SetSubtitlePID(index);
+            },
+            get: function () {
+                return stb.GetSubtitlePIDs();
+            },
+            cur: function () {
+                return stb.GetSubtitlePID();
             }
         }
     });

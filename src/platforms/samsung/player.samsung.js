@@ -1,5 +1,6 @@
 SB.readyForPlatform('samsung', function () {
-    var curAudio = 0;
+    var curAudio = 0,
+        curSubtitle = 0;
 
 
     var safeApply = function (self, method, args) {
@@ -223,6 +224,24 @@ SB.readyForPlatform('samsung', function () {
             },
             cur: function () {
                 return curAudio;
+            }
+        },
+        subtitle: {
+            set: function (index) {
+                Player.doPlugin('SetStreamID', 5, index);
+                curSubtitle = index;
+            },
+            get: function () {
+                var len = Player.doPlugin('GetTotalNumOfStreamID', 5);
+
+                var result = [];
+                for (var i = 0; i < len; i++) {
+                    result.push(Player.doPlugin('GetStreamLanguageInfo', 5, i));
+                }
+                return result;
+            },
+            cur: function () {
+                return curSubtitle;
             }
         }
     });
