@@ -186,10 +186,10 @@
   window.SB = Smartbox;
 
   // initialize library
-  $(function () {
+  window.onload = function () {
     SB.initialise();
 
     // we don't need initialise func anymore
     SB.initialise = null;
-  });
+  };
 })();

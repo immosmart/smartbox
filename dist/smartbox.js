@@ -186,12 +186,12 @@
   window.SB = Smartbox;
 
   // initialize library
-  $(function () {
+  window.onload = function () {
     SB.initialise();
 
     // we don't need initialise func anymore
     SB.initialise = null;
-  });
+  };
 })();
 // global SB
 !(function ( window, undefined ) {
@@ -1496,8 +1496,8 @@ window.SB.keyboardPresets = {
       }
     }
   };
-
   window.$$log = SB.utils.log.log;
+  window.$$error = SB.utils.error;
 
 })(this);
 
@@ -3806,12 +3806,11 @@ SB.readyForPlatform('samsung', function () {
             '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
             '$MANAGER_WIDGET/Common/Define.js',
             '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+            '$MANAGER_WIDGET/Common/API/Plugin.js',
             '$MANAGER_WIDGET/Common/API/Widget.js',
             '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-            '$MANAGER_WIDGET/Common/API/Plugin.js',
             'src/platforms/samsung/localstorage.js'
         ];
-
 
     SB.createPlatform('samsung', {
 
@@ -3831,7 +3830,6 @@ SB.readyForPlatform('samsung', function () {
             }
             document.write(htmlString);
         },
-
 
         getNativeDUID: function () {
             return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
@@ -3861,8 +3859,11 @@ SB.readyForPlatform('samsung', function () {
         },
 
         setPlugins: function () {
-            var self = this,
-                tvKey;
+          var self = this,
+            PL_NNAVI_STATE_BANNER_NONE = 0,
+            PL_NNAVI_STATE_BANNER_VOL = 1,
+            PL_NNAVI_STATE_BANNER_VOL_CH = 2,
+            tvKey;
 
             _.each(plugins, function (clsid, id) {
                 self.$plugins[id] = document.getElementById(id);
@@ -3882,47 +3883,52 @@ SB.readyForPlatform('samsung', function () {
             this.pluginAPI = new Common.API.Plugin();
             this.widgetAPI = new Common.API.Widget();
 
-            this.productType = TVPlugin.GetProductType();
-
             tvKey = new Common.API.TVKeyValue();
+            this.productType = TVPlugin.GetProductType();
 
             this.setKeys();
 
-            // enable standart volume indicator
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
-            this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+            if(this.pluginAPI.SetBannerState){
+              NNAVIPlugin.SetBannerState(PL_NNAVI_STATE_BANNER_VOL_CH);
+            }
+
+            function unregisterKey(key){
+              try{
+                self.pluginAPI.unregistKey(tvKey['KEY_'+key]);
+              }catch(e){
+                $$error(e);
+              }
+            }
+
+            unregisterKey('VOL_UP');
+            unregisterKey('VOL_DOWN');
+            unregisterKey('MUTE');
+
             this.widgetAPI.sendReadyEvent();
-
-            this.volumeEnable();
-
-            NNAVIPlugin.SetBannerState(2);
-        },
-
-        volumeEnable: function () {
-            sf.service.setVolumeControl(true);
         },
 
         /**
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = sf.key;
 
-            document.body.onkeydown = function (event) {
-                var keyCode = event.keyCode;
+          this.keys = sf.key;
 
-                switch (keyCode) {
-                    case sf.key.RETURN:
-                    case sf.key.EXIT:
-                    case 147:
-                    case 261:
-                        sf.key.preventDefault();
-                        break;
-                    default:
-                        break;
-                }
+          document.body.onkeydown = function ( event ) {
+            var keyCode = event.keyCode;
+            $$log('keyDown ' + keyCode);
+
+            switch ( keyCode ) {
+              case sf.key.RETURN:
+              //case sf.key.EXIT:
+              case 147:
+              case 261:
+                sf.key.preventDefault();
+                break;
+              default:
+                break;
             }
+          }
         },
 
         /**

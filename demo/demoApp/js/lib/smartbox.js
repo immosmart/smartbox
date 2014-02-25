@@ -186,12 +186,12 @@
   window.SB = Smartbox;
 
   // initialize library
-  $(function () {
+  window.onload = function () {
     SB.initialise();
 
     // we don't need initialise func anymore
     SB.initialise = null;
-  });
+  };
 })();
 // global SB
 !(function ( window, undefined ) {
@@ -268,10 +268,25 @@
     volumeUp: $.noop,
     volumeDown: $.noop,
     getVolume: $.noop,
-    setData: $.noop,
-    getData: $.noop,
-    removeData: $.noop,
-    exit: $.noop
+    exit: $.noop,
+      setData: function (name, val) {
+          // save data in string format
+          localStorage.setItem(name, JSON.stringify(val));
+      },
+
+      getData: function (name) {
+          var result;
+          try {
+              result = JSON.parse(localStorage.getItem(name));
+          } catch (e) {
+          }
+
+          return result;
+      },
+
+      removeData: function (name) {
+          localStorage.removeItem(name);
+      }
   };
 
   _.extend(SB, PlatformApi);
@@ -576,6 +591,12 @@
       e.stopPropagation();
     },
 
+    changeKeyboard: function ( keyboardOpt ) {
+      var curOpt = this.options.keyboard;
+      this.options.keyboard = _.extend({}, curOpt, keyboardOpt);
+      $keyboardPopup && $keyboardPopup.SBKeyboard(this.options.keyboard);
+    },
+
     hideKeyboard: function ( isComplete ) {
       var $wrapper = this.$wrapper;
       $wrapper.removeClass('smart-input-active');
@@ -682,7 +703,7 @@
           new Plugin(this, options));
       } else if ( typeof instance[method] === 'function' ) {
         instance[method].apply(instance, params);
-      }
+    }
     });
   }
 
@@ -693,396 +714,423 @@
 ;
 (function ( $, window, document, undefined ) {
 
-	var pluginName = 'SBKeyboard',
-		keyRegExp = /([^{]+){{([^}]*)}}/,
-		defaults = {
-			type: 'en',
-			firstLayout: 'en'
-		},
-		pluginPrototype = {},
-		keyboardPrototype = {},
-		generatedKeyboards = {};
+  var pluginName = 'SBKeyboard',
+    keyRegExp = /([^{]+){{([^}]*)}}/,
+    defaults = {
+      type: 'en',
+      firstLayout: null
+    },
+    pluginPrototype = {},
+    keyboardPrototype = {},
+    generatedKeyboards = {};
 
-	/**
-	 * Keyboard constructor
-	 * @param options
-	 * @param $el parent element
-	 * @constructor
-	 */
-	function Keyboard ( options, $el ) {
-		this.type = options.type;
-		this.currentLayout = '';
-		this.previousLayout = '';
-		this.$el = $el;
+  /**
+   * Keyboard constructor
+   * @param options
+   * @param $el parent element
+   * @constructor
+   */
+  function Keyboard ( options, $el ) {
 
-		// jquery layout els
-		this.$layouts = {};
+    this.type = options.type;
+    this.currentLayout = '';
+    this.previousLayout = '';
+    this.$el = $el;
 
-		// all available layouts(for changeKeyboardLang)
-		this.presets = [];
+    // jquery layout els
+    this.$layouts = {};
 
-		this.initialize(options);
-	}
+    // all available layouts(for changeKeyboardLang)
+    this.presets = [];
 
-	keyboardPrototype = {
-		isShiftActive: false,
-		isNumsShown: false,
-		initialize: function ( options ) {
-			var board = '',
-				preset,
-				haveNums = false,
-				type,
+    this.initialize(options);
+  }
 
-                _type=_.result(this, 'type');
+  keyboardPrototype = {
+    isShiftActive: false,
+    isNumsShown: false,
+    currentPresetType: '',
+      initialize: function ( options ) {
 
-			preset = SB.keyboardPresets[_type];
+      var _type = _.result(this, 'type'),
+        board = '',
+        preset,
+        haveNums = false,
+        type;
 
-			this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
+      preset = SB.keyboardPresets[_type];
 
-			if ( typeof preset === 'function' ) {
-				this.presets.push(_type);
-				board = this.generateBoard(_type);
-			} else if ( preset.length ) {
-				this.presets = preset;
-				haveNums = (preset.indexOf('fullnum') !== -1);
-				board = this.generateFull(this.presets, haveNums);
-			}
+      if (!preset) {
+        throw new Error('Preset ' + _type + ' doesn\'t exist');
+      }
 
-			this.$wrap
-				.append(board)
-			 	.addClass('kekekey_' + _type);
+      this.currentPresetType = _type;
 
-			this.$el.append(this.$wrap);
-			this.setEvents();
+      this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
 
-			// save jquery els of current layouts
-			for ( var i = 0; i < this.presets.length; i++ ) {
-				type = this.presets[i];
-				this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
-			}
+      if ( typeof preset === 'function' ) {
+        this.presets.push(_type);
+        board = this.generateBoard(_type);
+      } else if ( preset.length ) {
+        this.presets = preset;
+        haveNums = (preset.indexOf('fullnum') !== -1);
+        if ( haveNums ) {
+          this.presets = _.without(this.presets, 'fullnum');
+        }
+        board = this.generateFull(this.presets, haveNums);
+      }
 
-			if ( haveNums ) {
-				this.presets = _.without(this.presets,'fullnum')
-			}
+      this.$wrap
+        .append(board)
+        .addClass('kekekey_' + _type);
 
-			if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
-				this.changeLayout(options.firstLayout);
-			} else {
-				this.changeLayout(this.presets[0]);
-			}
-		},
+      this.$el.append(this.$wrap);
+      this.setEvents();
 
-		/**
-		 * Generate multilayout keyboards
-		 * @param types {Array} array of layout types (['ru', 'en'])
-		 * @param haveNums {Boolean} add fullnum keyboard
-		 * @returns {string} generated html
-		 */
-		generateFull: function ( types, haveNums ) {
-			var wrapHtml = '',
-				preset = '',
-				type = '';
+      // save jquery els of current layouts
+      for ( var i = 0; i < this.presets.length; i++ ) {
+        type = this.presets[i];
+        this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
+      }
 
-			if ( types.length > 1 ) {
-				this.$wrap.addClass('kb-multilang');
-			}
+      if (haveNums) {
+        this.$layouts['fullnum'] = this.$wrap.find('.keyboard_generated_fullnum');
+      }
 
-			if ( haveNums ) {
-				this.$wrap.addClass('kb-havenums');
-			}
+      if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
+        this.changeLayout(options.firstLayout);
+      } else {
+        this.changeLayout(this.presets[0]);
+      }
+    },
 
-			for ( var i = 0; i < types.length; i++ ) {
-				type = types[i];
-				wrapHtml += this.generateBoard(type);
-			}
+    /**
+     * Generate multilayout keyboards
+     * @param types {Array} array of layout types (['ru', 'en'])
+     * @param haveNums {Boolean} add fullnum keyboard
+     * @returns {string} generated html
+     */
+    generateFull: function ( types, haveNums ) {
+      var wrapHtml = '',
+        preset = '',
+        type = '';
 
-			return wrapHtml;
-		},
+      if ( types.length > 1 ) {
+        this.$wrap.addClass('kb-multilang');
+      }
 
-		/**
-		 * Generate keyboard layout
-		 * @param type {String}  'ru', 'en'
-		 * @returns {String} generated html
-		 */
-		generateBoard: function ( type ) {
+      for ( var i = 0; i < types.length; i++ ) {
+        type = types[i];
+        wrapHtml += this.generateBoard(type);
+      }
 
-			var preset = SB.keyboardPresets[type],
-				boardHtml = '',
-				rowHtml = '',
-				keyAttrs = {},
-				row, letter;
+      if ( haveNums ) {
+        this.$wrap.addClass('kb-havenums');
+        wrapHtml += this.generateBoard('fullnum');
+      }
 
-			if ( generatedKeyboards[type] ) {
-				return generatedKeyboards[type].board;
-			}
+      return wrapHtml;
+    },
 
-			preset = preset();
-			boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
+    /**
+     * Generate keyboard layout
+     * @param type {String}  'ru', 'en'
+     * @returns {String} generated html
+     */
+    generateBoard: function ( type ) {
 
-			for ( var i = 0; i < preset.length; i++ ) {
-				row = preset[i];
-				rowHtml = '<div class="kb-row" data-nav_type="hbox">';
+      var preset = SB.keyboardPresets[type],
+        boardHtml = '',
+        rowHtml = '',
+        keyAttrs = {},
+        row, letter;
 
-				for ( var j = 0; j < row.length; j++ ) {
-					letter = row[j];
-					if ( letter.length == 1 || letter === '&amp;' ) {
-						keyAttrs = {
-							text: letter,
-							type: '',
-							letter: letter
-						};
-					}
-					else {
-						var matches = keyRegExp.exec(letter);
+      if ( generatedKeyboards[type] ) {
+        return generatedKeyboards[type].board;
+      }
 
-						keyAttrs.text = matches[2] || '';
-						keyAttrs.type = matches[1];
-						keyAttrs.letter = '';
-					}
-					rowHtml += '<div class="kbtn nav-item ' +
-										 keyAttrs.type +
-										 '" data-letter="' + _.escape(keyAttrs.letter) + '"';
+      preset = preset();
+      boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
 
-					if ( keyAttrs.type ) {
-						rowHtml += ' data-keytype="' + keyAttrs.type + '"';
-					}
+      for ( var i = 0; i < preset.length; i++ ) {
+        row = preset[i];
+        rowHtml = '<div class="kb-row" data-nav_type="hbox">';
 
-					rowHtml += '>' + keyAttrs.text + '</div>';
-				}
+        for ( var j = 0; j < row.length; j++ ) {
+          letter = row[j];
+          if ( letter.length == 1 || letter === '&amp;' ) {
+            keyAttrs = {
+              text: letter,
+              type: '',
+              letter: letter
+            };
+          }
+          else {
+            var matches = keyRegExp.exec(letter);
 
-				boardHtml += rowHtml + '</div>';
-			}
+            keyAttrs.text = matches[2] || '';
+            keyAttrs.type = matches[1];
+            keyAttrs.letter = '';
+          }
+          rowHtml += '<div class="kbtn nav-item ' +
+                     keyAttrs.type +
+                     '" data-letter="' + _.escape(keyAttrs.letter) + '"';
 
-			boardHtml += '</div>';
+          if ( keyAttrs.type ) {
+            rowHtml += ' data-keytype="' + keyAttrs.type + '"';
+          }
 
-			generatedKeyboards[type] = {
-				board: boardHtml
-			};
-			return boardHtml;
-		},
+          rowHtml += '>' + keyAttrs.text + '</div>';
+        }
 
-		/**
-		 * Num keys event handler
-		 * @param e
-		 */
-		onKeyNum: function ( e ) {
-			switch ( e.keyName ) {
-				case 'red':
-					this.$el.trigger('backspace');
-					break;
-				default:
-					var ev = $.Event({
-						'type': 'type'
-					});
-					ev.letter = '' + e.num;
+        boardHtml += rowHtml + '</div>';
+      }
 
-					this.$el.trigger(ev);
-					break;
-			}
-			e.stopPropagation();
-		},
-		defaultOnKey: function ( e ) {
-			e.stopPropagation();
-		},
-		onKeyDown: function ( e ) {
-			var $el = $(e.currentTarget),
-				keyType = $el.attr('data-keytype'),
-				letter = $el.attr('data-letter'),
-				ev;
+      boardHtml += '</div>';
 
-			// create custom event for triggering keyboard event
-			ev = $.Event({
-				'type': 'type'
-			});
+      generatedKeyboards[type] = {
+        board: boardHtml
+      };
+      return boardHtml;
+    },
 
-			if ( keyType ) {
-				switch ( keyType ) {
-					case 'backspace':
-						ev = 'backspace';
-						break;
-					case 'delall':
-						ev = 'delall';
-						break;
-					case 'complete':
-						ev = 'complete';
-						break;
-					case 'space':
-						ev.letter = ' ';
-						break;
-					case 'shift':
-						this.triggerShiftLetters();
-						return;
-					case 'lang':
-						this.changeKeyboardLang();
-						return;
-					case 'nums':
-						this.triggerNumKeyboard();
-						return;
-					default:
-						break;
-				}
-			} else {
-				ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
-			}
+    /**
+     * Num keys event handler
+     * @param e
+     */
+    onKeyNum: function ( e ) {
+      switch ( e.keyName ) {
+        case 'red':
+          this.$el.trigger('backspace');
+          break;
+        default:
+          var ev = $.Event({
+            'type': 'type'
+          });
+          ev.letter = '' + e.num;
 
-			ev && this.$el.trigger(ev);
+          this.$el.trigger(ev);
+          break;
+      }
+      e.stopPropagation();
+    },
+    defaultOnKey: function ( e ) {
+      e.stopPropagation();
+    },
+    onKeyDown: function ( e ) {
+      var $el = $(e.currentTarget),
+        keyType = $el.attr('data-keytype'),
+        letter = $el.attr('data-letter'),
+        ev;
 
-			e.stopPropagation();
-		},
+      // create custom event for triggering keyboard event
+      ev = $.Event({
+        'type': 'type'
+      });
 
-		triggerShiftLetters: function () {
-			var self = this;
+      if ( keyType ) {
+        switch ( keyType ) {
+          case 'backspace':
+            ev = 'backspace';
+            break;
+          case 'delall':
+            ev = 'delall';
+            break;
+          case 'complete':
+            ev = 'complete';
+            break;
+          case 'space':
+            ev.letter = ' ';
+            break;
+          case 'shift':
+            this.triggerShiftLetters();
+            return;
+          case 'lang':
+            this.changeKeyboardLang();
+            return;
+          case 'nums':
+            this.triggerNumKeyboard();
+            return;
+          default:
+            break;
+        }
+      } else {
+        ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
+      }
 
-			if ( this.isShiftActive ) {
-				this.isShiftActive = false;
-				this.$el.removeClass('shift_active');
-			} else {
-				this.isShiftActive = true;
-				this.$el.addClass('shift_active');
-			}
+      ev && this.$el.trigger(ev);
 
-			// TODO: only for samsung 11
+      e.stopPropagation();
+    },
+
+    triggerShiftLetters: function () {
+      var self = this;
+
+      if ( this.isShiftActive ) {
+        this.isShiftActive = false;
+        this.$el.removeClass('shift_active');
+      } else {
+        this.isShiftActive = true;
+        this.$el.addClass('shift_active');
+      }
+
+      // TODO: only for samsung 11
 //      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
 //        this.innerHTML = self.isShiftActive ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
 //      });
-		},
+    },
 
-		/**
-		 * show/hide fullnum layout
-		 */
-		triggerNumKeyboard: function () {
+    /**
+     * show/hide fullnum layout
+     */
+    triggerNumKeyboard: function () {
 
-			if ( this.isNumsShown ) {
-				this.isNumsShown = false;
-				this.changeLayout(this.previousLayout);
-				this.$el.trigger('hide_num');
-			} else {
-				this.isNumsShown = true;
-				this.changeLayout('fullnum');
-				this.$el.trigger('show_num');
-			}
+      if ( this.isNumsShown ) {
+        this.isNumsShown = false;
+        this.changeLayout(this.previousLayout);
+        this.$el.trigger('hide_num');
+      } else {
+        this.isNumsShown = true;
+        this.changeLayout('fullnum');
+        this.$el.trigger('show_num');
+      }
 
-			$$nav.current(this.$layouts[this.currentLayout].find('.nums'));
-		},
+      $$nav.current(this.$layouts[this.currentLayout].find('.nums'));
+    },
 
-		changeKeyboardLang: function () {
-			var curIndex = this.presets.indexOf(this.currentLayout),
-				index;
+    changeKeyboardLang: function () {
+      var curIndex = this.presets.indexOf(this.currentLayout),
+        index;
 
-			index = (curIndex + 1) % this.presets.length;
-			this.changeLayout(this.presets[index]);
-			$$nav.current(this.$layouts[this.currentLayout].find('.lang'));
-		},
+      index = (curIndex + 1) % this.presets.length;
+      this.changeLayout(this.presets[index]);
+      $$nav.current(this.$layouts[this.currentLayout].find('.lang'));
+    },
 
-		/**
-		 * Change layout function
-		 * @param layout {String} 'fullnum', 'en'
-		 */
-		changeLayout: function ( layout ) {
-			var prevLayout,
-				curLayout = this.$layouts[layout];
+    /**
+     * Change layout function
+     * @param layout {String} 'fullnum', 'en'
+     */
+    changeLayout: function ( layout ) {
+      var prevLayout,
+        curLayout = this.$layouts[layout];
 
-			if ( this.currentLayout ) {
-				prevLayout = this.$layouts[this.currentLayout];
-				prevLayout && prevLayout.hide();
-				this.$el.removeClass('keyboard_' + this.currentLayout);
-				this.previousLayout = this.currentLayout;
-			}
+      if ( this.currentLayout ) {
+        prevLayout = this.$layouts[this.currentLayout];
+        prevLayout && prevLayout.hide();
+        this.$el.removeClass('keyboard_' + this.currentLayout);
+        this.previousLayout = this.currentLayout;
+      }
 
-			if ( curLayout ) {
-				this.currentLayout = layout;
-				this.$el.addClass('keyboard_' + layout);
-				curLayout.show();
-			}
-		},
-		setEvents: function () {
-			var self = this;
-			// block yellow & blue buttons
-			this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
-			this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
-			this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
-			this.$wrap
-				.on('nav_key:green', function ( e ) {
-					self.$el.trigger('complete');
-					e.stopPropagation();
-				})
-				.on('nav_key:return', function ( e ) {
-					self.$el.trigger('cancel');
-					e.stopPropagation();
-				});
-		},
-		show: function () {
-			this.$wrap.show();
-			this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
-			return this;
-		},
-		hide: function () {
-			this.$wrap.hide();
-			this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
-		}
-	};
+      if ( curLayout ) {
+        this.currentLayout = layout;
+        this.$el.addClass('keyboard_' + layout);
+        curLayout.show();
+      }
+    },
+    setEvents: function () {
+      var self = this;
+      // block yellow & blue buttons
+      this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
+      this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
+      this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
+      this.$wrap
+        .on('nav_key:green', function ( e ) {
+          self.$el.trigger('complete');
+          e.stopPropagation();
+        })
+        .on('nav_key:return', function ( e ) {
+          self.$el.trigger('cancel');
+          e.stopPropagation();
+        });
+    },
+    show: function () {
+      this.$wrap.show();
+      this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
+      return this;
+    },
+    hide: function () {
+      this.$wrap.hide();
+      this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
+    }
+  };
 
-	$.extend(Keyboard.prototype, keyboardPrototype);
-	keyboardPrototype = null;
+  $.extend(Keyboard.prototype, keyboardPrototype);
+  keyboardPrototype = null;
 
-	// The actual plugin constructor
-	function Plugin ( element, options ) {
-		this.$el = $(element);
-		this.keyboards = {};
+  // The actual plugin constructor
+  function Plugin ( element, options ) {
+    this.$el = $(element);
+    this.keyboards = {};
 
-		options = $.extend({}, defaults, options);
-		this.addKeyboard(options);
-		this.$el.addClass('keyboard_popup_wrapper');
-		this.currentKeyboard = this.keyboards[options.type];
-		this.currentKeyboard.show();
-	}
+    options = $.extend({}, defaults, options);
+    this.addKeyboard(options);
+    this.$el.addClass('keyboard_popup_wrapper');
+  }
 
-	pluginPrototype = {
-		/**
-		 * Add keyboard to current element
-		 * @param opt {Object}
-		 */
-		addKeyboard: function ( opt ) {
-			var options = $.extend({}, defaults, opt);
-			this.keyboards[options.type] = new Keyboard(options, this.$el);
-		},
-		/**
-		 * Change current active keyboard
-		 * @param type {String} 'en', 'ru'
-		 */
-		changeKeyboard: function ( type ) {
-			if ( this.keyboards[type]) {
-				this.currentKeyboard.hide();
-				this.currentKeyboard = this.keyboards[type].show();
-			}
-		}
-	};
+  pluginPrototype = {
+    /**
+     * Add keyboard to current element
+     * @param opt {Object}
+     */
+    addKeyboard: function ( opt ) {
+      var options = $.extend({}, defaults, opt),
+        type = _.isFunction(opt.type) ? _.result(opt, 'type') : opt.type;
 
-	$.extend(Plugin.prototype, pluginPrototype);
-	pluginPrototype = null;
+      if ( !this.keyboards[type] ) {
+        this.keyboards[type] = new Keyboard(options, this.$el);
+      }
+      this.changeKeyboard(type);
+    },
+    /**
+     * Change current active keyboard
+     * @param type {String|Function} 'en', 'ru'
+     */
+    changeKeyboard: function ( type ) {
+      var curKeyboard = this.currentKeyboard,
+        preset,
+        isCurrent;
 
-	// A lightweight plugin wrapper around the constructor,
-	// preventing against multiple instantiations
-	$.fn.SBKeyboard = function () {
-		var args = Array.prototype.slice.call(arguments),
-			method = (typeof args[0] == 'string') && args[0],
-			options = (typeof args[0] == 'object') && args[0],
-			params = args.slice(1);
+      type = _.isFunction(type) ? type() : type;
+      preset = this.keyboards[type];
+      isCurrent = curKeyboard && (curKeyboard.currentPresetType === type);
 
-		return this.each(function () {
-			var instance = $.data(this, 'plugin_' + pluginName);
-			if ( !instance ) {
-				$.data(this, 'plugin_' + pluginName,
-					new Plugin(this, options));
-			} else {
-				if (method) {
-					instance[method] && instance[method](params);
-				} else if (options) {
-					instance.addKeyboard(options);
-				}
-			}
-		});
-	}
+      if ( preset && !isCurrent ) {
+        curKeyboard && curKeyboard.hide();
+        this.currentKeyboard = preset.show();
+      } else if (!preset){
+        this.addKeyboard({
+          type: type
+        });
+      }
+    }
+  };
+
+  $.extend(Plugin.prototype, pluginPrototype);
+  pluginPrototype = null;
+
+  // A lightweight plugin wrapper around the constructor,
+  // preventing against multiple instantiations
+  $.fn.SBKeyboard = function () {
+    var args = Array.prototype.slice.call(arguments),
+      method = (typeof args[0] == 'string') && args[0],
+      options = (typeof args[0] == 'object') && args[0],
+      params = args.slice(1);
+
+    return this.each(function () {
+      var instance = $.data(this, 'plugin_' + pluginName);
+      if ( !instance ) {
+        $.data(this, 'plugin_' + pluginName,
+          new Plugin(this, options));
+      } else {
+        if ( method ) {
+          instance[method] && instance[method].apply(instance, params)
+        } else if ( options ) {
+          instance.addKeyboard(options);
+        }
+      }
+    });
+  }
 })(jQuery, window, document);
 
 window.SB = window.SB || {};
@@ -1090,54 +1138,56 @@ window.SB = window.SB || {};
 // Default layouts, can be extended
 window.SB.keyboardPresets = {
 
-	en: function () {
-		return [
-			'qwertyuiop'.split(''),
-			'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
-				['delall{{<span>Del<br/>all</span>}}']),
-			['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
-		];
-	},
+  en: function () {
+    return [
+      'qwertyuiop'.split(''),
+      'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
+        ['delall{{<span>Del<br/>all</span>}}']),
+      ['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
+    ];
+  },
 
-	ru: function () {
-		return [
-			'йцукенгшщзхъ'.split(''),
-			'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
-			['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
-		]
-	},
+  ru: function () {
+    return [
+      'йцукенгшщзхъ'.split(''),
+      'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
+      ['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
+    ]
+  },
 
-	email: function () {
-		return [
-			'1234567890@'.split(''),
-			'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
-			'zxcvbnm-.'.split('').concat('complete{{OK}}')
-		];
-	},
+  email: function () {
+    return [
+      '1234567890@'.split(''),
+      'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
+      'zxcvbnm-.'.split('').concat('complete{{OK}}')
+    ];
+  },
 
-	num: function () {
-		return [
-			'123'.split(''),
-			'456'.split(''),
-			'789'.split(''),
-			['backspace{{<i class="backspace_icon"></i>}}', '0', 'complete{{OK}}']
-		]
-	},
+  num: function () {
+    return [
+      '123'.split(''),
+      '456'.split(''),
+      '789'.split(''),
+      ['backspace{{<i class="backspace_icon"></i>}}', '0', 'complete{{OK}}']
+    ]
+  },
 
-	fullnum: function () {
-		return [
-			'1234567890'.split(''),
-			'-/:;()$"'.split('').concat(['&amp;', 'backspace{{<i class="backspace_icon"></i>}}']),
-			['nums{{ABC}}'].concat("@.,?!'+".split('')),
-			['space{{}}', 'complete{{OK}}']
-		]
-	},
+  fullnum: function () {
+    return [
+      '1234567890'.split(''),
+      '-/:;()$"'.split('').concat(['&amp;', 'backspace{{<i class="backspace_icon"></i>}}']),
+      ['nums{{ABC}}'].concat("@.,?!'+".split('')),
+      ['space{{}}', 'complete{{OK}}']
+    ]
+  },
 
-	fulltext_ru: ['en', 'ru'],
-	fulltext_ru_nums: ['en', 'ru', 'fullnum']
+  fulltext_ru: ['ru','en'],
+  fulltext_en: ['en'],
+  fulltext_ru_nums: ['ru', 'en', 'fullnum'],
+  fulltext_en_nums: ['en', 'fullnum']
 };
 (function (window) {
   "use strict";
@@ -1446,8 +1496,8 @@ window.SB.keyboardPresets = {
       }
     }
   };
-
   window.$$log = SB.utils.log.log;
+  window.$$error = SB.utils.error;
 
 })(this);
 
@@ -1469,7 +1519,7 @@ $(function () {
     for (var key in keys) {
       invertedKeys[keys[key]] = key.toLowerCase();
     }
-  }, true);
+  });
 
   function Navigation () {
 
@@ -1966,35 +2016,36 @@ $(function () {
        * @returns {*}
        */
       checkUserDefined: function ( $el, dir ) {
-        var ep = $el.attr('data-nav_ud'),
-          result = false,
-          res = $el.attr('data-nav_ud_' + dir);
+          var ep = $el.data('nav_ud'),
+              result = false,
+              res = $el.data('nav_ud_' + dir);
+          if (!ep && !res) {
+              return false;
+          }
 
-        if ( !(ep && res) ) {
-          return false;
-        }
+          if ( !res ) {
+              var sides = ep.split(','),
+                  dirs = ['up', 'right', 'down', 'left'];
+              if(sides.length !== 4) {
+                  return false;
+              }
 
-        if ( !res ) {
-          var sides = ep.split(','),
-            dirs = ['up', 'right', 'left', 'bottom'];
+              $el.data({
+                  'nav_ud_up': sides[0],
+                  'nav_ud_right': sides[1],
+                  'nav_ud_down': sides[2],
+                  'nav_ud_left': sides[3]
+              });
 
-          $el.attr({
-            'data-nav_ud_up': sides[0],
-            'data-nav_ud_right': sides[1],
-            'data-nav_ud_down': sides[2],
-            'data-nav_ud_left': sides[3]
-          });
+              res = sides[dirs.indexOf(dir)];
+          }
 
-          res = sides[dirs.indexOf(dir)];
-        }
-
-        if ( res == 'none' ) {
-          result = 'none';
-        } else if ( res ) {
-          result = $(res).first();
-        }
-
-        return result;
+          if ( res == 'none' ) {
+              result = 'none';
+          } else if ( res ) {
+              result = $(res).first();
+          }
+          return result;
       },
 
       /**
@@ -2131,10 +2182,13 @@ $(function () {
                     url: options
                 }
             }
-
-            this.stop();
-            this.state = 'play';
-            this._play(options);
+            if(options !== undefined) {
+                this.stop();
+                this.state = 'play';
+                this._play(options);
+            } else if(options === undefined && this.state === 'pause') {
+                this.resume();
+            }
         },
         _play: function () {
             var self = this;
@@ -3256,6 +3310,7 @@ SB.readyForPlatform('mag', function () {
         exit: function () {
             $$log('try to location change');
             Player.stop(true);
+            gSTB.DeinitPlayer();
             window.location = 'file:///home/web/services.html';
         },
 
@@ -3671,6 +3726,14 @@ SB.readyForPlatform('samsung', function () {
         _stop: function () {
             this.doPlugin('Stop');
         },
+        pause: function () {
+            this.doPlugin('Pause');
+            this.state = "pause";
+        },
+        resume: function () {
+            this.doPlugin('Resume');
+            this.state = "play";
+        },
         doPlugin: function () {
             var result,
                 plugin = this.plugin,
@@ -3743,12 +3806,11 @@ SB.readyForPlatform('samsung', function () {
             '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
             '$MANAGER_WIDGET/Common/Define.js',
             '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+            '$MANAGER_WIDGET/Common/API/Plugin.js',
             '$MANAGER_WIDGET/Common/API/Widget.js',
             '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-            '$MANAGER_WIDGET/Common/API/Plugin.js',
             'src/platforms/samsung/localstorage.js'
         ];
-
 
     SB.createPlatform('samsung', {
 
@@ -3768,7 +3830,6 @@ SB.readyForPlatform('samsung', function () {
             }
             document.write(htmlString);
         },
-
 
         getNativeDUID: function () {
             return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
@@ -3798,8 +3859,11 @@ SB.readyForPlatform('samsung', function () {
         },
 
         setPlugins: function () {
-            var self = this,
-                tvKey;
+          var self = this,
+            PL_NNAVI_STATE_BANNER_NONE = 0,
+            PL_NNAVI_STATE_BANNER_VOL = 1,
+            PL_NNAVI_STATE_BANNER_VOL_CH = 2,
+            tvKey;
 
             _.each(plugins, function (clsid, id) {
                 self.$plugins[id] = document.getElementById(id);
@@ -3819,47 +3883,52 @@ SB.readyForPlatform('samsung', function () {
             this.pluginAPI = new Common.API.Plugin();
             this.widgetAPI = new Common.API.Widget();
 
-            this.productType = TVPlugin.GetProductType();
-
             tvKey = new Common.API.TVKeyValue();
+            this.productType = TVPlugin.GetProductType();
 
             this.setKeys();
 
-            // enable standart volume indicator
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
-            this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+            if(this.pluginAPI.SetBannerState){
+              NNAVIPlugin.SetBannerState(PL_NNAVI_STATE_BANNER_VOL_CH);
+            }
+
+            function unregisterKey(key){
+              try{
+                self.pluginAPI.unregistKey(tvKey['KEY_'+key]);
+              }catch(e){
+                $$error(e);
+              }
+            }
+
+            unregisterKey('VOL_UP');
+            unregisterKey('VOL_DOWN');
+            unregisterKey('MUTE');
+
             this.widgetAPI.sendReadyEvent();
-
-            this.volumeEnable();
-
-            NNAVIPlugin.SetBannerState(2);
-        },
-
-        volumeEnable: function () {
-            sf.service.setVolumeControl(true);
         },
 
         /**
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = sf.key;
 
-            document.body.onkeydown = function (event) {
-                var keyCode = event.keyCode;
+          this.keys = sf.key;
 
-                switch (keyCode) {
-                    case sf.key.RETURN:
-                    case sf.key.EXIT:
-                    case 147:
-                    case 261:
-                        sf.key.preventDefault();
-                        break;
-                    default:
-                        break;
-                }
+          document.body.onkeydown = function ( event ) {
+            var keyCode = event.keyCode;
+            $$log('keyDown ' + keyCode);
+
+            switch ( keyCode ) {
+              case sf.key.RETURN:
+              //case sf.key.EXIT:
+              case 147:
+              case 261:
+                sf.key.preventDefault();
+                break;
+              default:
+                break;
             }
+          }
         },
 
         /**

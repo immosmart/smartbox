@@ -141,8 +141,8 @@
       }
     }
   };
-
   window.$$log = SB.utils.log.log;
+  window.$$error = SB.utils.error;
 
 })(this);
 
