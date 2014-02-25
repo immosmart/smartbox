@@ -39,9 +39,16 @@ Smartbox имеет три зависимости:
 # Как пользоваться библиотекой
 
 Для использования всех плагинов и функций библиотеки необходимо оборачивать код как callback SB.ready
+Также можно передавать коллбек в функцию SB()
 
         SB.ready(function(){
             // your code
+        });
+
+то же самое, что и
+
+        SB(function(){
+           // your code
         });
 
 SB.ready будет выполнен после всех коллбеков jQuery.ready, $(function(){}), $.ready(function(){});
@@ -65,18 +72,17 @@ SB.ready будет выполнен после всех коллбеков jQue
             // code for samsung
         });
 
+также можно использовать функцию SB()
+
+        SB('samsung', function(){
+            // code for samsung
+        })
+
 # Конфигурирование библиотеки
 
 Все конфигурации библиотеки находятся в объекте SB.config
 
-            SB.config = {
-              /**
-               * Платформа, которая будет использоваться в случае, когда detectPlatform вернул false
-               * ex: browser, samsung, lg
-               * @type: {String}
-               */
-              defaultPlatform: 'browser'
-            }
+            SB.config = {}
 
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>

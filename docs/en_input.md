@@ -70,6 +70,22 @@ Method can be called after plugin initialisation
 
         $(el).SBInput('showKeyboard');
 
+- hideKeyboard to hide a keyboard
+
+        $(el).SBInput('hideKeyboard');
+
+- changeKeyboard change current keyboard on input
+
+        var keyboardOpt =  {
+             type: 'fulltext_ru',
+             firstLayout: 'ru'
+         },
+        $(el).SBInput('changeKeyboard', keyboardOpt);
+
+- setText set text in input
+
+        $(el).SBInput('setText', 'text in input');
+
 # Cursor blinking
 
 The cursor blinking implies the class adding up/deletion to the element cursor   

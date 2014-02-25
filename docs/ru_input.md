@@ -70,6 +70,22 @@ SBInput - jQuery плагин, вызываемый на элементе input.
 
         $(el).SBInput('showKeyboard');
 
+- hideKeyboard скрытие клавиатуры
+
+        $(el).SBInput('hideKeyboard');
+
+- changeKeyboard смена клавиатуры на элементе
+
+        var keyboardOpt =  {
+             type: 'fulltext_ru',
+             firstLayout: 'ru'
+         },
+        $(el).SBInput('changeKeyboard', keyboardOpt);
+
+- setText установка текста в инпут
+
+        $(el).SBInput('setText', 'text in input');
+
 # Мигание курсора
 
 Мигание курсора подразумевает добавление/удаление класса к элементу cursor

@@ -83,9 +83,6 @@
             this.exit();
         },
 
-        initialise: function () {
-        },
-
         getNativeDUID: function () {
 
         },

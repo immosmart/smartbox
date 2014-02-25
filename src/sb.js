@@ -10,7 +10,9 @@
     _ready = true;
 
     for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-      readyCallbacks[i].call(this);
+      if (typeof readyCallbacks[i] === 'function') {
+        readyCallbacks[i].call(this);
+      }
     }
     // no need anymore
     readyCallbacks = null;
