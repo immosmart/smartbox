@@ -5,22 +5,28 @@
 
 # Свойства и методы
 
-<a href="#public-properies">`Public properies`</a>
-* <a href="#sbcurrentplatformkeys">`SB.keys`</a>
-* <a href="#sbcurrentplatformduid">`SB.DUID`</a>
-* <a href="#sbconfigduid">`SB.config.DUID`</a>
-* <a href="#sbcurrentplatformname">`SB.platformName`</a>
+* <a href="#platformName">`SB.platformName`</a>
+* <a href="#keys">`SB.keys`</a>
+* <a href="#platformUserAgent">`SB.platformUserAgent`</a>
+* <a href="#getDUID">`SB.getDUID`</a>
+* <a href="#getNativeDUID">`SB.getNativeDUID`</a>
+* <a href="#getSDI">`SB.getSDI`</a>
+* <a href="#getRandomDUID">`SB.getRandomDUID`</a>
+* <a href="#getMac">`SB.getMac`</a>
+* <a href="#setPlugins">`SB.setPlugins`</a>
+* <a href="#setData">`SB.setData(name, value)`</a>
+* <a href="#getData">`SB.getData(name)`</a>
+* <a href="#removeData">`SB.removeData(name)`</a>
+* <a href="#addplatform">`Добавление своей платформы`</a>
 
-<a href="#new-platform-adding">`New platform adding`</a>
 
 
-
-### SB.platformName
+### <a id="platformName"></a> `SB.platformName`
 
 *String*: название платформы(browser/samsung/mag/philips/lg)
 
 
-### SB.keys
+### <a id="keys"></a> `SB.keys`
 
 *Plain object*: хэш, содержащий названия и коды клавиш
 
@@ -65,7 +71,7 @@
 
 
 
-### SB.platformUserAgent
+### <a id="platformUserAgent"></a> `SB.platformUserAgent`
 
 *String* уникальная строка, которая проверяется на вхождение в userAgent запущенной среды
 
@@ -76,7 +82,7 @@
 
 
 
-### SB.getDUID
+### <a id="getDUID"></a> `SB.getDUID`
 
 *Function* возвращает DUID устройства, в зависимости от параметра SB.config.DUID
 
@@ -86,7 +92,7 @@
 
 
 
-### SB.getNativeDUID
+### <a id="getNativeDUID"></a> `SB.getNativeDUID`
 
 *Function* возвращает внутренний DUID устройства при наличии
 
@@ -96,7 +102,7 @@
 
 
 
-### SB.getSDI
+### <a id="getSDI"></a> `SB.getSDI`
 
 *Function* возвращает SDI устройства при наличии
 
@@ -106,7 +112,7 @@
 
 
 
-### SB.getRandomDUID
+### <a id="getRandomDUID"></a> `SB.getRandomDUID`
 
 *Function* возвращает сгенерированный DUID устройства
 
@@ -116,7 +122,7 @@
 
 
 
-### SB.getMac
+### <a id="getMac"></a> `SB.getMac`
 
 *Function* возвращает MAC устройства при наличии
 
@@ -126,14 +132,14 @@
 
 
 
-### SB.setPlugins
+### <a id="setPlugins"></a> `SB.setPlugins`
 
 *Function* инициализация и запуск плагинов, специфичных для платформы
 Функция вызывается автоматически при инициализации библиотеки
 
 
 
-### SB.setData(name, value)
+### <a id="setData"></a> `SB.setData(name, value)`
 
 *Function* сохранение информации в локальном хранилище платформы
 
@@ -144,7 +150,7 @@
 
 
 
-### SB.getData(name)
+### <a id="getData"></a> `SB.getData(name)`
 
 *Function* возвращает значение из локального хранилища
 
@@ -158,7 +164,7 @@
 
 
 
-### SB.removeData(name)
+### <a id="removeData"></a> `SB.removeData(name)`
 
 *Function* удаление параметра и значения из локального хранилища
 
@@ -168,7 +174,7 @@
 
 
 
-## Добавление своей платформы
+## <a id="addplatform"></a> `Добавление своей платформы`
 
 Для добавления своей платформы необходимо воспользоваться функцией SB.createPlatform
 
