@@ -4,7 +4,7 @@
 # Обзор
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
-На данный момент поддерживаются платформы
+На данный момент поддерживаются платформы:
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
@@ -83,6 +83,25 @@ SB.ready будет выполнен после всех коллбеков jQue
 Все конфигурации библиотеки находятся в объекте SB.config
 
             SB.config = {}
+
+## `SB.config.DUID`
+
+*String*: shows which method is used to get DUID for application. By default: `real`.
+
+`real`: the method SB.Platform.getNativeDUID() is used
+
+`mac`: the method device MAC-address is used, available for LG and Samsung,
+
+`random`: a new DUID is generated each application starting
+
+`[other value]`: will be used as DUID. For example:
+
+```js
+SB.config.DUID="fgsfds";
+SB.ready(function(){
+  SB.currentPlatform.DUID;//=> "fgsfds"
+});
+```
 
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>

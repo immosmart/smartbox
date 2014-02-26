@@ -49,7 +49,7 @@
     },
 
     /**
-     * Returns native DUID for platform if exist
+     * Returns MAC for platform if exist
      * @returns {string}
      */
     getMac: function () {
