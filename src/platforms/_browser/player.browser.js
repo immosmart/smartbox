@@ -1,4 +1,4 @@
-SB.readyForPlatform('browser', function(){
+SB.readyForPlatform('browser', function () {
 
     Player.extend({
         _init: function () {
@@ -91,6 +91,68 @@ SB.readyForPlatform('browser', function(){
             },
             cur: function () {
                 return 0;
+            }
+        },
+        subtitle: {
+            set: function (index) {
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        _.each(subtitles, function (self, i) {
+                            if (self.mode === "showing") {
+                                self.mode = "disabled";
+                            }
+                            else if (i == index) {
+                                self.mode = "showing";
+                            }
+                        });
+                        return true;
+                    }
+                }
+                return false;
+            },
+            get: function () {
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        return _.map(subtitles, function (self) {
+                            return {index: subtitles.indexOf(self), language: self.language};
+                        });
+                    }
+                }
+                return false;
+            },
+            cur: function () {
+                var cur = -1;
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        _.each(subtitles, function (self, i) {
+                            if (self.mode === "showing") {
+                                cur = i;
+                                return false;
+                            }
+                        });
+                    }
+                }
+                return cur;
+            },
+            toggle: function () {
+                var l = Player.subtitle.get().length;
+                var cur = Player.subtitle.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = -1;
+                    }
+                    Player.subtitle.set(cur);
+                }
             }
         }
     });

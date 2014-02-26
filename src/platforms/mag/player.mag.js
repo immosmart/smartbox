@@ -9,8 +9,8 @@ SB.readyForPlatform('mag', function () {
         updateInterval = setInterval(function () {
             var position = stb.GetPosTime();
             //if (position != lastTime) {
-                Player.videoInfo.currentTime = position;
-                Player.trigger('update');
+            Player.videoInfo.currentTime = position;
+            Player.trigger('update');
             SB.utils.log.state(position, 'position', 'player');
             //}
             //lastTime = position;
@@ -93,7 +93,11 @@ SB.readyForPlatform('mag', function () {
                 stb.SetSubtitlePID(index);
             },
             get: function () {
-                return stb.GetSubtitlePIDs();
+                var subtitles = [];
+                _.each(stb.GetSubtitlePIDs(), function (self) {
+                    subtitles.push({index: self.pid, language: self.lang[1]});
+                });
+                return subtitles;
             },
             cur: function () {
                 return stb.GetSubtitlePID();
