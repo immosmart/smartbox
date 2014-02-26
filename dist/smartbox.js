@@ -2424,7 +2424,6 @@ $(function () {
             /**
              * Load subtitles from remote file
              * @param url
-             * @param {string} ajaxType POST/GET
              */
             url: function (url) {
                 var extension = /\.([^\.]+)$/.exec(url)[1];
