@@ -10,7 +10,9 @@
     _ready = true;
 
     for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-      readyCallbacks[i].call(this);
+      if (typeof readyCallbacks[i] === 'function') {
+        readyCallbacks[i].call(this);
+      }
     }
     // no need anymore
     readyCallbacks = null;
@@ -23,6 +25,17 @@
   function detect ( slug ) {
     return userAgent.indexOf(slug) !== -1;
   }
+
+  var initialise = function() {
+    Smartbox.setPlugins();
+    Smartbox.getDUID();
+
+    // wait for calling others $()
+    setTimeout(function () {
+      onReady();
+      onReady = null;
+    }, 10);
+  };
 
   Smartbox = function ( platform, cb ) {
     if ( typeof platform === 'string' ) {
@@ -38,17 +51,6 @@
     platformName: '',
 
     userAgent: userAgent,
-
-    initialise: function () {
-      this.setPlugins();
-      this.getDUID();
-
-      // wait for calling others $()
-      setTimeout(function () {
-        onReady();
-        onReady = null;
-      }, 10);
-    },
 
     createPlatform: function ( platformName, platformApi ) {
       var isCurrent = platformApi.detect && platformApi.detect();
@@ -187,10 +189,10 @@
 
   // initialize library
   window.onload = function () {
-    SB.initialise();
+    initialise();
 
     // we don't need initialise func anymore
-    SB.initialise = null;
+    initialise = null;
   };
 })();
 // global SB
@@ -210,7 +212,7 @@
      * @return {string} DUID
      */
     getDUID: function () {
-      switch (SB.config.DUID) {
+      switch ( SB.config.DUID ) {
         case 'real':
           this.DUID = this.getNativeDUID();
           break;
@@ -269,24 +271,25 @@
     volumeDown: $.noop,
     getVolume: $.noop,
     exit: $.noop,
-      setData: function (name, val) {
-          // save data in string format
-          localStorage.setItem(name, JSON.stringify(val));
-      },
+    sendReturn: $.noop,
+    setData: function ( name, val ) {
+      // save data in string format
+      localStorage.setItem(name, JSON.stringify(val));
+    },
 
-      getData: function (name) {
-          var result;
-          try {
-              result = JSON.parse(localStorage.getItem(name));
-          } catch (e) {
-          }
-
-          return result;
-      },
-
-      removeData: function (name) {
-          localStorage.removeItem(name);
+    getData: function ( name ) {
+      var result;
+      try {
+        result = JSON.parse(localStorage.getItem(name));
+      } catch (e) {
       }
+
+      return result;
+    },
+
+    removeData: function ( name ) {
+      localStorage.removeItem(name);
+    }
   };
 
   _.extend(SB, PlatformApi);
@@ -1863,7 +1866,11 @@ $(function () {
         var user_defined = this.checkUserDefined($el, dir);
 
         if ( user_defined ) {
-          return user_defined;
+          if (user_defined === 'none') {
+            return false;
+          } else {
+            return user_defined;
+          }
         }
 
         var objBounds = $el[0].getBoundingClientRect(),
@@ -2042,6 +2049,8 @@ $(function () {
 
           if ( res == 'none' ) {
               result = 'none';
+          } else if( res == '0' ) {
+              result = false;
           } else if ( res ) {
               result = $(res).first();
           }
@@ -3316,9 +3325,6 @@ SB.readyForPlatform('mag', function () {
 
         sendReturn: function () {
             this.exit();
-        },
-
-        initialise: function () {
         },
 
         getNativeDUID: function () {

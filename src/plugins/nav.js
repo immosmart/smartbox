@@ -352,7 +352,11 @@
         var user_defined = this.checkUserDefined($el, dir);
 
         if ( user_defined ) {
-          return user_defined;
+          if (user_defined === 'none') {
+            return false;
+          } else {
+            return user_defined;
+          }
         }
 
         var objBounds = $el[0].getBoundingClientRect(),
@@ -531,6 +535,8 @@
 
           if ( res == 'none' ) {
               result = 'none';
+          } else if( res == '0' ) {
+              result = false;
           } else if ( res ) {
               result = $(res).first();
           }

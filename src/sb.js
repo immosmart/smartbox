@@ -26,6 +26,17 @@
     return userAgent.indexOf(slug) !== -1;
   }
 
+  var initialise = function() {
+    Smartbox.setPlugins();
+    Smartbox.getDUID();
+
+    // wait for calling others $()
+    setTimeout(function () {
+      onReady();
+      onReady = null;
+    }, 10);
+  };
+
   Smartbox = function ( platform, cb ) {
     if ( typeof platform === 'string' ) {
       Smartbox.readyForPlatform(platform, cb);
@@ -40,17 +51,6 @@
     platformName: '',
 
     userAgent: userAgent,
-
-    initialise: function () {
-      this.setPlugins();
-      this.getDUID();
-
-      // wait for calling others $()
-      setTimeout(function () {
-        onReady();
-        onReady = null;
-      }, 10);
-    },
 
     createPlatform: function ( platformName, platformApi ) {
       var isCurrent = platformApi.detect && platformApi.detect();
@@ -189,9 +189,9 @@
 
   // initialize library
   window.onload = function () {
-    SB.initialise();
+    initialise();
 
     // we don't need initialise func anymore
-    SB.initialise = null;
+    initialise = null;
   };
 })();

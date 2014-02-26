@@ -15,7 +15,7 @@
      * @return {string} DUID
      */
     getDUID: function () {
-      switch (SB.config.DUID) {
+      switch ( SB.config.DUID ) {
         case 'real':
           this.DUID = this.getNativeDUID();
           break;
@@ -74,24 +74,25 @@
     volumeDown: $.noop,
     getVolume: $.noop,
     exit: $.noop,
-      setData: function (name, val) {
-          // save data in string format
-          localStorage.setItem(name, JSON.stringify(val));
-      },
+    sendReturn: $.noop,
+    setData: function ( name, val ) {
+      // save data in string format
+      localStorage.setItem(name, JSON.stringify(val));
+    },
 
-      getData: function (name) {
-          var result;
-          try {
-              result = JSON.parse(localStorage.getItem(name));
-          } catch (e) {
-          }
-
-          return result;
-      },
-
-      removeData: function (name) {
-          localStorage.removeItem(name);
+    getData: function ( name ) {
+      var result;
+      try {
+        result = JSON.parse(localStorage.getItem(name));
+      } catch (e) {
       }
+
+      return result;
+    },
+
+    removeData: function ( name ) {
+      localStorage.removeItem(name);
+    }
   };
 
   _.extend(SB, PlatformApi);
