@@ -1,112 +1,88 @@
-# Демо
-* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/README_RU.md">Документация на русском</a>
 
-# Обзор
+# Demo
+* <a href="http://immosmart.github.io/smartbox/demo/demoApp">Full demo with plugins</a>
 
-Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
-На данный момент поддерживаются платформы:
+# Overview
+
+A smartbox library allows to start one application on a few smartTV platforms. 
+
+Currently supported platforms: 
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
 
-Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
+To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
 
-# Инициализация
+# Initialization
 
-Smartbox имеет три зависимости:
+Smartbox has three dependencies:
 - <a href="https://github.com/jquery/jquery/tree/1.8-stable">jQuery(1.8.1+)</a>
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
-- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
+- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
 
 Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
 
-# Плагины библиотеки
+The compiled version of the library is located in the folder <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
 
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">Методы отдельных платформ</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_log.md">Консоль Лог</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_legend.md">Легенда</a>
-* Навигация
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav.md">Инициализация и методы</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_alg.md">Алгоритм</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_extended.md">Продвинутое использование</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_input.md">Поля ввода</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
-* Легенда @todo_doc
-* Абстракция LocalStorage (хранение данных на клиентском устройстве) @todo_doc
-* <a href="https://github.com/immosmart/smartbox/blob/develop/docs/ru_player.md">Плеер</a>
+# Library plugins
 
-# Как пользоваться библиотекой
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">Platforms' methods</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_log.md">Log console</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_legend.md">Legend</a>
+* Navigation
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav.md">Initialization and methods</a>
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav_alg.md">Algorithm</a>
+    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav_extended.md">Extended usage</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_input.md">Input fields</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_keyboard.md">Keyboard(virtual)</a>
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_voice.md">Voice management</a>
+* Legend @todo_doc
+* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_player.md">Player</a>
 
-Для использования всех плагинов и функций библиотеки необходимо оборачивать код как callback SB.ready
-Также можно передавать коллбек в функцию SB()
+# How to use the library
 
+To use all plugins and functions of the library it's necessary to wrap a code as callback SB.ready
         SB.ready(function(){
             // your code
         });
 
-то же самое, что и
+SB.ready will be executed after all callbacks jQuery.ready, $(function(){}), $.ready(function(){});
 
-        SB(function(){
-           // your code
-        });
+# Library's methods
 
-SB.ready будет выполнен после всех коллбеков jQuery.ready, $(function(){}), $.ready(function(){});
-
-# Методы бибилиотеки
-
-- isInited() проверка инициализации библиотеки. Возвращает true или false
+- isInited() - checking the library initialization. Returns true or false
 
         SB.isInited();
 
-- ready(func) выполняет код функции func после инициализации библиотеки
+- ready(func) executes the code of the funtion func after the library has been initializated
 
         SB.ready(function(){
             // your code
         });
 
-- readyForPlatform(platform, cb) выполняет код функции func после инициализации библиотеки,
-если текущая платформа - platform
+- readyForPlatform(platform, cb) executes the code of the funtion func after the library has been initializated,
+if the current plaform - platform
 
         SB.readyForPlatform('samsung', function(){
             // code for samsung
         });
 
-также можно использовать функцию SB()
+# Library configuration
 
-        SB('samsung', function(){
-            // code for samsung
-        })
+All configurations of the library are located in the object SB.platform
 
-# Конфигурирование библиотеки
+            SB.config = {
+              /**
+               * Platform which will be used in case detectPlatform returns false
+               * ex: browser, samsung, lg
+               * @type: {String}
+               */
+              defaultPlatform: 'browser'
+            }
 
-Все конфигурации библиотеки находятся в объекте SB.config
+# Autotests
+<a href="http://immosmart.github.io/smartbox/">Jasmine autotest start</a>
 
-            SB.config = {}
 
-## `SB.config.DUID`
-
-*String*: shows which method is used to get DUID for application. By default: `real`.
-
-`real`: the method SB.Platform.getNativeDUID() is used
-
-`mac`: the method device MAC-address is used, available for LG and Samsung,
-
-`random`: a new DUID is generated each application starting
-
-`[other value]`: will be used as DUID. For example:
-
-```js
-SB.config.DUID="fgsfds";
-SB.ready(function(){
-  SB.currentPlatform.DUID;//=> "fgsfds"
-});
-```
-
-# Автотесты
-<a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>
-
-# Посты о Smartbox
-* <a href="http://habrahabr.ru/post/211236//">Habr: Библиотека SmartBox для Samsung, LG, Philips и других</a>
-* <a href="http://habrahabr.ru/post/188294/">Habr: Создание кроссплатформенного Smart TV приложения на базе библиотеки SmartBox</a>
 

@@ -1,68 +1,188 @@
 # Platform
 
-Device native methods are called through the base class. You can extend it and add your own new platform. After `SB.ready` a current platform has been defined already and is kept in `SB.currentPlatform`.
+Device native methods are called through the base `SB` object. You can extend it and add your own new platform.
+After `SB.ready` a current platform has been already defined and is  kept in `SB`.
 
-###Contents
+# Свойства и методы
 
-<a href="#public-properies">`Public properies`</a>
-* <a href="#sbcurrentplatformkeys">`SB.currentPlatform.keys`</a>
-* <a href="#sbcurrentplatformduid">`SB.currentPlatform.DUID`</a>
-* <a href="#sbconfigduid">`SB.config.DUID`</a>
-* <a href="#sbcurrentplatformname">`SB.currentPlatform.name`</a>
-
-<a href="#new-platform-adding">`New platform adding`</a>
- 
-##Public properies
-
-###`SB.currentPlatform.keys`
-
-*Plain object*: hash containing keys codes and them names. 
-
-```js
-SB.currentPlatform.keys.TOOLS; //=> 32
-```
+* <a href="#_platformName">`SB.platformName`</a>
+* <a href="#_keys">`SB.keys`</a>
+* <a href="#_platformUserAgent">`SB.platformUserAgent`</a>
+* <a href="#_getDUID">`SB.getDUID`</a>
+* <a href="#_getNativeDUID">`SB.getNativeDUID`</a>
+* <a href="#_getSDI">`SB.getSDI`</a>
+* <a href="#_getRandomDUID">`SB.getRandomDUID`</a>
+* <a href="#_getMac">`SB.getMac`</a>
+* <a href="#_setPlugins">`SB.setPlugins`</a>
+* <a href="#_setData">`SB.setData(name, value)`</a>
+* <a href="#_getData">`SB.getData(name)`</a>
+* <a href="#_removeData">`SB.removeData(name)`</a>
+* <a href="#_addplatform">`New platform adding`</a>
 
 
-###`SB.currentPlatform.DUID`
 
-*String*: contains a unique device ID
-
-###`SB.config.DUID` 
-
-*String*: shows which method is used to get DUID for application. By default: `real`.
-
-`real`: the method SB.Platform.getNativeDUID() is used
-
-`mac`: the method device MAC-address is used, available for LG and Samsung,
-
-`random`: a new DUID is generated each application starting
-
-`[other value]`: will be used as DUID. For example: 
-
-```js
-SB.config.DUID="fgsfds";
-SB.ready(function(){
-  SB.currentPlatform.DUID;//=> "fgsfds"
-});
-```
-
-
-###`SB.currentPlatform.name`
+### <a id="_platformName"></a> `SB.platformName`
 
 *String*: platform name (samsung, lg, philips, etc...)
 
 
-##New platform adding
+### <a id="_keys"></a> `SB.keys`
 
-You can add a new plaform creating the object `SB.Platform`. 
+*Plain object*: hash containing keys codes and them names.
 
-```js
-  var platform = new SB.Platform('philips'),
-    platformObj;
+#### Default key names
 
-  platformObj = {
-    //TODO: override some methods
-  };
-  
-  _.extend(platform, platformObj);
+        BLUE
+        CH_DOWN
+        CH_UP
+        DOWN
+        ENTER
+        EXIT
+        FF
+        GREEN
+        INFO
+        LEFT
+        N0
+        N1
+        N2
+        N3
+        N4
+        N5
+        N6
+        N7
+        N8
+        N9
+        NEXT
+        PAUSE
+        PLAY
+        PRECH
+        PREV
+        REC
+        RED
+        RETURN
+        RIGHT
+        RW
+        SMART
+        STOP
+        SUBT
+        TOOLS
+        UP
+        YELLOW
+
+
+
+### <a id="_platformUserAgent"></a> `SB.platformUserAgent`
+
+*String* unique string for platform. It's compare with environment userAgent in `SB.detect` method
+
+#### Example
+
+    SB.platformUserAgent === 'netcast'; // for philips
+    SB.platformUserAgent === 'maple';   // for samsung
+
+
+
+### <a id="_getDUID"></a> `SB.getDUID`
+
+*Function* return platform DUID in case of SB.config.DUID
+
+#### Returns
+
+*String* DUID
+
+
+
+### <a id="_getNativeDUID"></a> `SB.getNativeDUID`
+
+*Function* return native DUID if exist
+
+#### Returns
+
+*String* DUID or empty string
+
+
+
+### <a id="_getSDI"></a> `SB.getSDI`
+
+*Function* return platform SDI if exist
+
+#### Returns
+
+*String* SDI or empty string
+
+
+
+### <a id="_getRandomDUID"></a> `SB.getRandomDUID`
+
+*Function* return random DUID
+
+#### Returns
+
+*String* generated DUID, for example: "1446dcfb2ca1091"
+
+
+
+### <a id="_getMac"></a> `SB.getMac`
+
+*Function* return platform MAC if exist
+
+#### Returns
+
+*String* MAC or empty string
+
+
+
+### <a id="_setPlugins"></a> `SB.setPlugins`
+
+*Function* initialize & start plugins specific for platform
+function calls automatically with smartbox initialization
+
+
+
+### <a id="_setData"></a> `SB.setData(name, value)`
+
+*Function* save data in platform storage
+
+#### Arguments
+
+1. `name` *String* data name
+2. `value` *(&#42;)* data value
+
+
+
+### <a id="_getData"></a> `SB.getData(name)`
+
+*Function* return value from platform storage
+
+#### Arguments
+
+1. `name` *String* data name
+
+#### Returns
+
+*(&#42;)* data value
+
+
+
+### <a id="_removeData"></a> `SB.removeData(name)`
+
+*Function* remove data from platform storage
+
+#### Arguments
+
+1. `name` *String* data name
+
+
+
+## <a id="_addplatform"></a> `New platform adding`
+
+You can add a new plaform using function  SB.createPlatform(platformName, cb)
+
 ```
+var platformName = 'myPlatform';
+SB.createPlatform(platformName, {
+    //platform methods
+});
+```
+
+

@@ -34,7 +34,7 @@
     this.logs = 0;
     this.states = {};
 
-    var $wrapper = $('#log_' + this.name);
+    var $wrapper = $logWrap.find('#log_' + this.name);
 
     this.$content = $wrapper.find('.log_content');
     this.$state = $wrapper.find('.log_states');

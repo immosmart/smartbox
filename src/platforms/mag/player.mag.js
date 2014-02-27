@@ -1,9 +1,6 @@
 SB.readyForPlatform('mag', function () {
 
-
     var updateInterval;
-
-
     var startUpdate = function () {
         var lastTime = 0;
         updateInterval = setInterval(function () {
@@ -16,11 +13,9 @@ SB.readyForPlatform('mag', function () {
             //lastTime = position;
         }, 500);
     }
-
     var stopUpdate = function () {
         clearInterval(updateInterval);
     }
-
 
     window.stbEvent =
     {
