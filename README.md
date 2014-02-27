@@ -11,6 +11,7 @@ Currently supported platforms:
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
+- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
 
 To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
 
