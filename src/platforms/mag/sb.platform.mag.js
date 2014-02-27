@@ -10,8 +10,8 @@
             LEFT: 37,
             DOWN: 40,
             UP: 38,
-            RETURN: 27,
-            EXIT: 8,
+            RETURN: 8,
+            EXIT: 27,
             TOOLS: 122,
             FF: 70,
             RW: 66,
@@ -35,6 +35,7 @@
             N8: 56,
             N9: 57,
             PRECH: 116,
+            POWER: 85,
             //SMART: 36,
             PLAY: 82,
             STOP: 83,
@@ -46,10 +47,27 @@
 
         onDetect: function () {
 
+            var isStandBy = false;
+
             stb = window.gSTB;
 
             window.moveTo(0, 0);
             window.resizeTo(1280, 720);
+
+            SB(function () {
+              var $body = $(document.body);
+              $body.on('nav_key:power', function () {
+                var eventName = 'standby_';
+                isStandBy = !isStandBy;
+
+                eventName += isStandBy ? 'set' : 'unset';
+                stb.StandBy(isStandBy);
+
+                // TODO: trigger events on SB
+                $$log('trigger standby event ' + eventName, 'standby');
+                $body.trigger(eventName);
+              });
+            });
 
 
             window.localStorage = {
