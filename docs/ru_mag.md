@@ -39,9 +39,7 @@
 
 ### Демка на MAG250
 
-![Alt text](img/mag_10.png)
-
-![Alt text](img/mag_11.png)
+![Демка на MAG250](img/mag_11.png)
 
 ### Прогон тестов
 
