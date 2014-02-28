@@ -1,3 +1,5 @@
+* <a href="https://github.com/immosmart/smartbox/blob/master/README.md">English documentation</a>
+
 # Демо
 * <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
 
@@ -5,10 +7,10 @@
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
 На данный момент поддерживаются платформы:
-- Samsung SmartTv 2011+
-- Lg SmartTv
-- Philips 2012+
-- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
+- Samsung SmartTv 2011+,
+- Lg SmartTv,
+- Philips 2012+,
+- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> (<a href="smartbox/docs/ru_mag.md">MAG200/250 How-to</a>).
 
 Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
 
