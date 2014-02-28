@@ -105,11 +105,15 @@
     width: 315px;
 }
 
+.keyboard_ru .space {
+    width: 395px;
+}
+
 .kb-multilang .space {
     width: 255px;
 }
 
-.kb-multilang.kb-havenums .space {
+.keyboard_en .kb-multilang.kb-havenums .space {
     width: 195px;
 }
 
@@ -119,6 +123,10 @@
 
 .keyboard_ru .kb-multilang .kbtn.space {
     width: 335px;
+}
+
+.keyboard_en .kb-havenums .space {
+    width: 255px;
 }
 
 .keyboard_ru .kb-multilang.kb-havenums .kbtn.space {

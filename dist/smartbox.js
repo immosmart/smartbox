@@ -1,14 +1,22 @@
-/**
- * Main smartbox file
- */
-(function ( window, undefined ) {
-
-  var _ready = false,
+;(function () {
+  var Smartbox,
+    _ready = false,
     readyCallbacks = [],
-    SB,
-    _running = false;
+    userAgent = navigator.userAgent.toLowerCase(),
+    SmartboxAPI;
 
-  var userAgent = navigator.userAgent.toLowerCase();
+  //private func for applying all ready callbacks
+  var onReady = function () {
+    _ready = true;
+
+    for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
+      if (typeof readyCallbacks[i] === 'function') {
+        readyCallbacks[i].call(this);
+      }
+    }
+    // no need anymore
+    readyCallbacks = null;
+  };
 
   /**
    * Detecting current platform
@@ -18,16 +26,34 @@
     return userAgent.indexOf(slug) !== -1;
   }
 
-  SB = {
+  var initialise = function() {
+    Smartbox.setPlugins();
+    Smartbox.getDUID();
 
+    // wait for calling others $()
+    setTimeout(function () {
+      onReady();
+      onReady = null;
+    }, 10);
+  };
+
+  Smartbox = function ( platform, cb ) {
+    if ( typeof platform === 'string' ) {
+      Smartbox.readyForPlatform(platform, cb);
+    } else if ( typeof platform === 'function' ) {
+      // first arg - function
+      Smartbox.ready(platform);
+    }
+  };
+
+  //public smartbox API
+  SmartboxAPI = {
     platformName: '',
 
-    // TODO: refactor platform creating
-    // because platform can be overrided
-    createPlatform: function ( platformName, platformApi ) {
+    userAgent: userAgent,
 
-      var isCurrent = platformApi.detect && platformApi.detect(),
-        platform;
+    createPlatform: function ( platformName, platformApi ) {
+      var isCurrent = platformApi.detect && platformApi.detect();
 
       if ( isCurrent || detect(platformApi.platformUserAgent) ) {
         this.platformName = platformName;
@@ -39,23 +65,8 @@
       }
     },
 
-    config: {
-      DUID: 'real',
-      logKey: 'tools'
-    },
-
-    /**
-     * Main function
-     * @param cb {Function} callback after initialization
-     * @param notRun {Boolean}
-     */
-    ready: function ( cb, notRun ) {
-
-      // initializing on first calling ready func
-      if ( !notRun && !_running ) {
-        this.initialize();
-      }
-
+    // calling cb after library initialise
+    ready: function ( cb ) {
       if ( _ready ) {
         cb.call(this);
       } else {
@@ -63,47 +74,18 @@
       }
     },
 
-    initialize: function () {
-      var self = this;
-
-      _running = true;
-
-      window.$$log = SB.utils.log.log;
-      window.$$error = SB.utils.error;
-
-      $(function () {
-        self.setPlugins();
-        self.getDUID();
-
-        // wait for calling others $()
-        setTimeout(function () {
-          self._onReady();
-        });
-      });
-    },
-
+    // calling cb after library initialise if platform is current
     readyForPlatform: function ( platform, cb ) {
       var self = this;
       this.ready(function () {
         if ( platform == self.platformName ) {
           cb.call(self);
         }
-      }, true);
-    },
-
-    /**
-     * Applying all ready callbacks
-     * @private
-     */
-    _onReady: function () {
-      _ready = true;
-
-      for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-        readyCallbacks[i].call(this);
-      }
+      });
     },
 
     utils: {
+
       /**
        * Show error message
        * @param msg
@@ -192,17 +174,27 @@
         if ( this.externalCss.length ) {
           this.addExternalCss(this.externalCss);
         }
-      },
-
-      legend: {}
+      }
     }
   };
 
-    //TODO: For backward capability. Remove this.
-  SB.currentPlatform = SB;
+  Smartbox.config = {
+    DUID: 'real'
+  };
 
-  window.SB = SB;
-})(this);
+  _.extend(Smartbox, SmartboxAPI);
+
+  // exporting library to global
+  window.SB = Smartbox;
+
+  // initialize library
+  window.onload = function () {
+    initialise();
+
+    // we don't need initialise func anymore
+    initialise = null;
+  };
+})();
 // global SB
 !(function ( window, undefined ) {
 
@@ -216,16 +208,11 @@
     platformUserAgent: 'not found',
 
     /**
-     * Function called if running on current platform
-     */
-    initialise: $.noop,
-
-    /**
      * Get DUID in case of Config
      * @return {string} DUID
      */
     getDUID: function () {
-      switch (SB.config.DUID) {
+      switch ( SB.config.DUID ) {
         case 'real':
           this.DUID = this.getNativeDUID();
           break;
@@ -259,7 +246,7 @@
     },
 
     /**
-     * Returns native DUID for platform if exist
+     * Returns MAC for platform if exist
      * @returns {string}
      */
     getMac: function () {
@@ -275,7 +262,7 @@
     },
 
     /**
-     * Set custom plugins
+     * Set custom plugins for platform
      */
     setPlugins: $.noop,
 
@@ -283,10 +270,26 @@
     volumeUp: $.noop,
     volumeDown: $.noop,
     getVolume: $.noop,
-    setData: $.noop,
-    getData: $.noop,
-    removeData: $.noop,
-    exit: $.noop
+    exit: $.noop,
+    sendReturn: $.noop,
+    setData: function ( name, val ) {
+      // save data in string format
+      localStorage.setItem(name, JSON.stringify(val));
+    },
+
+    getData: function ( name ) {
+      var result;
+      try {
+        result = JSON.parse(localStorage.getItem(name));
+      } catch (e) {
+      }
+
+      return result;
+    },
+
+    removeData: function ( name ) {
+      localStorage.removeItem(name);
+    }
   };
 
   _.extend(SB, PlatformApi);
@@ -591,6 +594,12 @@
       e.stopPropagation();
     },
 
+    changeKeyboard: function ( keyboardOpt ) {
+      var curOpt = this.options.keyboard;
+      this.options.keyboard = _.extend({}, curOpt, keyboardOpt);
+      $keyboardPopup && $keyboardPopup.SBKeyboard(this.options.keyboard);
+    },
+
     hideKeyboard: function ( isComplete ) {
       var $wrapper = this.$wrapper;
       $wrapper.removeClass('smart-input-active');
@@ -697,7 +706,7 @@
           new Plugin(this, options));
       } else if ( typeof instance[method] === 'function' ) {
         instance[method].apply(instance, params);
-      }
+    }
     });
   }
 
@@ -708,396 +717,423 @@
 ;
 (function ( $, window, document, undefined ) {
 
-	var pluginName = 'SBKeyboard',
-		keyRegExp = /([^{]+){{([^}]*)}}/,
-		defaults = {
-			type: 'en',
-			firstLayout: 'en'
-		},
-		pluginPrototype = {},
-		keyboardPrototype = {},
-		generatedKeyboards = {};
+  var pluginName = 'SBKeyboard',
+    keyRegExp = /([^{]+){{([^}]*)}}/,
+    defaults = {
+      type: 'en',
+      firstLayout: null
+    },
+    pluginPrototype = {},
+    keyboardPrototype = {},
+    generatedKeyboards = {};
 
-	/**
-	 * Keyboard constructor
-	 * @param options
-	 * @param $el parent element
-	 * @constructor
-	 */
-	function Keyboard ( options, $el ) {
-		this.type = options.type;
-		this.currentLayout = '';
-		this.previousLayout = '';
-		this.$el = $el;
+  /**
+   * Keyboard constructor
+   * @param options
+   * @param $el parent element
+   * @constructor
+   */
+  function Keyboard ( options, $el ) {
 
-		// jquery layout els
-		this.$layouts = {};
+    this.type = options.type;
+    this.currentLayout = '';
+    this.previousLayout = '';
+    this.$el = $el;
 
-		// all available layouts(for changeKeyboardLang)
-		this.presets = [];
+    // jquery layout els
+    this.$layouts = {};
 
-		this.initialize(options);
-	}
+    // all available layouts(for changeKeyboardLang)
+    this.presets = [];
 
-	keyboardPrototype = {
-		isShiftActive: false,
-		isNumsShown: false,
-		initialize: function ( options ) {
-			var board = '',
-				preset,
-				haveNums = false,
-				type,
+    this.initialize(options);
+  }
 
-                _type=_.result(this, 'type');
+  keyboardPrototype = {
+    isShiftActive: false,
+    isNumsShown: false,
+    currentPresetType: '',
+      initialize: function ( options ) {
 
-			preset = SB.keyboardPresets[_type];
+      var _type = _.result(this, 'type'),
+        board = '',
+        preset,
+        haveNums = false,
+        type;
 
-			this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
+      preset = SB.keyboardPresets[_type];
 
-			if ( typeof preset === 'function' ) {
-				this.presets.push(_type);
-				board = this.generateBoard(_type);
-			} else if ( preset.length ) {
-				this.presets = preset;
-				haveNums = (preset.indexOf('fullnum') !== -1);
-				board = this.generateFull(this.presets, haveNums);
-			}
+      if (!preset) {
+        throw new Error('Preset ' + _type + ' doesn\'t exist');
+      }
 
-			this.$wrap
-				.append(board)
-			 	.addClass('kekekey_' + _type);
+      this.currentPresetType = _type;
 
-			this.$el.append(this.$wrap);
-			this.setEvents();
+      this.$wrap = $(document.createElement('div')).addClass('kb-wrap');
 
-			// save jquery els of current layouts
-			for ( var i = 0; i < this.presets.length; i++ ) {
-				type = this.presets[i];
-				this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
-			}
+      if ( typeof preset === 'function' ) {
+        this.presets.push(_type);
+        board = this.generateBoard(_type);
+      } else if ( preset.length ) {
+        this.presets = preset;
+        haveNums = (preset.indexOf('fullnum') !== -1);
+        if ( haveNums ) {
+          this.presets = _.without(this.presets, 'fullnum');
+        }
+        board = this.generateFull(this.presets, haveNums);
+      }
 
-			if ( haveNums ) {
-				this.presets = _.without(this.presets,'fullnum')
-			}
+      this.$wrap
+        .append(board)
+        .addClass('kekekey_' + _type);
 
-			if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
-				this.changeLayout(options.firstLayout);
-			} else {
-				this.changeLayout(this.presets[0]);
-			}
-		},
+      this.$el.append(this.$wrap);
+      this.setEvents();
 
-		/**
-		 * Generate multilayout keyboards
-		 * @param types {Array} array of layout types (['ru', 'en'])
-		 * @param haveNums {Boolean} add fullnum keyboard
-		 * @returns {string} generated html
-		 */
-		generateFull: function ( types, haveNums ) {
-			var wrapHtml = '',
-				preset = '',
-				type = '';
+      // save jquery els of current layouts
+      for ( var i = 0; i < this.presets.length; i++ ) {
+        type = this.presets[i];
+        this.$layouts[type] = this.$wrap.find('.keyboard_generated_' + type);
+      }
 
-			if ( types.length > 1 ) {
-				this.$wrap.addClass('kb-multilang');
-			}
+      if (haveNums) {
+        this.$layouts['fullnum'] = this.$wrap.find('.keyboard_generated_fullnum');
+      }
 
-			if ( haveNums ) {
-				this.$wrap.addClass('kb-havenums');
-			}
+      if ( this.presets.indexOf(options.firstLayout) !== -1 ) {
+        this.changeLayout(options.firstLayout);
+      } else {
+        this.changeLayout(this.presets[0]);
+      }
+    },
 
-			for ( var i = 0; i < types.length; i++ ) {
-				type = types[i];
-				wrapHtml += this.generateBoard(type);
-			}
+    /**
+     * Generate multilayout keyboards
+     * @param types {Array} array of layout types (['ru', 'en'])
+     * @param haveNums {Boolean} add fullnum keyboard
+     * @returns {string} generated html
+     */
+    generateFull: function ( types, haveNums ) {
+      var wrapHtml = '',
+        preset = '',
+        type = '';
 
-			return wrapHtml;
-		},
+      if ( types.length > 1 ) {
+        this.$wrap.addClass('kb-multilang');
+      }
 
-		/**
-		 * Generate keyboard layout
-		 * @param type {String}  'ru', 'en'
-		 * @returns {String} generated html
-		 */
-		generateBoard: function ( type ) {
+      for ( var i = 0; i < types.length; i++ ) {
+        type = types[i];
+        wrapHtml += this.generateBoard(type);
+      }
 
-			var preset = SB.keyboardPresets[type],
-				boardHtml = '',
-				rowHtml = '',
-				keyAttrs = {},
-				row, letter;
+      if ( haveNums ) {
+        this.$wrap.addClass('kb-havenums');
+        wrapHtml += this.generateBoard('fullnum');
+      }
 
-			if ( generatedKeyboards[type] ) {
-				return generatedKeyboards[type].board;
-			}
+      return wrapHtml;
+    },
 
-			preset = preset();
-			boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
+    /**
+     * Generate keyboard layout
+     * @param type {String}  'ru', 'en'
+     * @returns {String} generated html
+     */
+    generateBoard: function ( type ) {
 
-			for ( var i = 0; i < preset.length; i++ ) {
-				row = preset[i];
-				rowHtml = '<div class="kb-row" data-nav_type="hbox">';
+      var preset = SB.keyboardPresets[type],
+        boardHtml = '',
+        rowHtml = '',
+        keyAttrs = {},
+        row, letter;
 
-				for ( var j = 0; j < row.length; j++ ) {
-					letter = row[j];
-					if ( letter.length == 1 || letter === '&amp;' ) {
-						keyAttrs = {
-							text: letter,
-							type: '',
-							letter: letter
-						};
-					}
-					else {
-						var matches = keyRegExp.exec(letter);
+      if ( generatedKeyboards[type] ) {
+        return generatedKeyboards[type].board;
+      }
 
-						keyAttrs.text = matches[2] || '';
-						keyAttrs.type = matches[1];
-						keyAttrs.letter = '';
-					}
-					rowHtml += '<div class="kbtn nav-item ' +
-										 keyAttrs.type +
-										 '" data-letter="' + _.escape(keyAttrs.letter) + '"';
+      preset = preset();
+      boardHtml = '<div class="kb-c keyboard_generated_' + type + '">';
 
-					if ( keyAttrs.type ) {
-						rowHtml += ' data-keytype="' + keyAttrs.type + '"';
-					}
+      for ( var i = 0; i < preset.length; i++ ) {
+        row = preset[i];
+        rowHtml = '<div class="kb-row" data-nav_type="hbox">';
 
-					rowHtml += '>' + keyAttrs.text + '</div>';
-				}
+        for ( var j = 0; j < row.length; j++ ) {
+          letter = row[j];
+          if ( letter.length == 1 || letter === '&amp;' ) {
+            keyAttrs = {
+              text: letter,
+              type: '',
+              letter: letter
+            };
+          }
+          else {
+            var matches = keyRegExp.exec(letter);
 
-				boardHtml += rowHtml + '</div>';
-			}
+            keyAttrs.text = matches[2] || '';
+            keyAttrs.type = matches[1];
+            keyAttrs.letter = '';
+          }
+          rowHtml += '<div class="kbtn nav-item ' +
+                     keyAttrs.type +
+                     '" data-letter="' + _.escape(keyAttrs.letter) + '"';
 
-			boardHtml += '</div>';
+          if ( keyAttrs.type ) {
+            rowHtml += ' data-keytype="' + keyAttrs.type + '"';
+          }
 
-			generatedKeyboards[type] = {
-				board: boardHtml
-			};
-			return boardHtml;
-		},
+          rowHtml += '>' + keyAttrs.text + '</div>';
+        }
 
-		/**
-		 * Num keys event handler
-		 * @param e
-		 */
-		onKeyNum: function ( e ) {
-			switch ( e.keyName ) {
-				case 'red':
-					this.$el.trigger('backspace');
-					break;
-				default:
-					var ev = $.Event({
-						'type': 'type'
-					});
-					ev.letter = '' + e.num;
+        boardHtml += rowHtml + '</div>';
+      }
 
-					this.$el.trigger(ev);
-					break;
-			}
-			e.stopPropagation();
-		},
-		defaultOnKey: function ( e ) {
-			e.stopPropagation();
-		},
-		onKeyDown: function ( e ) {
-			var $el = $(e.currentTarget),
-				keyType = $el.attr('data-keytype'),
-				letter = $el.attr('data-letter'),
-				ev;
+      boardHtml += '</div>';
 
-			// create custom event for triggering keyboard event
-			ev = $.Event({
-				'type': 'type'
-			});
+      generatedKeyboards[type] = {
+        board: boardHtml
+      };
+      return boardHtml;
+    },
 
-			if ( keyType ) {
-				switch ( keyType ) {
-					case 'backspace':
-						ev = 'backspace';
-						break;
-					case 'delall':
-						ev = 'delall';
-						break;
-					case 'complete':
-						ev = 'complete';
-						break;
-					case 'space':
-						ev.letter = ' ';
-						break;
-					case 'shift':
-						this.triggerShiftLetters();
-						return;
-					case 'lang':
-						this.changeKeyboardLang();
-						return;
-					case 'nums':
-						this.triggerNumKeyboard();
-						return;
-					default:
-						break;
-				}
-			} else {
-				ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
-			}
+    /**
+     * Num keys event handler
+     * @param e
+     */
+    onKeyNum: function ( e ) {
+      switch ( e.keyName ) {
+        case 'red':
+          this.$el.trigger('backspace');
+          break;
+        default:
+          var ev = $.Event({
+            'type': 'type'
+          });
+          ev.letter = '' + e.num;
 
-			ev && this.$el.trigger(ev);
+          this.$el.trigger(ev);
+          break;
+      }
+      e.stopPropagation();
+    },
+    defaultOnKey: function ( e ) {
+      e.stopPropagation();
+    },
+    onKeyDown: function ( e ) {
+      var $el = $(e.currentTarget),
+        keyType = $el.attr('data-keytype'),
+        letter = $el.attr('data-letter'),
+        ev;
 
-			e.stopPropagation();
-		},
+      // create custom event for triggering keyboard event
+      ev = $.Event({
+        'type': 'type'
+      });
 
-		triggerShiftLetters: function () {
-			var self = this;
+      if ( keyType ) {
+        switch ( keyType ) {
+          case 'backspace':
+            ev = 'backspace';
+            break;
+          case 'delall':
+            ev = 'delall';
+            break;
+          case 'complete':
+            ev = 'complete';
+            break;
+          case 'space':
+            ev.letter = ' ';
+            break;
+          case 'shift':
+            this.triggerShiftLetters();
+            return;
+          case 'lang':
+            this.changeKeyboardLang();
+            return;
+          case 'nums':
+            this.triggerNumKeyboard();
+            return;
+          default:
+            break;
+        }
+      } else {
+        ev.letter = this.isShiftActive ? letter.toUpperCase() : letter;
+      }
 
-			if ( this.isShiftActive ) {
-				this.isShiftActive = false;
-				this.$el.removeClass('shift_active');
-			} else {
-				this.isShiftActive = true;
-				this.$el.addClass('shift_active');
-			}
+      ev && this.$el.trigger(ev);
 
-			// TODO: only for samsung 11
+      e.stopPropagation();
+    },
+
+    triggerShiftLetters: function () {
+      var self = this;
+
+      if ( this.isShiftActive ) {
+        this.isShiftActive = false;
+        this.$el.removeClass('shift_active');
+      } else {
+        this.isShiftActive = true;
+        this.$el.addClass('shift_active');
+      }
+
+      // TODO: only for samsung 11
 //      this.$el.find('.kbtn').not('.delall,.complete,.space,.nums,.lang,.shift,.backspace').each(function () {
 //        this.innerHTML = self.isShiftActive ? this.innerHTML.toUpperCase() : this.innerHTML.toLowerCase();
 //      });
-		},
+    },
 
-		/**
-		 * show/hide fullnum layout
-		 */
-		triggerNumKeyboard: function () {
+    /**
+     * show/hide fullnum layout
+     */
+    triggerNumKeyboard: function () {
 
-			if ( this.isNumsShown ) {
-				this.isNumsShown = false;
-				this.changeLayout(this.previousLayout);
-				this.$el.trigger('hide_num');
-			} else {
-				this.isNumsShown = true;
-				this.changeLayout('fullnum');
-				this.$el.trigger('show_num');
-			}
+      if ( this.isNumsShown ) {
+        this.isNumsShown = false;
+        this.changeLayout(this.previousLayout);
+        this.$el.trigger('hide_num');
+      } else {
+        this.isNumsShown = true;
+        this.changeLayout('fullnum');
+        this.$el.trigger('show_num');
+      }
 
-			$$nav.current(this.$layouts[this.currentLayout].find('.nums'));
-		},
+      $$nav.current(this.$layouts[this.currentLayout].find('.nums'));
+    },
 
-		changeKeyboardLang: function () {
-			var curIndex = this.presets.indexOf(this.currentLayout),
-				index;
+    changeKeyboardLang: function () {
+      var curIndex = this.presets.indexOf(this.currentLayout),
+        index;
 
-			index = (curIndex + 1) % this.presets.length;
-			this.changeLayout(this.presets[index]);
-			$$nav.current(this.$layouts[this.currentLayout].find('.lang'));
-		},
+      index = (curIndex + 1) % this.presets.length;
+      this.changeLayout(this.presets[index]);
+      $$nav.current(this.$layouts[this.currentLayout].find('.lang'));
+    },
 
-		/**
-		 * Change layout function
-		 * @param layout {String} 'fullnum', 'en'
-		 */
-		changeLayout: function ( layout ) {
-			var prevLayout,
-				curLayout = this.$layouts[layout];
+    /**
+     * Change layout function
+     * @param layout {String} 'fullnum', 'en'
+     */
+    changeLayout: function ( layout ) {
+      var prevLayout,
+        curLayout = this.$layouts[layout];
 
-			if ( this.currentLayout ) {
-				prevLayout = this.$layouts[this.currentLayout];
-				prevLayout && prevLayout.hide();
-				this.$el.removeClass('keyboard_' + this.currentLayout);
-				this.previousLayout = this.currentLayout;
-			}
+      if ( this.currentLayout ) {
+        prevLayout = this.$layouts[this.currentLayout];
+        prevLayout && prevLayout.hide();
+        this.$el.removeClass('keyboard_' + this.currentLayout);
+        this.previousLayout = this.currentLayout;
+      }
 
-			if ( curLayout ) {
-				this.currentLayout = layout;
-				this.$el.addClass('keyboard_' + layout);
-				curLayout.show();
-			}
-		},
-		setEvents: function () {
-			var self = this;
-			// block yellow & blue buttons
-			this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
-			this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
-			this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
-			this.$wrap
-				.on('nav_key:green', function ( e ) {
-					self.$el.trigger('complete');
-					e.stopPropagation();
-				})
-				.on('nav_key:return', function ( e ) {
-					self.$el.trigger('cancel');
-					e.stopPropagation();
-				});
-		},
-		show: function () {
-			this.$wrap.show();
-			this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
-			return this;
-		},
-		hide: function () {
-			this.$wrap.hide();
-			this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
-		}
-	};
+      if ( curLayout ) {
+        this.currentLayout = layout;
+        this.$el.addClass('keyboard_' + layout);
+        curLayout.show();
+      }
+    },
+    setEvents: function () {
+      var self = this;
+      // block yellow & blue buttons
+      this.$wrap.on('nav_key:yellow nav_key:blue', this.defaultOnKey);
+      this.$wrap.on('nav_key:num nav_key:red', _.bind(this.onKeyNum, this));
+      this.$wrap.on('click', '.kbtn', _.bind(this.onKeyDown, this));
+      this.$wrap
+        .on('nav_key:green', function ( e ) {
+          self.$el.trigger('complete');
+          e.stopPropagation();
+        })
+        .on('nav_key:return', function ( e ) {
+          self.$el.trigger('cancel');
+          e.stopPropagation();
+        });
+    },
+    show: function () {
+      this.$wrap.show();
+      this.$el.addClass(_.result(this, 'type') + '_wrap').addClass('keyboard_' + this.currentLayout);
+      return this;
+    },
+    hide: function () {
+      this.$wrap.hide();
+      this.$el.removeClass(_.result(this, 'type') + '_wrap').removeClass('keyboard_' + this.currentLayout);
+    }
+  };
 
-	$.extend(Keyboard.prototype, keyboardPrototype);
-	keyboardPrototype = null;
+  $.extend(Keyboard.prototype, keyboardPrototype);
+  keyboardPrototype = null;
 
-	// The actual plugin constructor
-	function Plugin ( element, options ) {
-		this.$el = $(element);
-		this.keyboards = {};
+  // The actual plugin constructor
+  function Plugin ( element, options ) {
+    this.$el = $(element);
+    this.keyboards = {};
 
-		options = $.extend({}, defaults, options);
-		this.addKeyboard(options);
-		this.$el.addClass('keyboard_popup_wrapper');
-		this.currentKeyboard = this.keyboards[options.type];
-		this.currentKeyboard.show();
-	}
+    options = $.extend({}, defaults, options);
+    this.addKeyboard(options);
+    this.$el.addClass('keyboard_popup_wrapper');
+  }
 
-	pluginPrototype = {
-		/**
-		 * Add keyboard to current element
-		 * @param opt {Object}
-		 */
-		addKeyboard: function ( opt ) {
-			var options = $.extend({}, defaults, opt);
-			this.keyboards[options.type] = new Keyboard(options, this.$el);
-		},
-		/**
-		 * Change current active keyboard
-		 * @param type {String} 'en', 'ru'
-		 */
-		changeKeyboard: function ( type ) {
-			if ( this.keyboards[type]) {
-				this.currentKeyboard.hide();
-				this.currentKeyboard = this.keyboards[type].show();
-			}
-		}
-	};
+  pluginPrototype = {
+    /**
+     * Add keyboard to current element
+     * @param opt {Object}
+     */
+    addKeyboard: function ( opt ) {
+      var options = $.extend({}, defaults, opt),
+        type = _.isFunction(opt.type) ? _.result(opt, 'type') : opt.type;
 
-	$.extend(Plugin.prototype, pluginPrototype);
-	pluginPrototype = null;
+      if ( !this.keyboards[type] ) {
+        this.keyboards[type] = new Keyboard(options, this.$el);
+      }
+      this.changeKeyboard(type);
+    },
+    /**
+     * Change current active keyboard
+     * @param type {String|Function} 'en', 'ru'
+     */
+    changeKeyboard: function ( type ) {
+      var curKeyboard = this.currentKeyboard,
+        preset,
+        isCurrent;
 
-	// A lightweight plugin wrapper around the constructor,
-	// preventing against multiple instantiations
-	$.fn.SBKeyboard = function () {
-		var args = Array.prototype.slice.call(arguments),
-			method = (typeof args[0] == 'string') && args[0],
-			options = (typeof args[0] == 'object') && args[0],
-			params = args.slice(1);
+      type = _.isFunction(type) ? type() : type;
+      preset = this.keyboards[type];
+      isCurrent = curKeyboard && (curKeyboard.currentPresetType === type);
 
-		return this.each(function () {
-			var instance = $.data(this, 'plugin_' + pluginName);
-			if ( !instance ) {
-				$.data(this, 'plugin_' + pluginName,
-					new Plugin(this, options));
-			} else {
-				if (method) {
-					instance[method] && instance[method](params);
-				} else if (options) {
-					instance.addKeyboard(options);
-				}
-			}
-		});
-	}
+      if ( preset && !isCurrent ) {
+        curKeyboard && curKeyboard.hide();
+        this.currentKeyboard = preset.show();
+      } else if (!preset){
+        this.addKeyboard({
+          type: type
+        });
+      }
+    }
+  };
+
+  $.extend(Plugin.prototype, pluginPrototype);
+  pluginPrototype = null;
+
+  // A lightweight plugin wrapper around the constructor,
+  // preventing against multiple instantiations
+  $.fn.SBKeyboard = function () {
+    var args = Array.prototype.slice.call(arguments),
+      method = (typeof args[0] == 'string') && args[0],
+      options = (typeof args[0] == 'object') && args[0],
+      params = args.slice(1);
+
+    return this.each(function () {
+      var instance = $.data(this, 'plugin_' + pluginName);
+      if ( !instance ) {
+        $.data(this, 'plugin_' + pluginName,
+          new Plugin(this, options));
+      } else {
+        if ( method ) {
+          instance[method] && instance[method].apply(instance, params)
+        } else if ( options ) {
+          instance.addKeyboard(options);
+        }
+      }
+    });
+  }
 })(jQuery, window, document);
 
 window.SB = window.SB || {};
@@ -1105,54 +1141,56 @@ window.SB = window.SB || {};
 // Default layouts, can be extended
 window.SB.keyboardPresets = {
 
-	en: function () {
-		return [
-			'qwertyuiop'.split(''),
-			'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
-				['delall{{<span>Del<br/>all</span>}}']),
-			['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
-		];
-	},
+  en: function () {
+    return [
+      'qwertyuiop'.split(''),
+      'asdfghjkl'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('zxcvbnm'.split('')).concat(
+        ['delall{{<span>Del<br/>all</span>}}']),
+      ['lang{{en}}', 'nums{{123}}', 'space{{}}', 'complete{{Complete}}']
+    ];
+  },
 
-	ru: function () {
-		return [
-			'йцукенгшщзхъ'.split(''),
-			'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
-			['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
-		]
-	},
+  ru: function () {
+    return [
+      'йцукенгшщзхъ'.split(''),
+      'фывапролджэ'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      ['shift{{<i class="shift_icon"></i>Shift}}'].concat('ячсмитьбю'.split('')).concat(['delall{{<span>Del<br/>all</span>}}']),
+      ['lang{{ru}}', 'nums{{123}}', 'space{{}}', 'complete{{Готово}}']
+    ]
+  },
 
-	email: function () {
-		return [
-			'1234567890@'.split(''),
-			'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
-			'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
-			'zxcvbnm-.'.split('').concat('complete{{OK}}')
-		];
-	},
+  email: function () {
+    return [
+      '1234567890@'.split(''),
+      'qwertyuiop'.split('').concat(['backspace{{<i class="backspace_icon"></i>}}']),
+      'asdfghjkl_'.split('').concat(['delall{{<span>Del<br/>all</span>}}']),
+      'zxcvbnm-.'.split('').concat('complete{{OK}}')
+    ];
+  },
 
-	num: function () {
-		return [
-			'123'.split(''),
-			'456'.split(''),
-			'789'.split(''),
-			['backspace{{<i class="backspace_icon"></i>}}', '0', 'complete{{OK}}']
-		]
-	},
+  num: function () {
+    return [
+      '123'.split(''),
+      '456'.split(''),
+      '789'.split(''),
+      ['backspace{{<i class="backspace_icon"></i>}}', '0', 'complete{{OK}}']
+    ]
+  },
 
-	fullnum: function () {
-		return [
-			'1234567890'.split(''),
-			'-/:;()$"'.split('').concat(['&amp;', 'backspace{{<i class="backspace_icon"></i>}}']),
-			['nums{{ABC}}'].concat("@.,?!'+".split('')),
-			['space{{}}', 'complete{{OK}}']
-		]
-	},
+  fullnum: function () {
+    return [
+      '1234567890'.split(''),
+      '-/:;()$"'.split('').concat(['&amp;', 'backspace{{<i class="backspace_icon"></i>}}']),
+      ['nums{{ABC}}'].concat("@.,?!'+".split('')),
+      ['space{{}}', 'complete{{OK}}']
+    ]
+  },
 
-	fulltext_ru: ['en', 'ru'],
-	fulltext_ru_nums: ['en', 'ru', 'fullnum']
+  fulltext_ru: ['ru','en'],
+  fulltext_en: ['en'],
+  fulltext_ru_nums: ['ru', 'en', 'fullnum'],
+  fulltext_en_nums: ['en', 'fullnum']
 };
 (function (window) {
   "use strict";
@@ -1354,7 +1392,7 @@ window.SB.keyboardPresets = {
     this.logs = 0;
     this.states = {};
 
-    var $wrapper = $('#log_' + this.name);
+    var $wrapper = $logWrap.find('#log_' + this.name);
 
     this.$content = $wrapper.find('.log_content');
     this.$state = $wrapper.find('.log_states');
@@ -1461,6 +1499,8 @@ window.SB.keyboardPresets = {
       }
     }
   };
+  window.$$log = SB.utils.log.log;
+  window.$$error = SB.utils.error;
 
 })(this);
 
@@ -1482,7 +1522,7 @@ $(function () {
     for (var key in keys) {
       invertedKeys[keys[key]] = key.toLowerCase();
     }
-  }, true);
+  });
 
   function Navigation () {
 
@@ -1826,7 +1866,11 @@ $(function () {
         var user_defined = this.checkUserDefined($el, dir);
 
         if ( user_defined ) {
-          return user_defined;
+          if (user_defined === 'none') {
+            return false;
+          } else {
+            return user_defined;
+          }
         }
 
         var objBounds = $el[0].getBoundingClientRect(),
@@ -1979,35 +2023,38 @@ $(function () {
        * @returns {*}
        */
       checkUserDefined: function ( $el, dir ) {
-        var ep = $el.attr('data-nav_ud'),
-          result = false,
-          res = $el.attr('data-nav_ud_' + dir);
+          var ep = $el.data('nav_ud'),
+              result = false,
+              res = $el.data('nav_ud_' + dir);
+          if (!ep && !res) {
+              return false;
+          }
 
-        if ( !(ep && res) ) {
-          return false;
-        }
+          if ( !res ) {
+              var sides = ep.split(','),
+                  dirs = ['up', 'right', 'down', 'left'];
+              if(sides.length !== 4) {
+                  return false;
+              }
 
-        if ( !res ) {
-          var sides = ep.split(','),
-            dirs = ['up', 'right', 'left', 'bottom'];
+              $el.data({
+                  'nav_ud_up': sides[0],
+                  'nav_ud_right': sides[1],
+                  'nav_ud_down': sides[2],
+                  'nav_ud_left': sides[3]
+              });
 
-          $el.attr({
-            'data-nav_ud_up': sides[0],
-            'data-nav_ud_right': sides[1],
-            'data-nav_ud_down': sides[2],
-            'data-nav_ud_left': sides[3]
-          });
+              res = sides[dirs.indexOf(dir)];
+          }
 
-          res = sides[dirs.indexOf(dir)];
-        }
-
-        if ( res == 'none' ) {
-          result = 'none';
-        } else if ( res ) {
-          result = $(res).first();
-        }
-
-        return result;
+          if ( res == 'none' ) {
+              result = 'none';
+          } else if( res == '0' ) {
+              result = false;
+          } else if ( res ) {
+              result = $(res).first();
+          }
+          return result;
       },
 
       /**
@@ -2077,8 +2124,6 @@ $(function () {
     var updateInterval, curAudio = 0;
 
 
-
-
     /**
      * emulates events after `play` method called
      * @private
@@ -2144,10 +2189,13 @@ $(function () {
                     url: options
                 }
             }
-
-            this.stop();
-            this.state = 'play';
-            this._play(options);
+            if (options !== undefined) {
+                this.stop();
+                this.state = 'play';
+                this._play(options);
+            } else if (options === undefined && this.state === 'pause') {
+                this.resume();
+            }
         },
         _play: function () {
             var self = this;
@@ -2317,6 +2365,171 @@ $(function () {
                     this.set(cur);
                 }
             }
+        },
+        subtitle: {
+            /**
+             * Set subtitle index
+             * @param index
+             */
+            set: function (index) {
+                curSubtitle = index;
+            },
+            /**
+             * Returns list of available subtitles
+             * @returns {Array}
+             */
+            get: function () {
+                var len = 2;
+                var result = [];
+                for (var i = 0; i < len; i++) {
+                    result.push(0);
+                }
+                return result;
+            },
+            /**
+             * @returns {Number} index of current subtitles
+             */
+            cur: function () {
+                return curSubtitle;
+            },
+            toggle: function () {
+                var l = Player.subtitle.get().length;
+                var cur = Player.subtitle.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = 0;
+                    }
+                    Player.subtitle.set(cur);
+                }
+            },
+            text: function (time) {
+                var data = Player.subtitle.data,
+                    index = _.sortedIndex(data, {
+                        time: time
+                    }, function (value) {
+                        return value.time;
+                    });
+                if (data[index - 1]) {
+                    return data[index - 1].text;
+                }
+                return '';
+            },
+            data: [
+                {
+                    time: 0,
+                    text: ''
+                }
+            ],
+            /**
+             * Load subtitles from remote file
+             * @param url
+             */
+            url: function (url) {
+                var extension = /\.([^\.]+)$/.exec(url)[1];
+                // TODO Сделать универсальное выключение вшитых субтитров
+                Player.subtitle.set(undefined);
+                $.ajax({
+                    url: url,
+                    dataType: 'text',
+                    success: function (data) {
+                        var $subtitiles = $('#subtitles_view');
+                        $(Player).off('.subtitles');
+                        Player.subtitle.init = true;
+                        Player.subtitle.remote = true;
+                        Player.subtitle.parse[extension].call(Player, data);
+                        $subtitiles.show();
+                        var setSubtitlesText = function () {
+                            $('#subtitles_text').html(Player.subtitle.text(parseInt(Player.videoInfo.currentTime) * 1000));
+                        }
+                        Player.on('update', setSubtitlesText);
+
+                        if (!$subtitiles.length) {
+                            $('body').append('<div id="subtitles_view" style="position: absolute; z-index: 1;"><div id="subtitles_text"></div></div>');
+                            $subtitiles = $('#subtitles_view');
+                            $subtitiles.css({
+                                width: '1280px',
+                                height: '720px',
+                                left: '0px',
+                                top: '0px'
+                            });
+                            $('#subtitles_text').css({
+                                'position': 'absolute',
+                                'text-align': 'center',
+                                'width': '100%',
+                                'left': '0',
+                                'bottom': '50px',
+                                'font-size': '24px',
+                                'color': '#fff',
+                                'text-shadow': '0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000',
+                                'line-height': '26px'
+                            });
+                        }
+
+                        var stopSubtitlesUpdate = function () {
+                            $(Player).off('update', setSubtitlesText);
+                            $(Player).off('stop', stopSubtitlesUpdate);
+                            $subtitiles.hide();
+                        }
+
+                        Player.on('stop', stopSubtitlesUpdate);
+                    }
+                });
+            },
+            parse: {
+                smi: function (data) {
+                    data = data.split(/\s*<sync/i);
+                    data.shift();
+                    Player.subtitle.data = _.map(data, function (value) {
+                        var match = /[\s\S]*start=(\d+)[\s\S]*<p[^>]*>([\s\S]*)<spanid/i.exec(value);
+                        if (match) {
+                            return {
+                                time: parseInt(match[1], 10),
+                                text: match[2]
+                            };
+                        }
+                    });
+                },
+                srt: function (data) {
+                    data = data.split('\r\n\r\n');
+                    var self = Player.subtitle;
+
+                    self.data = [];
+                    var parseTime = function (time) {
+                        var matches = time.match(/(\d{2}):(\d{2}):(\d{2}),(\d+)/);
+                        return parseInt(matches[1], 10) * 3600000 +
+                            parseInt(matches[2], 10) * 60000 +
+                            parseInt(matches[3], 10) * 1000 +
+                            parseInt(matches[4], 10);
+                    };
+
+                    _.each(data, function (value) {
+                        if (!value) {
+                            return;
+                        }
+                        var rows = value.split('\n');
+
+                        var timeRow = rows[1].split(' --> '),
+                            timeStart, timeEnd, text;
+                        rows.splice(0, 2);
+                        timeStart = parseTime(timeRow[0]);
+                        timeEnd = parseTime(timeRow[1]);
+
+                        self.data.push({
+                            time: timeStart,
+                            text: rows.join('<br/>')
+                        });
+                        self.data.push({
+                            time: timeEnd,
+                            text: ''
+                        });
+                    });
+                    self.data.unshift({
+                        time: 0,
+                        text: ''
+                    });
+                }
+            }
         }
     };
 
@@ -2453,6 +2666,9 @@ $(function () {
 
         },
         hide: function () {
+            if(!this.enabled()){
+                return;
+            }
             this._nativeTurnOff();
             $buble.hide();
             return this;
@@ -2708,7 +2924,7 @@ $(function () {
     }
 
 })(jQuery);
-SB.readyForPlatform('browser', function(){
+SB.readyForPlatform('browser', function () {
 
     Player.extend({
         _init: function () {
@@ -2797,10 +3013,72 @@ SB.readyForPlatform('browser', function(){
 
             },
             get: function () {
-
+                return [];
             },
             cur: function () {
-
+                return 0;
+            }
+        },
+        subtitle: {
+            set: function (index) {
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        _.each(subtitles, function (self, i) {
+                            if (self.mode === "showing") {
+                                self.mode = "disabled";
+                            }
+                            else if (i == index) {
+                                self.mode = "showing";
+                            }
+                        });
+                        return true;
+                    }
+                }
+                return false;
+            },
+            get: function () {
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        return _.map(subtitles, function (self) {
+                            return {index: subtitles.indexOf(self), language: self.language};
+                        });
+                    }
+                }
+                return false;
+            },
+            cur: function () {
+                var cur = -1;
+                if (Player.$video_container[0].textTracks) {
+                    var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
+                        return i.kind === 'subtitles';
+                    });
+                    if (subtitles.length) {
+                        _.each(subtitles, function (self, i) {
+                            if (self.mode === "showing") {
+                                cur = i;
+                                return false;
+                            }
+                        });
+                    }
+                }
+                return cur;
+            },
+            toggle: function () {
+                var l = Player.subtitle.get().length;
+                var cur = Player.subtitle.cur();
+                if (l > 1) {
+                    cur++;
+                    if (cur >= l) {
+                        cur = -1;
+                    }
+                    Player.subtitle.set(cur);
+                }
             }
         }
     });
@@ -3097,27 +3375,22 @@ SB.createPlatform('lg', {
 });
 SB.readyForPlatform('mag', function () {
 
-
     var updateInterval;
-
-
     var startUpdate = function () {
         var lastTime = 0;
         updateInterval = setInterval(function () {
             var position = stb.GetPosTime();
             //if (position != lastTime) {
-                Player.videoInfo.currentTime = position;
-                Player.trigger('update');
+            Player.videoInfo.currentTime = position;
+            Player.trigger('update');
             SB.utils.log.state(position, 'position', 'player');
             //}
             //lastTime = position;
         }, 500);
     }
-
     var stopUpdate = function () {
         clearInterval(updateInterval);
     }
-
 
     window.stbEvent =
     {
@@ -3175,7 +3448,6 @@ SB.readyForPlatform('mag', function () {
             stb.SetPosTime(time)
         },
         audio: {
-
             set: function (index) {
                 stb.SetAudioPID(index);
             },
@@ -3184,6 +3456,21 @@ SB.readyForPlatform('mag', function () {
             },
             cur: function () {
                 return stb.GetAudioPID();
+            }
+        },
+        subtitle: {
+            set: function (index) {
+                stb.SetSubtitlePID(index);
+            },
+            get: function () {
+                var subtitles = [];
+                _.each(stb.GetSubtitlePIDs(), function (self) {
+                    subtitles.push({index: self.pid, language: self.lang[1]});
+                });
+                return subtitles;
+            },
+            cur: function () {
+                return stb.GetSubtitlePID();
             }
         }
     });
@@ -3226,6 +3513,7 @@ SB.readyForPlatform('mag', function () {
             N8: 56,
             N9: 57,
             PRECH: 116,
+            POWER: 85,
             //SMART: 36,
             PLAY: 82,
             STOP: 83,
@@ -3237,23 +3525,40 @@ SB.readyForPlatform('mag', function () {
 
         onDetect: function () {
 
+            var isStandBy = false;
+
             stb = window.gSTB;
 
             window.moveTo(0, 0);
             window.resizeTo(1280, 720);
+
+            SB(function () {
+              var $body = $(document.body);
+              $body.on('nav_key:power', function () {
+                var eventName = 'standby_';
+                isStandBy = !isStandBy;
+
+                eventName += isStandBy ? 'set' : 'unset';
+                stb.StandBy(isStandBy);
+
+                // TODO: trigger events on SB
+                $$log('trigger standby event ' + eventName, 'standby');
+                $body.trigger(eventName);
+              });
+            });
 
 
             window.localStorage = {
                 setItem: function (name, data) {
 
                 },
-                clear: function(){
+                clear: function () {
 
                 },
-                getItem: function(){
+                getItem: function () {
 
                 },
-                removeItem: function(){
+                removeItem: function () {
 
                 }
             }
@@ -3263,7 +3568,15 @@ SB.readyForPlatform('mag', function () {
             return !!window.gSTB;
         },
 
-        initialise: function () {
+        exit: function () {
+            $$log('try to location change');
+            Player.stop(true);
+            gSTB.DeinitPlayer();
+            window.location = 'file:///home/web/services.html';
+        },
+
+        sendReturn: function () {
+            this.exit();
         },
 
         getNativeDUID: function () {
@@ -3496,7 +3809,8 @@ SB.createPlatform('philips', {
 	}
 }());
 SB.readyForPlatform('samsung', function () {
-    var curAudio = 0;
+    var curAudio = 0,
+        curSubtitle = 0;
 
 
     var safeApply = function (self, method, args) {
@@ -3671,6 +3985,14 @@ SB.readyForPlatform('samsung', function () {
         _stop: function () {
             this.doPlugin('Stop');
         },
+        pause: function () {
+            this.doPlugin('Pause');
+            this.state = "pause";
+        },
+        resume: function () {
+            this.doPlugin('Resume');
+            this.state = "play";
+        },
         doPlugin: function () {
             var result,
                 plugin = this.plugin,
@@ -3713,6 +4035,24 @@ SB.readyForPlatform('samsung', function () {
             cur: function () {
                 return curAudio;
             }
+        },
+        subtitle: {
+            set: function (index) {
+                Player.doPlugin('SetStreamID', 5, index);
+                curSubtitle = index;
+            },
+            get: function () {
+                var len = Player.doPlugin('GetTotalNumOfStreamID', 5);
+
+                var result = [];
+                for (var i = 0; i < len; i++) {
+                    result.push(Player.doPlugin('GetStreamLanguageInfo', 5, i));
+                }
+                return result;
+            },
+            cur: function () {
+                return curSubtitle;
+            }
         }
     });
 });
@@ -3743,12 +4083,11 @@ SB.readyForPlatform('samsung', function () {
             '$MANAGER_WIDGET/Common/af/2.0.0/extlib/jquery.tmpl.js',
             '$MANAGER_WIDGET/Common/Define.js',
             '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
+            '$MANAGER_WIDGET/Common/API/Plugin.js',
             '$MANAGER_WIDGET/Common/API/Widget.js',
             '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-            '$MANAGER_WIDGET/Common/API/Plugin.js',
             'src/platforms/samsung/localstorage.js'
         ];
-
 
     SB.createPlatform('samsung', {
 
@@ -3768,7 +4107,6 @@ SB.readyForPlatform('samsung', function () {
             }
             document.write(htmlString);
         },
-
 
         getNativeDUID: function () {
             return this.$plugins.pluginObjectNNavi.GetDUID(this.getMac());
@@ -3798,8 +4136,11 @@ SB.readyForPlatform('samsung', function () {
         },
 
         setPlugins: function () {
-            var self = this,
-                tvKey;
+          var self = this,
+            PL_NNAVI_STATE_BANNER_NONE = 0,
+            PL_NNAVI_STATE_BANNER_VOL = 1,
+            PL_NNAVI_STATE_BANNER_VOL_CH = 2,
+            tvKey;
 
             _.each(plugins, function (clsid, id) {
                 self.$plugins[id] = document.getElementById(id);
@@ -3819,47 +4160,52 @@ SB.readyForPlatform('samsung', function () {
             this.pluginAPI = new Common.API.Plugin();
             this.widgetAPI = new Common.API.Widget();
 
-            this.productType = TVPlugin.GetProductType();
-
             tvKey = new Common.API.TVKeyValue();
+            this.productType = TVPlugin.GetProductType();
 
             this.setKeys();
 
-            // enable standart volume indicator
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_UP);
-            this.pluginAPI.unregistKey(tvKey.KEY_VOL_DOWN);
-            this.pluginAPI.unregistKey(tvKey.KEY_MUTE);
+            if(this.pluginAPI.SetBannerState){
+              NNAVIPlugin.SetBannerState(PL_NNAVI_STATE_BANNER_VOL_CH);
+            }
+
+            function unregisterKey(key){
+              try{
+                self.pluginAPI.unregistKey(tvKey['KEY_'+key]);
+              }catch(e){
+                $$error(e);
+              }
+            }
+
+            unregisterKey('VOL_UP');
+            unregisterKey('VOL_DOWN');
+            unregisterKey('MUTE');
+
             this.widgetAPI.sendReadyEvent();
-
-            this.volumeEnable();
-
-            NNAVIPlugin.SetBannerState(2);
-        },
-
-        volumeEnable: function () {
-            sf.service.setVolumeControl(true);
         },
 
         /**
          * Set keys for samsung platform
          */
         setKeys: function () {
-            this.keys = sf.key;
 
-            document.body.onkeydown = function (event) {
-                var keyCode = event.keyCode;
+          this.keys = sf.key;
 
-                switch (keyCode) {
-                    case sf.key.RETURN:
-                    case sf.key.EXIT:
-                    case 147:
-                    case 261:
-                        sf.key.preventDefault();
-                        break;
-                    default:
-                        break;
-                }
+          document.body.onkeydown = function ( event ) {
+            var keyCode = event.keyCode;
+            $$log('keyDown ' + keyCode);
+
+            switch ( keyCode ) {
+              case sf.key.RETURN:
+              //case sf.key.EXIT:
+              case 147:
+              case 261:
+                sf.key.preventDefault();
+                break;
+              default:
+                break;
             }
+          }
         },
 
         /**

@@ -9,7 +9,7 @@ The element searching algorithm can be changed if different behaviour is needed.
 ```
 
 If the attribute is defined then the navigation stops to use the intelligent element search in some cases. In the above example when the key "DOWN" has been pressed the focus transits to the element #pfl_film_watch.
-Edges are defined separated by commas in the CSS order - top, right, bottom, left
+Edges are defined separated by commas: up, right, down, left
 
 
 ```
@@ -17,6 +17,17 @@ Edges are defined separated by commas in the CSS order - top, right, bottom, lef
 ```
 
 In this example the key "DOWN" pressing is ignored.
+
+You can also set each side separately
+
+```
+<i class="fav-button nav-item" data-nav_ud_up="none"></i>
+```
+
+In this example the key "UP" pressing is ignored.
+
+If you set attribute by .data(), it will work too.
+
 
 
 

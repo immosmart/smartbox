@@ -105,6 +105,9 @@
 
         },
         hide: function () {
+            if(!this.enabled()){
+                return;
+            }
             this._nativeTurnOff();
             $buble.hide();
             return this;

@@ -298,6 +298,12 @@
       e.stopPropagation();
     },
 
+    changeKeyboard: function ( keyboardOpt ) {
+      var curOpt = this.options.keyboard;
+      this.options.keyboard = _.extend({}, curOpt, keyboardOpt);
+      $keyboardPopup && $keyboardPopup.SBKeyboard(this.options.keyboard);
+    },
+
     hideKeyboard: function ( isComplete ) {
       var $wrapper = this.$wrapper;
       $wrapper.removeClass('smart-input-active');
@@ -404,7 +410,7 @@
           new Plugin(this, options));
       } else if ( typeof instance[method] === 'function' ) {
         instance[method].apply(instance, params);
-      }
+    }
     });
   }
 

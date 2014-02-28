@@ -20,10 +20,10 @@
 	<width itemtype="number">1280</width>
 	<height itemtype="number">720</height>
 	<author itemtype="group">
-		<name itemtype="string">IMMO</name>
-		<email itemtype="string">info@smart-kino.com</email>
-		<link itemtype="string">http://smart-kino.com</link>
-		<organization itemtype="string">IMMO</organization>
+		<name itemtype="string">Smart</name>
+		<email itemtype="string">info@example.com</email>
+		<link itemtype="string">https://github.com/immosmart/smartbox</link>
+		<organization itemtype="string">Smart</organization>
 	</author>
 
 

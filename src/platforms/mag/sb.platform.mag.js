@@ -35,6 +35,7 @@
             N8: 56,
             N9: 57,
             PRECH: 116,
+            POWER: 85,
             //SMART: 36,
             PLAY: 82,
             STOP: 83,
@@ -46,23 +47,40 @@
 
         onDetect: function () {
 
+            var isStandBy = false;
+
             stb = window.gSTB;
 
             window.moveTo(0, 0);
             window.resizeTo(1280, 720);
+
+            SB(function () {
+              var $body = $(document.body);
+              $body.on('nav_key:power', function () {
+                var eventName = 'standby_';
+                isStandBy = !isStandBy;
+
+                eventName += isStandBy ? 'set' : 'unset';
+                stb.StandBy(isStandBy);
+
+                // TODO: trigger events on SB
+                $$log('trigger standby event ' + eventName, 'standby');
+                $body.trigger(eventName);
+              });
+            });
 
 
             window.localStorage = {
                 setItem: function (name, data) {
 
                 },
-                clear: function(){
+                clear: function () {
 
                 },
-                getItem: function(){
+                getItem: function () {
 
                 },
-                removeItem: function(){
+                removeItem: function () {
 
                 }
             }
@@ -72,7 +90,15 @@
             return !!window.gSTB;
         },
 
-        initialise: function () {
+        exit: function () {
+            $$log('try to location change');
+            Player.stop(true);
+            gSTB.DeinitPlayer();
+            window.location = 'file:///home/web/services.html';
+        },
+
+        sendReturn: function () {
+            this.exit();
         },
 
         getNativeDUID: function () {

@@ -11,16 +11,11 @@
     platformUserAgent: 'not found',
 
     /**
-     * Function called if running on current platform
-     */
-    initialise: $.noop,
-
-    /**
      * Get DUID in case of Config
      * @return {string} DUID
      */
     getDUID: function () {
-      switch (SB.config.DUID) {
+      switch ( SB.config.DUID ) {
         case 'real':
           this.DUID = this.getNativeDUID();
           break;
@@ -54,7 +49,7 @@
     },
 
     /**
-     * Returns native DUID for platform if exist
+     * Returns MAC for platform if exist
      * @returns {string}
      */
     getMac: function () {
@@ -70,7 +65,7 @@
     },
 
     /**
-     * Set custom plugins
+     * Set custom plugins for platform
      */
     setPlugins: $.noop,
 
@@ -78,10 +73,26 @@
     volumeUp: $.noop,
     volumeDown: $.noop,
     getVolume: $.noop,
-    setData: $.noop,
-    getData: $.noop,
-    removeData: $.noop,
-    exit: $.noop
+    exit: $.noop,
+    sendReturn: $.noop,
+    setData: function ( name, val ) {
+      // save data in string format
+      localStorage.setItem(name, JSON.stringify(val));
+    },
+
+    getData: function ( name ) {
+      var result;
+      try {
+        result = JSON.parse(localStorage.getItem(name));
+      } catch (e) {
+      }
+
+      return result;
+    },
+
+    removeData: function ( name ) {
+      localStorage.removeItem(name);
+    }
   };
 
   _.extend(SB, PlatformApi);
