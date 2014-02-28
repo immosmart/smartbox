@@ -140,7 +140,7 @@ describe('Player', function () {
         });
 
 
-        if (Config.movieAudioTracksLength > 1) {
+        if (Config.movieAudioTracksLength >= 1) {
             xit('gets audio tracks array', function () {
                 runs(function () {
                     expect(Player.audio.get().length).toBe(Config.movieAudioTracksLength);
