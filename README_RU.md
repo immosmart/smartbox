@@ -1,4 +1,4 @@
-* <a href="https://github.com/immosmart/smartbox/blob/master/README.md">English documentation</a>
+* [English documentation](README.md)
 
 # Демо
 * <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
@@ -10,7 +10,7 @@
 - Samsung SmartTv 2011+,
 - Lg SmartTv,
 - Philips 2012+,
-- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> (<a href="smartbox/docs/ru_mag.md">MAG200/250 How-to</a>).
+- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
 Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
 

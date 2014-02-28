@@ -1,4 +1,4 @@
-* <a href="https://github.com/immosmart/smartbox/blob/master/README_RU.md">Документация на русском</a>
+* [Документация на русском](README_RU.md)
 
 # Demo
 * <a href="http://immosmart.github.io/smartbox/demo/demoApp">Full demo with plugins</a>
@@ -11,7 +11,7 @@ Currently supported platforms:
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
-- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
+- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
 To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
 

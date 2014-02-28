@@ -1,3 +1,5 @@
+* [English documentation](en_mag.md)
+
 # SmartBox на STB MAG200/250
 
 <img src="img/mag_10.png" />
