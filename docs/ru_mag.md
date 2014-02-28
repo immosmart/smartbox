@@ -2,7 +2,7 @@
 
 # Как запустить демку на устройстве MAG250
 
-* Заходим на устройство по ssh ([инструкция](http://wiki.infomir.eu/doku.php/faq:second_bootloader_mag200_250)). Могут быть проблемы. Если недостучаться до 22 порта - вам нужно перепрошится на публичную версию (через Bootstarp&USB). Далее входим с паролем `930920`:
+* Заходим на устройство по ssh ([инструкция](http://wiki.infomir.eu/doku.php/faq:second_bootloader_mag200_250)). Могут быть проблемы. Если нет доступа до 22-го порта - вам нужно перепрошить устройство на публичную версию (через Bootstarp&USB). Далее входим с паролем `930920`:
 
 ```
   ssh root@192.168.0.XXX
@@ -18,7 +18,7 @@
   /usr/share/qt-4.6.0/stbapp -qws -display directfb http://immosmart.github.io/smartbox/ &
 ```
 
-* Можно сделать скриншот (инструкция http://wiki.infomir.eu/doku.php/stalker:faq). На MAG250 работает только рецепт с fbdump. Правда видео не захватывается.
+* Можно сделать скриншот (инструкция http://wiki.infomir.eu/doku.php/stalker:faq). На MAG250 нормально работает только рецепт с fbdump. Правда видео не захватывается.
 
 ```
   wget -O /tmp/fbdump.zip http://wiki.infomir.eu/lib/exe/fetch.php/files:fbdump.zip
@@ -34,7 +34,6 @@
 ```
 
 ## Скриншоты
-
 
 ### Демка на MAG250
 
