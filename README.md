@@ -22,7 +22,7 @@ Smartbox has three dependencies:
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
 - <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
 
-The compiled version of the library is located in the folder [`/dist`](tree/master/dist).
+The compiled version of the library is located in the directory [`/dist`](dist).
 
 # Library plugins
 

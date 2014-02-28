@@ -21,7 +21,7 @@ Smartbox имеет три зависимости:
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
 - <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
 
-Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
+Собранная версия библиотеки находится в директории [`/dist`](dist).
 
 # Плагины библиотеки
 
