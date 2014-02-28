@@ -8,6 +8,7 @@
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
+- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
 
 Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
 
