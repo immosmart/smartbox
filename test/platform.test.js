@@ -38,7 +38,7 @@ describe('Platform', function () {
             localStorage.clear();
         });
 
-        it('Should have local Storage', function () {
+        xit('Should have local Storage', function () {
             expect(window.localStorage).toBeDefined();
         });
 
