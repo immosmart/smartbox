@@ -12,7 +12,7 @@
 - Philips 2012+,
 - <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
-Для добавления своей платформы смотрите [документацию по платформам](docs/ru_platform.md")
+Для добавления своей платформы смотрите [документацию по платформам](docs/ru_platform.md)
 
 # Инициализация
 
@@ -25,18 +25,18 @@ Smartbox имеет три зависимости:
 
 # Плагины библиотеки
 
-* [Методы отдельных платформ](docs/ru_platform.md")
-* [Консоль Лог](docs/ru_log.md")
-* [Легенда](docs/ru_legend.md")
+* [Методы отдельных платформ](docs/ru_platform.md)
+* [Консоль Лог](docs/ru_log.md)
+* [Легенда](docs/ru_legend.md)
 * Навигация
-    * [Инициализация и методы](docs/ru_nav.md")
-    * [Алгоритм](docs/ru_nav_alg.md")
-    * [Продвинутое использование](docs/ru_nav_extended.md")
-* [Поля ввода](docs/ru_input.md")
-* [Клавиатура(виртуальная)](docs/ru_keyboard.md")
-* [Голосовое управление](docs/ru_voice.md")
+    * [Инициализация и методы](docs/ru_nav.md)
+    * [Алгоритм](docs/ru_nav_alg.md)
+    * [Продвинутое использование](docs/ru_nav_extended.md)
+* [Поля ввода](docs/ru_input.md)
+* [Клавиатура(виртуальная)](docs/ru_keyboard.md)
+* [Голосовое управление](docs/ru_voice.md)
 * Абстракция LocalStorage (хранение данных на клиентском устройстве) @todo_doc
-* [Плеер](docs/ru_player.md")
+* [Плеер](docs/ru_player.md)
 
 # Как пользоваться библиотекой
 
