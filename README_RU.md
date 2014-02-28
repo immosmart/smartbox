@@ -1,3 +1,5 @@
+* [English documentation](README.md)
+
 # Демо
 * <a href="http://immosmart.github.io/smartbox/demo/demoApp">Полное демо с плагинами</a>
 
@@ -5,12 +7,12 @@
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
 На данный момент поддерживаются платформы:
-- Samsung SmartTv 2011+
-- Lg SmartTv
-- Philips 2012+
-- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
+- Samsung SmartTv 2011+,
+- Lg SmartTv,
+- Philips 2012+,
+- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
-Для добавления своей платформы смотрите <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">документацию по платформам</a>
+Для добавления своей платформы смотрите [документацию по платформам](docs/ru_platform.md")
 
 # Инициализация
 
@@ -19,22 +21,22 @@ Smartbox имеет три зависимости:
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
 - <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) для плагина плеера
 
-Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
+Собранная версия библиотеки находится в директории [`/dist`](dist).
 
 # Плагины библиотеки
 
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_platform.md">Методы отдельных платформ</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_log.md">Консоль Лог</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_legend.md">Легенда</a>
+* [Методы отдельных платформ](docs/ru_platform.md")
+* [Консоль Лог](docs/ru_log.md")
+* [Легенда](docs/ru_legend.md")
 * Навигация
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav.md">Инициализация и методы</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_alg.md">Алгоритм</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_nav_extended.md">Продвинутое использование</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_input.md">Поля ввода</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_keyboard.md">Клавиатура(виртуальная)</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_voice.md">Голосовое управление</a>
+    * [Инициализация и методы](docs/ru_nav.md")
+    * [Алгоритм](docs/ru_nav_alg.md")
+    * [Продвинутое использование](docs/ru_nav_extended.md")
+* [Поля ввода](docs/ru_input.md")
+* [Клавиатура(виртуальная)](docs/ru_keyboard.md")
+* [Голосовое управление](docs/ru_voice.md")
 * Абстракция LocalStorage (хранение данных на клиентском устройстве) @todo_doc
-* <a href="https://github.com/immosmart/smartbox/blob/develop/docs/ru_player.md">Плеер</a>
+* [Плеер](docs/ru_player.md")
 
 # Как пользоваться библиотекой
 

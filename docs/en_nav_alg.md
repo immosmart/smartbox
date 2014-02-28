@@ -4,27 +4,27 @@ The alghorithm is reasonable for any direction. "Upper edge" means an edge coinc
 
 Example: There are navigation elements, focused element is marked in red. 
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide1.png" />
+![slide1](nav_slides/slide1.png)
 
 User presses the button "Up". The first occuring thing is eliminating of elements that have upper edge lower then upper edge of the focused element. 
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide2.png" />
+![slide2](nav_slides/slide2.png)
 
 The elements that have edges that intersect along the axis perpendicular to the direction are found. If there is any of such element exists then their priority become higher and other elements are eliminated. 
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide3.png" />
+![slide3](nav_slides/slide3.png)
 
 The element that has upper edge closer to the upper edge of the focused element is searched for from the last elements.  
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide4.png" />
+
+![slide4](nav_slides/slide4.png)
 
 If on the second step intersected elements haven't been found the closest element is found. 
 
-
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide5.png" />
+![slide5](nav_slides/slide5.png)
 
 # It's not a bug, it's a feature!
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide6.png" />
+![slide6](nav_slides/slide6.png)
 
 In this example moving vertically from the element **B** to the element **A** it's possible to transit the focus but not vise versaю
 It happens because of the bottom edge pf the element **A** is lower then the bottom edge of the element **B**.

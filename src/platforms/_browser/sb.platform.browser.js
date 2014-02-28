@@ -53,16 +53,5 @@ SB.createPlatform('browser', {
             this.DUID = 'FIREFOXISBEST';
         }
         return this.DUID;
-    },
-
-    volumeUp: function () {
-    },
-
-    volumeDown: function () {
-    },
-
-    getVolume: function () {
     }
-
-
 });

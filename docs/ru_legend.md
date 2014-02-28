@@ -15,7 +15,7 @@
 При нажатии на такой элемент возникает событие nav_key:(Имя элемента) в body
 По умолчанию в легенде присутствуют элементы:
 
-<img src="http://immosmart.github.io/smartbox/docs/img/legend.jpg" />
+![legend](img/legend.jpg)
 
 # Скрытие/отображение элемента
 

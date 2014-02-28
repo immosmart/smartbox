@@ -65,7 +65,5 @@
 
 http://immosmart.github.io/smartbox/examples/navigation/phantom/index.html
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide7.png" />
-
-
+![slide7](nav_slides/slide7.png)
 

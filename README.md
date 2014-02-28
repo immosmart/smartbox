@@ -1,4 +1,4 @@
-* <a href="https://github.com/immosmart/smartbox/blob/master/README_RU.md">Документация на русском</a>
+* [Документация на русском](README_RU.md)
 
 # Demo
 * <a href="http://immosmart.github.io/smartbox/demo/demoApp">Full demo with plugins</a>
@@ -11,9 +11,9 @@ Currently supported platforms:
 - Samsung SmartTv 2011+
 - Lg SmartTv
 - Philips 2012+
-- Infomir STB MAG-200/250 => http://wiki.infomir.eu/
+- <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
-To add your own platform please see the platform <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">documentation</a>
+To add your own platform please see the platform [documentation](docs/en_platform.md).
 
 # Initialization
 
@@ -22,24 +22,22 @@ Smartbox has three dependencies:
 - <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
 - <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
 
-Собранная версия библиотеки находится в папке <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
-
-The compiled version of the library is located in the folder <a href="https://github.com/immosmart/smartbox/tree/master/dist">`/dist`</a>
+The compiled version of the library is located in the directory [`/dist`](dist).
 
 # Library plugins
 
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_platform.md">Platforms' methods</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_log.md">Log console</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/ru_legend.md">Legend</a>
+* [Platforms' methods](docs/en_platform.md)
+* [Log console](docs/en_log.md)
+* [Legend](docs/ru_legend.md)
 * Navigation
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav.md">Initialization and methods</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav_alg.md">Algorithm</a>
-    * <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_nav_extended.md">Extended usage</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_input.md">Input fields</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_keyboard.md">Keyboard(virtual)</a>
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_voice.md">Voice management</a>
+    * [Initialization and methods](docs/en_nav.md)
+    * [Algorithm](docs/en_nav_alg.md)
+    * [Extended usage](docs/en_nav_extended.md)
+* [Input fields](docs/en_input.md)
+* [Keyboard(virtual)](docs/en_keyboard.md)
+* [Voice management](docs/en_voice.md)
 * Legend @todo_doc
-* <a href="https://github.com/immosmart/smartbox/blob/master/docs/en_player.md">Player</a>
+* [Player](docs/en_player.md)
 
 # How to use the library
 
