@@ -18,8 +18,6 @@
   /usr/share/qt-4.6.0/stbapp -qws -display directfb http://immosmart.github.io/smartbox/ &
 ```
 
-* http://wiki.infomir.eu/doku.php/stalker:faq
-
 * Можно сделать скриншот (инструкция http://wiki.infomir.eu/doku.php/stalker:faq). На MAG250 работает только рецепт с fbdump. Правда видео не захватывается.
 
 ```
