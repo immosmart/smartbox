@@ -15,13 +15,3 @@
         jasmineEnv.execute();
     };
 })();
-/*window.onload=function(){
-    Player.init();
-    setTimeout(function(){
-        Player.play({
-            url: 'http://ua-cnt.smart-kino.com//trailers/russkiy_reportazh/korporatsiya_svyatye_motory.mp4'
-        });
-    },20000);
-
-
-};*/
