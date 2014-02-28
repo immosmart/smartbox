@@ -74,16 +74,19 @@
 
       window.localStorage = {
         setItem: function ( name, data ) {
-
+          if (typeof data === 'object') {
+            data = JSON.stringify(data);
+          }
+          stb.SaveUserData(name, data);
         },
         clear: function () {
 
         },
-        getItem: function () {
-
+        getItem: function (name) {
+          return stb.LoadUserData(name);
         },
-        removeItem: function () {
-
+        removeItem: function (name) {
+          stb.SaveUserData(name, null);
         }
       }
     },
