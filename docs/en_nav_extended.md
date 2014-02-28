@@ -62,4 +62,4 @@ A phantom is a `nav-item` which transits the focus on the another element as soo
 
 In this example when the focus comes to the element it's transited to the element #card_owner.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide7.png" />
+![slide7](nav_slides/slide7.png)

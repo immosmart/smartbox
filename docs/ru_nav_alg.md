@@ -4,29 +4,29 @@
 
 Пример: есть элементы навигации, элемент в фокусе обозначен красным цветом.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide1.png" />
+![slide1](nav_slides/slide1.png)
 
 Юзер нижмает кнопку вверх. Первое что происходит - отсеиваютя элементы верхняя грань которых ниже чем верхняя грань элемента в фокусе.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide2.png" />
+![slide2](nav_slides/slide2.png)
 
 Находятся элементы, грани которых пересекаются по оси перпендикулярной направлению. Если такие элементы находятся, их приоритет становится выше и остальные отсеиваются.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide3.png" />
+![slide3](nav_slides/slide3.png)
 
 Из оставшихся элементов находится тот чья верхняя грань ближе всего к верхней грани элемента в фокусе. Это и есть искомый элемент.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide4.png" />
+![slide4](nav_slides/slide4.png)
 
 
 Если на втором шаге пересекающихся элементов не было найдено с оставшимися элементами происходит тоже самое. Находится самый ближайший.
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide5.png" />
+![slide5](nav_slides/slide5.png)
 
 # Это не баг, это фича.
 
 
-<img src="http://immosmart.github.io/smartbox/docs/nav_slides/slide6.png" />
+![slide6](nav_slides/slide6.png)
 
 В этом примере двигаясь по вертикали из элемента **B** в элемент **A** перейти можно, но не наоборот.
 Это происходит потому что нижняя грань элемента **A**, ниже нижней грани элемента **B**.
