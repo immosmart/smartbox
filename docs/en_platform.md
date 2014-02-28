@@ -3,7 +3,7 @@
 Device native methods are called through the base `SB` object. You can extend it and add your own new platform.
 After `SB.ready` a current platform has been already defined and is  kept in `SB`.
 
-# Свойства и методы
+# Properties and methods
 
 * <a href="#_platformName">`SB.platformName`</a>
 * <a href="#_keys">`SB.keys`</a>
