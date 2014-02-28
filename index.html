@@ -37,12 +37,22 @@
             width: 1280px;
             height: 720px;
             overflow: hidden;
-            background: transparent;
+            background: #ffffff;
+        }
+
+        #title {
+            font: 18px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
     </style>
 </head>
 <body>
+<h1 id="title"></h1>
 <div class="nav-item"></div>
 <div id="pluginPlayerWrap"></div>
+<script type="text/javascript">
+    (function () {
+        document.getElementById('title').textContent = 'Smartbox test. Version ' + SB.version;
+    })();
+</script>
 </body>
 </html>

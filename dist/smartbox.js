@@ -48,6 +48,7 @@
 
   //public smartbox API
   SmartboxAPI = {
+    version: 0.1,
     platformName: '',
 
     userAgent: userAgent,
