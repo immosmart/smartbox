@@ -26,20 +26,25 @@ SB.readyForPlatform('lg', function () {
         _update: function () {
             var info = this.plugin.mediaPlayInfo();
 
-            if (info && !isReady) {
+            if (info && info.duration && !isReady) {
                 //$('#log').append('<div>'+info.duration+'</div>');
+
+                $$log(JSON.stringify(info));
+
                 isReady = true;
 
-                this.trigger('ready');
+
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
+                this.trigger('ready');
             }
 
+            if(!isReady){
+                return;
+            }
 
             this.videoInfo.currentTime=info.currentPosition/1000;
-
-
             this.trigger('update');
         },
         onBuffering: function (isStarted) {
@@ -69,6 +74,18 @@ SB.readyForPlatform('lg', function () {
         },
         seek: function(time){
             this.plugin.seek(time*1000);
+        },
+        audio: {
+            set: function (index) {
+            },
+            get: function () {
+               return [];
+            },
+            cur: function () {
+                return 0;
+            },
+            toggle: function () {
+            }
         }
     });
 });
