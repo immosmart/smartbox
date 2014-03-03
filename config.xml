@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    This file for Samsung SmartTV.
+
+-->
 <widget>
 	<mouse>y</mouse>
 	<previewjs itemtype="string"></previewjs>

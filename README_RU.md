@@ -7,9 +7,9 @@
 
 Библиотека smartbox позволяет запускать одно приложение на нескольких платформах.
 На данный момент поддерживаются платформы:
-- Samsung SmartTv 2011+,
-- Lg SmartTv,
-- Philips 2012+,
+- [Samsung SmartTv 2011+](http://samsungdforum.com/),
+- [Lg SmartTv](http://developer.lge.com/resource/tv/RetrieveOverview.dev),
+- [Philips 2012+](http://www.yourappontv.com/),
 - <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
 Для добавления своей платформы смотрите [документацию по платформам](docs/ru_platform.md")
@@ -84,26 +84,29 @@ SB.ready будет выполнен после всех коллбеков jQue
 
 Все конфигурации библиотеки находятся в объекте SB.config
 
+```js
             SB.config = {}
+```
 
-## `SB.config.DUID`
+### SB.config.DUID
 
-*String*: shows which method is used to get DUID for application. By default: `real`.
 
-`real`: the method SB.Platform.getNativeDUID() is used
+*String*: указывает какой метод будет использоваться в качестве DUID. По умолчанию: `real`.
 
-`mac`: the method device MAC-address is used, available for LG and Samsung,
+* `real`: используется SB.Platform.getNativeDUID();
+* `mac`: используется метод получения MAC-адреса (LG и Samsung);
+* `random`: генерируется случайный DUID при каждом запуске;
+* `[чтотодругое]`: берем любое значение в качестве DUID.
 
-`random`: a new DUID is generated each application starting
-
-`[other value]`: will be used as DUID. For example:
+Для примера:
 
 ```js
-SB.config.DUID="fgsfds";
-SB.ready(function(){
-  SB.currentPlatform.DUID;//=> "fgsfds"
-});
+            SB.config.DUID="fgsfds";
+            SB.ready(function(){
+              SB.currentPlatform.DUID;//=> "fgsfds"
+            });
 ```
+
 
 # Автотесты
 <a href="http://immosmart.github.io/smartbox/">Запуск автотестов Jasmine</a>

@@ -8,9 +8,9 @@
 A smartbox library allows to start one application on a few smartTV platforms. 
 
 Currently supported platforms: 
-- Samsung SmartTv 2011+
-- Lg SmartTv
-- Philips 2012+
+- [Samsung SmartTv 2011+](http://samsungdforum.com/),
+- [Lg SmartTv](http://developer.lge.com/resource/tv/RetrieveOverview.dev),
+- [Philips 2012+](http://www.yourappontv.com/),
 - <a href="http://wiki.infomir.eu/">STB Infomir MAG200/250</a> ([MAG200/250 How-to](docs/ru_mag.md)).
 
 To add your own platform please see the platform [documentation](docs/en_platform.md).
@@ -71,6 +71,7 @@ if the current plaform - platform
 
 All configurations of the library are located in the object SB.platform
 
+```js
             SB.config = {
               /**
                * Platform which will be used in case detectPlatform returns false
@@ -79,8 +80,28 @@ All configurations of the library are located in the object SB.platform
                */
               defaultPlatform: 'browser'
             }
+```
+
+### SB.config.DUID
+
+*String*: shows which method is used to get DUID for application. By default: `real`.
+
+* `real`: the method SB.Platform.getNativeDUID() is used;
+* `mac`: the method device MAC-address is used, available for LG and Samsung;
+* `random`: a new DUID is generated each application starting;
+* `[other value]`: will be used as DUID.
+
+For example:
+
+```js
+        SB.config.DUID="fgsfds";
+        SB.ready(function(){
+          SB.currentPlatform.DUID;//=> "fgsfds"
+        });
+```
 
 # Autotests
+
 <a href="http://immosmart.github.io/smartbox/">Jasmine autotest start</a>
 
 
