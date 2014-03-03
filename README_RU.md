@@ -85,11 +85,17 @@ SB.ready будет выполнен после всех коллбеков jQue
 Все конфигурации библиотеки находятся в объекте SB.config
 
 ```js
-            SB.config = {}
+            SB.config = {
+              /**
+               * Platform which will be used in case detectPlatform returns false
+               * ex: browser, samsung, lg
+               * @type: {String}
+               */
+              defaultPlatform: 'browser'
+            }
 ```
 
-### SB.config.DUID
-
+#### SB.config.DUID
 
 *String*: указывает какой метод будет использоваться в качестве DUID. По умолчанию: `real`.
 

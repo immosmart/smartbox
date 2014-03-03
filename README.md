@@ -82,7 +82,7 @@ All configurations of the library are located in the object SB.platform
             }
 ```
 
-### SB.config.DUID
+#### SB.config.DUID
 
 *String*: shows which method is used to get DUID for application. By default: `real`.
 
