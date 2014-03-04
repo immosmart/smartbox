@@ -1,5 +1,14 @@
 describe('Platform', function () {
 
+
+    it('Supports events', function(){
+        var spy=jasmine.createSpy();
+        SB.on('event', spy);
+        SB.trigger('event');
+        expect(spy).toHaveBeenCalled();
+    });
+
+
     it('Should supports ready', function () {
         var spy1=jasmine.createSpy(), spy2=jasmine.createSpy();
         runs(function(){
