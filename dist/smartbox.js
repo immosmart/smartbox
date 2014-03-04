@@ -2990,8 +2990,16 @@ SB.readyForPlatform('browser', function () {
              */
         },
         _play: function (options) {
-            this.$video_container.attr('src', options.url);
-            this.$video_container[0].play();
+            var video=this.$video_container[0];
+            video.src=options.url;
+
+            if(options.from){
+                //may be buggy
+                video.addEventListener('loadedmetadata', function(){
+                    video.currentTime = options.from;
+                }, false);
+            }
+            video.play();
         },
         _stop: function () {
             this.$video_container[0].pause();
@@ -3198,7 +3206,7 @@ SB.createPlatform('browser', {
 SB.readyForPlatform('lg', function () {
     var updateInterval;
 
-    var isReady = false;
+    var isReady = false, from;
 
     Player.extend({
         updateDelay: 500,
@@ -3234,7 +3242,13 @@ SB.readyForPlatform('lg', function () {
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
+
+                if(from){
+                    this.seek(from);
+                }
+
                 this.trigger('ready');
+
             }
 
             if(!isReady){
@@ -3256,6 +3270,8 @@ SB.readyForPlatform('lg', function () {
             isReady = false;
             this.plugin.data = options.url;
             this.plugin.play(1);
+
+            from= options.from;
         },
         pause: function(){
             this.plugin.play(0);
@@ -3436,6 +3452,9 @@ SB.readyForPlatform('mag', function () {
             stb.Play(options.url);
             startUpdate();
             Player.trigger('bufferingBegin');
+            if(options.from){
+                this.seek(options.from);
+            }
         },
         _stop: function () {
             stb.Stop();

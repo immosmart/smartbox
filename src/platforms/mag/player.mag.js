@@ -54,6 +54,9 @@ SB.readyForPlatform('mag', function () {
             stb.Play(options.url);
             startUpdate();
             Player.trigger('bufferingBegin');
+            if(options.from){
+                this.seek(options.from);
+            }
         },
         _stop: function () {
             stb.Stop();

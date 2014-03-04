@@ -1,7 +1,7 @@
 SB.readyForPlatform('lg', function () {
     var updateInterval;
 
-    var isReady = false;
+    var isReady = false, from;
 
     Player.extend({
         updateDelay: 500,
@@ -37,7 +37,13 @@ SB.readyForPlatform('lg', function () {
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
+
+                if(from){
+                    this.seek(from);
+                }
+
                 this.trigger('ready');
+
             }
 
             if(!isReady){
@@ -59,6 +65,8 @@ SB.readyForPlatform('lg', function () {
             isReady = false;
             this.plugin.data = options.url;
             this.plugin.play(1);
+
+            from= options.from;
         },
         pause: function(){
             this.plugin.play(0);
