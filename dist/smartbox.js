@@ -176,17 +176,46 @@
           this.addExternalCss(this.externalCss);
         }
       }
-    }
+    },
+    extendFromEvents: function(object){
+          var extendFunction, eventProto;
+          //use underscore, or jQuery extend function
+          if (window._ && _.extend) {
+              extendFunction = _.extend;
+          } else if (window.$ && $.extend) {
+              extendFunction = $.extend;
+          }
+
+
+          if (window.EventEmitter) {
+              eventProto = EventEmitter.prototype;
+          } else if (window.Backbone) {
+              eventProto = Backbone.Events;
+          } else if (window.Events) {
+              eventProto = Events.prototype;
+          }
+
+          object.extend = function (proto) {
+              extendFunction(this, proto);
+          };
+
+          object.extend(eventProto);
+      }
   };
 
   Smartbox.config = {
     DUID: 'real'
   };
 
+
+    SmartboxAPI.extendFromEvents(SmartboxAPI);
+
   _.extend(Smartbox, SmartboxAPI);
 
   // exporting library to global
   window.SB = Smartbox;
+
+
 
   // initialize library
   window.onload = function () {
@@ -2534,30 +2563,7 @@ $(function () {
         }
     };
 
-
-    var extendFunction, eventProto;
-    //use underscore, or jQuery extend function
-    if (window._ && _.extend) {
-        extendFunction = _.extend;
-    } else if (window.$ && $.extend) {
-        extendFunction = $.extend;
-    }
-
-
-    if (window.EventEmitter) {
-        eventProto = EventEmitter.prototype;
-    } else if (window.Backbone) {
-        eventProto = Backbone.Events;
-    } else if (window.Events) {
-        eventProto = Events.prototype;
-    }
-
-    Player.extend = function (proto) {
-        extendFunction(this, proto);
-    };
-
-    Player.extend(eventProto);
-
+    SB.extendFromEvents(Player);
 
 }(this));
 (function ($) {
@@ -2990,8 +2996,16 @@ SB.readyForPlatform('browser', function () {
              */
         },
         _play: function (options) {
-            this.$video_container.attr('src', options.url);
-            this.$video_container[0].play();
+            var video=this.$video_container[0];
+            video.src=options.url;
+
+            if(options.from){
+                //may be buggy
+                video.addEventListener('loadedmetadata', function(){
+                    video.currentTime = options.from;
+                }, false);
+            }
+            video.play();
         },
         _stop: function () {
             this.$video_container[0].pause();
@@ -3197,7 +3211,7 @@ SB.createPlatform('browser', {
 SB.readyForPlatform('lg', function () {
     var updateInterval;
 
-    var isReady = false;
+    var isReady = false, from;
 
     Player.extend({
         updateDelay: 500,
@@ -3222,20 +3236,31 @@ SB.readyForPlatform('lg', function () {
         _update: function () {
             var info = this.plugin.mediaPlayInfo();
 
-            if (info && !isReady) {
+            if (info && info.duration && !isReady) {
                 //$('#log').append('<div>'+info.duration+'</div>');
+
+                $$log(JSON.stringify(info));
+
                 isReady = true;
 
-                this.trigger('ready');
+
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
+
+                if(from){
+                    this.seek(from);
+                }
+
+                this.trigger('ready');
+
             }
 
+            if(!isReady){
+                return;
+            }
 
             this.videoInfo.currentTime=info.currentPosition/1000;
-
-
             this.trigger('update');
         },
         onBuffering: function (isStarted) {
@@ -3250,6 +3275,8 @@ SB.readyForPlatform('lg', function () {
             isReady = false;
             this.plugin.data = options.url;
             this.plugin.play(1);
+
+            from= options.from;
         },
         pause: function(){
             this.plugin.play(0);
@@ -3265,6 +3292,18 @@ SB.readyForPlatform('lg', function () {
         },
         seek: function(time){
             this.plugin.seek(time*1000);
+        },
+        audio: {
+            set: function (index) {
+            },
+            get: function () {
+               return [];
+            },
+            cur: function () {
+                return 0;
+            },
+            toggle: function () {
+            }
         }
     });
 });
@@ -3418,6 +3457,9 @@ SB.readyForPlatform('mag', function () {
             stb.Play(options.url);
             startUpdate();
             Player.trigger('bufferingBegin');
+            if(options.from){
+                this.seek(options.from);
+            }
         },
         _stop: function () {
             stb.Stop();

@@ -63,8 +63,16 @@ SB.readyForPlatform('browser', function () {
              */
         },
         _play: function (options) {
-            this.$video_container.attr('src', options.url);
-            this.$video_container[0].play();
+            var video=this.$video_container[0];
+            video.src=options.url;
+
+            if(options.from){
+                //may be buggy
+                video.addEventListener('loadedmetadata', function(){
+                    video.currentTime = options.from;
+                }, false);
+            }
+            video.play();
         },
         _stop: function () {
             this.$video_container[0].pause();
