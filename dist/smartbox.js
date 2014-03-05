@@ -3142,7 +3142,6 @@ SB.createPlatform('browser', {
         return this.DUID;
     }
 });
-
 (function ($) {
     "use strict";
 
@@ -4187,7 +4186,7 @@ SB.readyForPlatform('samsung', function () {
 
             switch ( keyCode ) {
               case sf.key.RETURN:
-              //case sf.key.EXIT:
+              case sf.key.EXIT:
               case 147:
               case 261:
                 sf.key.preventDefault();
@@ -4215,11 +4214,11 @@ SB.readyForPlatform('samsung', function () {
         },
 
         exit: function () {
-            sf.core.exit(false);
+            sf.core.exit(true);
         },
 
         sendReturn: function () {
-            sf.core.exit(true);
+            sf.core.exit(false);
         },
 
         blockNavigation: function () {

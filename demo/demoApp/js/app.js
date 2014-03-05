@@ -88,4 +88,10 @@
 
   // main app initialize when smartbox ready
   SB(_.bind(App.initialize, App));
+
+  $(document.body).bind('nav_key:return nav_key:exit nav_key:smart nav_key:smarthub', function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    SB.exit();
+  });
 })();
