@@ -178,14 +178,8 @@
       }
     },
     extendFromEvents: function(object){
-          var extendFunction, eventProto;
-          //use underscore, or jQuery extend function
-          if (window._ && _.extend) {
-              extendFunction = _.extend;
-          } else if (window.$ && $.extend) {
-              extendFunction = $.extend;
-          }
-
+          var eventProto,
+              extendFunction = _.merge;
 
           if (window.EventEmitter) {
               eventProto = EventEmitter.prototype;
@@ -2151,7 +2145,7 @@ $(function () {
 
 (function (window) {
 
-    var updateInterval, curAudio = 0;
+    var updateInterval, curAudio = 0, curSubtitle=0;
 
 
     /**
@@ -2397,24 +2391,89 @@ $(function () {
             }
         },
         subtitle: {
+            _urls: [],
+            running: false,
+            $subtitles_text: null,
+
+            hasUpdateListener: false,
+
+            _prevTime: -1,
+            _prevSubtitle: -1,
+
+            onUpdate: function () {
+                if (this.running) {
+                    var cTime = Player.videoInfo.currentTime, index, subtitleObject;
+                    //если идет последовательное воспроизведение
+                    //это самый частый случай
+                    if (cTime > this._prevTime) {
+                        console.log('normal');
+                        index = this.getTextIndex(this._prevSubtitle + 1);
+                    } else {//если были перемотки ищем с начала и до конца
+                        console.log('rewind');
+                        index = this.getTextIndex(0);
+                    }
+
+                    subtitleObject = this.data[index];
+
+                    if (subtitleObject) {
+                        this.showText(subtitleObject.text);
+                        this._prevTime = cTime;
+                        this._prevSubtitle = index;
+                    }
+                }
+
+            },
+
+            showText: function(text){
+                var $subtitiles;
+                if(!this.$subtitles_text){
+                    $('body').append('<div id="subtitles_view" style="position: absolute; z-index: 1;"><div id="subtitles_text"></div></div>');
+                    $subtitiles = $('#subtitles_view');
+                    $subtitiles.css({
+                        width: '1280px',
+                        height: '720px',
+                        left: '0px',
+                        top: '0px'
+                    });
+                    this.$subtitles_text=$('#subtitles_text').css({
+                        'position': 'absolute',
+                        'text-align': 'center',
+                        'width': '100%',
+                        'left': '0',
+                        'bottom': '50px',
+                        'font-size': '24px',
+                        'color': '#fff',
+                        'text-shadow': '0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000',
+                        'line-height': '26px'
+                    });
+                }
+                this.$subtitles_text.html(text);
+            },
+
+            add: function(url, name){
+                this._urls.push({
+                    url: url,
+                    name: name
+                });
+            },
             /**
              * Set subtitle index
              * @param index
              */
             set: function (index) {
                 curSubtitle = index;
+                if(index!=-1){
+                    this.url(this._urls[index].url);
+                }else{
+                    this.running=false;
+                }
             },
             /**
              * Returns list of available subtitles
              * @returns {Array}
              */
             get: function () {
-                var len = 2;
-                var result = [];
-                for (var i = 0; i < len; i++) {
-                    result.push(0);
-                }
-                return result;
+                return _.pluck(this._urls, 'name');
             },
             /**
              * @returns {Number} index of current subtitles
@@ -2433,17 +2492,19 @@ $(function () {
                     Player.subtitle.set(cur);
                 }
             },
-            text: function (time) {
-                var data = Player.subtitle.data,
-                    index = _.sortedIndex(data, {
-                        time: time
-                    }, function (value) {
-                        return value.time;
-                    });
-                if (data[index - 1]) {
-                    return data[index - 1].text;
+            getTextIndex: function (fromIndex) {
+                var cTime = Player.videoInfo.currentTime*1000;
+                for (var i = fromIndex, l = this.data.length; i < l; i++) {
+                    var obj = this.data[i];
+                    if (cTime >= obj.time) {
+                        var next=this.data[i+1];
+                        if(next&&cTime>=next.time){
+                            continue;
+                        }
+                        return i;
+                    }
                 }
-                return '';
+                return -1;
             },
             data: [
                 {
@@ -2457,52 +2518,21 @@ $(function () {
              */
             url: function (url) {
                 var extension = /\.([^\.]+)$/.exec(url)[1];
-                // TODO Сделать универсальное выключение вшитых субтитров
-                Player.subtitle.set(undefined);
+                var self=this;
                 $.ajax({
                     url: url,
                     dataType: 'text',
                     success: function (data) {
-                        var $subtitiles = $('#subtitles_view');
-                        $(Player).off('.subtitles');
-                        Player.subtitle.init = true;
-                        Player.subtitle.remote = true;
+                        self.running=true;
                         Player.subtitle.parse[extension].call(Player, data);
-                        $subtitiles.show();
-                        var setSubtitlesText = function () {
-                            $('#subtitles_text').html(Player.subtitle.text(parseInt(Player.videoInfo.currentTime) * 1000));
-                        }
-                        Player.on('update', setSubtitlesText);
 
-                        if (!$subtitiles.length) {
-                            $('body').append('<div id="subtitles_view" style="position: absolute; z-index: 1;"><div id="subtitles_text"></div></div>');
-                            $subtitiles = $('#subtitles_view');
-                            $subtitiles.css({
-                                width: '1280px',
-                                height: '720px',
-                                left: '0px',
-                                top: '0px'
-                            });
-                            $('#subtitles_text').css({
-                                'position': 'absolute',
-                                'text-align': 'center',
-                                'width': '100%',
-                                'left': '0',
-                                'bottom': '50px',
-                                'font-size': '24px',
-                                'color': '#fff',
-                                'text-shadow': '0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000,0 0 3px #000',
-                                'line-height': '26px'
+                        if(!self.hasUpdateListener){
+                            self.hasUpdateListener=true;
+                            Player.on('update', function(){
+                                self.onUpdate();
                             });
                         }
 
-                        var stopSubtitlesUpdate = function () {
-                            $(Player).off('update', setSubtitlesText);
-                            $(Player).off('stop', stopSubtitlesUpdate);
-                            $subtitiles.hide();
-                        }
-
-                        Player.on('stop', stopSubtitlesUpdate);
                     }
                 });
             },
@@ -3034,7 +3064,7 @@ SB.readyForPlatform('browser', function () {
                 return 0;
             }
         },
-        subtitle: {
+        /*subtitle: {
             set: function (index) {
                 if (Player.$video_container[0].textTracks) {
                     var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
@@ -3095,7 +3125,7 @@ SB.readyForPlatform('browser', function () {
                     Player.subtitle.set(cur);
                 }
             }
-        }
+        }*/
     });
 });
 

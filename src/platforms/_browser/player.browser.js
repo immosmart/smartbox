@@ -101,7 +101,7 @@ SB.readyForPlatform('browser', function () {
                 return 0;
             }
         },
-        subtitle: {
+        /*subtitle: {
             set: function (index) {
                 if (Player.$video_container[0].textTracks) {
                     var subtitles = _.filter(Player.$video_container[0].textTracks, function (i) {
@@ -162,6 +162,6 @@ SB.readyForPlatform('browser', function () {
                     Player.subtitle.set(cur);
                 }
             }
-        }
+        }*/
     });
 });
