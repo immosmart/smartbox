@@ -198,7 +198,8 @@
   };
 
   Smartbox.config = {
-    DUID: 'real'
+    DUID: 'real',
+    customVolumeEnable: false
   };
 
 

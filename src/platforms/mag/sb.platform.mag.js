@@ -66,9 +66,7 @@
           eventName += isStandBy ? 'set' : 'unset';
           stb.StandBy(isStandBy);
 
-          // TODO: trigger events on SB
-          $$log('trigger standby event ' + eventName, 'standby');
-          $body.trigger(eventName);
+          SB.trigger(eventName);
         });
       });
 

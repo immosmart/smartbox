@@ -119,9 +119,11 @@
               }
             }
 
-            unregisterKey('VOL_UP');
-            unregisterKey('VOL_DOWN');
-            unregisterKey('MUTE');
+            if (!this.config.customVolumeEnable) {
+              unregisterKey('VOL_UP');
+              unregisterKey('VOL_DOWN');
+              unregisterKey('MUTE');
+            }
 
             this.widgetAPI.sendReadyEvent();
         },
@@ -176,7 +178,82 @@
 
         blockNavigation: function () {
             sf.key.preventDefault();
+        },
+      volumeAddStep: 5,
+      volumeAdd: function (num) {
+        var $audio = this.$plugins.audio,
+          outputDevice = $audio.GetOutputDevice(),
+          volume, i;
+
+        if (outputDevice == 3 || this.productType == 2) {
+          return;
         }
+
+        var key = num < 0 ? 1 : 0;//если меньше 0 убавляем громкость
+        num = Math.abs(num);
+        for (i = 0; i < num; i++) {
+          $audio.SetVolumeWithKey(key);
+        }
+        volume = this.getVolume();
+        $(document.body).trigger('volume_change', {
+          volume: volume
+        });
+      },
+      toggleMute: function () {
+        var $audio = this.$plugins.audio,
+          volume, $body = $(document.body);
+        if (this.isMute) {
+          $audio.SetUserMute(0);
+          volume = this.getVolume();
+
+          if (volume === 0) {
+            this.volumeUp(5);
+          } else {
+            $body.trigger('volume_change', {
+              volume: volume
+            });
+          }
+          this.isMute = false;
+        } else {
+          if (!this.isMute) {
+            $audio.SetUserMute(1);
+
+            this.getVolume({
+              mute: true
+            });
+
+            $body.trigger('volume_change', {
+              volume: 0
+            });
+            this.isMute = true;
+          }
+        }
+      },
+      volumeDown: function (step) {
+        step = step || -this.volumeAddStep;
+        this.volumeAdd(-step);
+      },
+      volumeUp: function (step) {
+        step = step || this.volumeAddStep;
+        this.volumeAdd(step);
+      },
+      getVolume: function (options) {
+        options = options || {};
+        var $audio = this.$plugins.audio,
+          volume = $audio.GetVolume(),
+          $body = $(document.body);
+
+        if (volume == 0 || options.mute) {
+          if (!this.isMute) {
+            $body.addClass('mute').trigger('volume_mute');
+            this.isMute = true;
+          }
+        } else if (this.isMute) {
+          $body.removeClass('mute').trigger('volume_unmute');
+          this.isMute = false;
+        }
+        return volume;
+      }
     });
 
 })(this);
