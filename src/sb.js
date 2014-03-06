@@ -178,14 +178,8 @@
       }
     },
     extendFromEvents: function(object){
-          var extendFunction, eventProto;
-          //use underscore, or jQuery extend function
-          if (window._ && _.extend) {
-              extendFunction = _.extend;
-          } else if (window.$ && $.extend) {
-              extendFunction = $.extend;
-          }
-
+          var eventProto,
+              extendFunction = _.merge;
 
           if (window.EventEmitter) {
               eventProto = EventEmitter.prototype;
