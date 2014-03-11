@@ -19,8 +19,8 @@ To add your own platform please see the platform [documentation](docs/en_platfor
 
 Smartbox has three dependencies:
 - <a href="https://github.com/jquery/jquery/tree/1.8-stable">jQuery(1.8.1+)</a>
-- <a href="https://github.com/jashkenas/underscore">Underscore</a>(или <a href="https://github.com/lodash/lodash">lodash</a>)
-- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> или <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
+- <a href="https://github.com/jashkenas/underscore">Underscore</a>(or <a href="https://github.com/lodash/lodash">lodash</a>)
+- <a href="https://github.com/Wolfy87/EventEmitter">Event Emitter</a>( <a href="https://github.com/jashkenas/backbone">Backbone</a> or <a href="https://github.com/artempoletsky/Frontbone">Frontbone</a> ) for the player plugin
 
 The compiled version of the library is located in the directory [`/dist`](dist).
 
