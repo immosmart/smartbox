@@ -3301,6 +3301,8 @@ SB.readyForPlatform('lg', function () {
             $('body').append('<object mode3D="'+(options.is3d?'side_by_side':'off')+'" type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
             this.plugin = $('#pluginPlayer')[0];
             this.$plugin = $(this.plugin);
+
+            var self=this;
             this.plugin.onPlayStateChange = function () {
                 self.onEvent.apply(self, arguments);
             }
