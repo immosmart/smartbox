@@ -4,7 +4,7 @@ describe('Player', function () {
     var currentType = '';
 
 
-    describe('basic support', function () {
+    xdescribe('basic support', function () {
 
 
 
@@ -88,7 +88,7 @@ describe('Player', function () {
     });
 
 
-    xdescribe('extended support', function () {
+    describe('extended support', function () {
 
         var begin = jasmine.createSpy('bufferingEnd handler');
         var end = jasmine.createSpy('end handler');
@@ -199,6 +199,21 @@ describe('Player', function () {
             });
         });
 
+
+        it('supports from option', function(){
+            Player.play({
+                url: Config.movie,
+                from: 300
+            });
+
+            waitsFor(function(){
+                return Player.videoInfo.currentTime>=300;
+            }, 15000, 'seek complete');
+
+            runs(function(){
+               Player.stop();
+            });
+        });
 
     });
 
