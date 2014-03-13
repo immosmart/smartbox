@@ -29,6 +29,8 @@ SB.readyForPlatform('browser', function () {
                 }).on('ended', function () {
                     self.state = "stop";
                     self.trigger('complete');
+                }).on('error', function(e){
+                    self.trigger('error');
                 });
 
 

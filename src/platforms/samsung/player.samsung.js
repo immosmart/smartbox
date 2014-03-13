@@ -57,8 +57,8 @@ SB.readyForPlatform('samsung', function () {
             self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
             //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
             self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
-            //self.plugin.OnConnectionFailed = 'Player.onError';
-            //self.plugin.OnNetworkDisconnected = 'Player.onError';
+            self.plugin.OnConnectionFailed = 'Player.onError';
+            self.plugin.OnNetworkDisconnected = 'Player.onError';
             //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
 
             self.plugin.OnEvent = 'Player.onEvent';
@@ -85,6 +85,10 @@ SB.readyForPlatform('samsung', function () {
             //  this.currentTime = time;
             //}
         },
+
+        onError: function(){
+            this.trigger('error');
+        },
         onEvent: function (event, arg1, arg2) {
 
             // alert('playerEvent: ' + event);
@@ -94,7 +98,7 @@ SB.readyForPlatform('samsung', function () {
                     break;
 
                 case 4:
-                    //this.onError();
+                    this.onError();
                     break;
 
                 case 8:

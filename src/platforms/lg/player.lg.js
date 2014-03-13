@@ -9,9 +9,11 @@ SB.readyForPlatform('lg', function () {
 
         },
         onEvent: function(){
-            if(this.plugin.playState=='5'){
+            if(this.plugin.playState==5){
                 this.state='stop';
                 this.trigger('complete');
+            }else if(this.plugin.playState==4){
+                this.trigger('error')
             }
         },
         _update: function () {
@@ -20,7 +22,7 @@ SB.readyForPlatform('lg', function () {
             if (info && info.duration && !isReady) {
                 //$('#log').append('<div>'+info.duration+'</div>');
 
-                $$log(JSON.stringify(info));
+                //$$log(JSON.stringify(info));
 
                 isReady = true;
 
@@ -28,9 +30,11 @@ SB.readyForPlatform('lg', function () {
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
-
+                var self=this;
                 if(from){
-                    this.seek(from);
+                    _.defer(function(){
+                        self.seek(from);
+                    });
                 }
 
                 this.trigger('ready');
@@ -67,6 +71,10 @@ SB.readyForPlatform('lg', function () {
             }
             this.plugin.onBuffering = function () {
                 self.onBuffering.apply(self, arguments);
+            }
+
+            this.plugin.onError  = function () {
+                self.trigger('error')
             }
 
 

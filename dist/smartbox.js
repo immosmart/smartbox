@@ -2168,7 +2168,20 @@ $(function () {
 
     var inited = false;
 
+
+    var errorTimeout;
+
     var Player = window.Player = {
+
+
+        config: {
+            //Время после которого произойдет событие 'error'
+            errorTimeout: 9000
+        },
+
+
+
+
 
         /**
          * Inserts player object to DOM and do some init work
@@ -2204,8 +2217,9 @@ $(function () {
          * }); // => runs stream
          */
         play: function (options) {
+            var self=this;
             if (!inited) {
-                this._init();
+                self._init();
                 inited = true;
             }
 
@@ -2215,9 +2229,26 @@ $(function () {
                 }
             }
             if (options !== undefined) {
-                this.stop();
-                this.state = 'play';
-                this._play(options);
+                self.stop();
+                self.state = 'play';
+                self._play(options);
+
+
+                var onready=function(){
+                    console.log('clear');
+                    self.off('ready', onready);
+                    self.off('error', onready);
+                    clearTimeout(errorTimeout);
+                };
+
+                self.on('ready', onready);
+                self.on('error', onready);
+
+                errorTimeout=setTimeout(function(){
+                    self.trigger('error');
+                }, self.config.errorTimeout);
+
+
             } else if (options === undefined && this.state === 'pause') {
                 this.resume();
             }
@@ -2993,6 +3024,8 @@ SB.readyForPlatform('browser', function () {
                 }).on('ended', function () {
                     self.state = "stop";
                     self.trigger('complete');
+                }).on('error', function(e){
+                    self.trigger('error');
                 });
 
 
@@ -3250,9 +3283,11 @@ SB.readyForPlatform('lg', function () {
 
         },
         onEvent: function(){
-            if(this.plugin.playState=='5'){
+            if(this.plugin.playState==5){
                 this.state='stop';
                 this.trigger('complete');
+            }else if(this.plugin.playState==4){
+                this.trigger('error')
             }
         },
         _update: function () {
@@ -3261,7 +3296,7 @@ SB.readyForPlatform('lg', function () {
             if (info && info.duration && !isReady) {
                 //$('#log').append('<div>'+info.duration+'</div>');
 
-                $$log(JSON.stringify(info));
+                //$$log(JSON.stringify(info));
 
                 isReady = true;
 
@@ -3269,9 +3304,11 @@ SB.readyForPlatform('lg', function () {
                 this.videoInfo = {
                     duration: info.duration / 1000
                 };
-
+                var self=this;
                 if(from){
-                    this.seek(from);
+                    _.defer(function(){
+                        self.seek(from);
+                    });
                 }
 
                 this.trigger('ready');
@@ -3308,6 +3345,10 @@ SB.readyForPlatform('lg', function () {
             }
             this.plugin.onBuffering = function () {
                 self.onBuffering.apply(self, arguments);
+            }
+
+            this.plugin.onError  = function () {
+                self.trigger('error')
             }
 
 
@@ -3934,8 +3975,8 @@ SB.readyForPlatform('samsung', function () {
             self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
             //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
             self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
-            //self.plugin.OnConnectionFailed = 'Player.onError';
-            //self.plugin.OnNetworkDisconnected = 'Player.onError';
+            self.plugin.OnConnectionFailed = 'Player.onError';
+            self.plugin.OnNetworkDisconnected = 'Player.onError';
             //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
 
             self.plugin.OnEvent = 'Player.onEvent';
@@ -3962,6 +4003,10 @@ SB.readyForPlatform('samsung', function () {
             //  this.currentTime = time;
             //}
         },
+
+        onError: function(){
+            this.trigger('error');
+        },
         onEvent: function (event, arg1, arg2) {
 
             // alert('playerEvent: ' + event);
@@ -3971,7 +4016,7 @@ SB.readyForPlatform('samsung', function () {
                     break;
 
                 case 4:
-                    //this.onError();
+                    this.onError();
                     break;
 
                 case 8:

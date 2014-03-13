@@ -26,7 +26,20 @@
 
     var inited = false;
 
+
+    var errorTimeout;
+
     var Player = window.Player = {
+
+
+        config: {
+            //Время после которого произойдет событие 'error'
+            errorTimeout: 9000
+        },
+
+
+
+
 
         /**
          * Inserts player object to DOM and do some init work
@@ -62,8 +75,9 @@
          * }); // => runs stream
          */
         play: function (options) {
+            var self=this;
             if (!inited) {
-                this._init();
+                self._init();
                 inited = true;
             }
 
@@ -73,9 +87,26 @@
                 }
             }
             if (options !== undefined) {
-                this.stop();
-                this.state = 'play';
-                this._play(options);
+                self.stop();
+                self.state = 'play';
+                self._play(options);
+
+
+                var onready=function(){
+                    console.log('clear');
+                    self.off('ready', onready);
+                    self.off('error', onready);
+                    clearTimeout(errorTimeout);
+                };
+
+                self.on('ready', onready);
+                self.on('error', onready);
+
+                errorTimeout=setTimeout(function(){
+                    self.trigger('error');
+                }, self.config.errorTimeout);
+
+
             } else if (options === undefined && this.state === 'pause') {
                 this.resume();
             }
