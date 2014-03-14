@@ -62,14 +62,12 @@ SB.readyForPlatform('mag', function () {
             stb.Stop();
             stopUpdate();
         },
-        pause: function () {
+        _pause: function () {
             stb.Pause();
-            this.state = "pause";
             stopUpdate();
         },
-        resume: function () {
+        _resume: function () {
             stb.Continue();
-            this.state = "play";
             startUpdate();
         },
         seek: function (time) {

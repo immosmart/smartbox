@@ -38,6 +38,7 @@ SB.readyForPlatform('samsung', function () {
             if (self.usePlayerObject) {
                 //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
                 self.plugin = document.getElementById('pluginPlayer');
+
                 $('body').append(self.$plugin);
 
 
@@ -179,13 +180,11 @@ SB.readyForPlatform('samsung', function () {
         _stop: function () {
             this.doPlugin('Stop');
         },
-        pause: function () {
+        _pause: function () {
             this.doPlugin('Pause');
-            this.state = "pause";
         },
-        resume: function () {
+        _resume: function () {
             this.doPlugin('Resume');
-            this.state = "play";
         },
         doPlugin: function () {
             var result,

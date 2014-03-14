@@ -177,6 +177,11 @@
         }
       }
     },
+
+    /**
+     * Add events methods to source object
+     * @param object {Object} source object
+     */
     extendFromEvents: function(object){
           var eventProto,
               extendFunction = _.merge;
@@ -203,7 +208,7 @@
   };
 
 
-    SmartboxAPI.extendFromEvents(SmartboxAPI);
+  SmartboxAPI.extendFromEvents(SmartboxAPI);
 
   _.extend(Smartbox, SmartboxAPI);
 
@@ -319,6 +324,35 @@
 
   _.extend(SB, PlatformApi);
 })(this);
+(function () {
+  /**
+   * Plugin constructor
+   * @param name plugin name
+   * @param api plugin public functions
+   * @returns {Plugin}
+   * @constructor
+   */
+  var Plugin = function ( name, api ) {
+    this.name = name;
+
+    _.extend(this, api);
+    return this;
+  };
+
+  Plugin.prototype.config = {};
+  Plugin.prototype.initialize = $.noop;
+  Plugin.prototype.isManuallyInited = false;
+
+  SB.addPlugin = function ( pluginName, pluginApi ) {
+    var plugin;
+    pluginName = '$$' + pluginName;
+    plugin = this.plugins[pluginName] = new Plugin(pluginName, pluginApi);
+
+    if ( !window[pluginName] ) {
+      window[pluginName] = plugin;
+    }
+  }
+})();
 /**
  * Keyboard Plugin
  */
@@ -2138,7 +2172,6 @@ $(function () {
       n && nav.current(n);
     });
   });
-
 })(this);
 /**
  * Player plugin for smartbox
@@ -2156,6 +2189,8 @@ $(function () {
      */
     var stub_play = function (self) {
         self.state = "play";
+
+        updateInterval && clearInterval(updateInterval);
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -2164,7 +2199,7 @@ $(function () {
                 self.trigger("complete");
             }
         }, 500);
-    }
+    };
 
     var inited = false;
 
@@ -2294,17 +2329,27 @@ $(function () {
          * Player.pause(); //paused
          */
         pause: function () {
-            this._stop();
+          if (this.state === 'play') {
+            this._pause();
             this.state = "pause";
+            this.trigger('pause');
+          }
         },
+        _pause: $.noop,
         /**
          * Resume playback
          * @examples
          * Player.pause(); //resumed
          */
         resume: function () {
+          if (this.state === 'pause') {
+            this._resume();
             stub_play(this);
+            this.state = "play";
+            this.trigger('resume');
+          }
         },
+        _resume: $.noop,
         /**
          * Toggles pause/resume
          * @examples
@@ -3074,13 +3119,11 @@ SB.readyForPlatform('browser', function () {
             this.$video_container[0].pause();
             this.$video_container[0].src = '';
         },
-        pause: function () {
+        _pause: function () {
             this.$video_container[0].pause();
-            this.state = "pause";
         },
-        resume: function () {
+        _resume: function () {
             this.$video_container[0].play();
-            this.state = "play";
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
@@ -3356,17 +3399,14 @@ SB.readyForPlatform('lg', function () {
 
             from= options.from;
         },
-        pause: function(){
+        _pause: function(){
             this.plugin.play(0);
-            this.state="pause";
         },
-        resume: function(){
+        _resume: function(){
             this.plugin.play(1);
-            this.state="play";
         },
         _stop: function () {
             this.plugin.stop();
-            this.state="stop";
         },
         seek: function(time){
             this.plugin.seek(time*1000);
@@ -3543,14 +3583,12 @@ SB.readyForPlatform('mag', function () {
             stb.Stop();
             stopUpdate();
         },
-        pause: function () {
+        _pause: function () {
             stb.Pause();
-            this.state = "pause";
             stopUpdate();
         },
-        resume: function () {
+        _resume: function () {
             stb.Continue();
-            this.state = "play";
             startUpdate();
         },
         seek: function (time) {
@@ -3789,14 +3827,12 @@ SB.readyForPlatform('philips', function () {
             video.stop();
             stopUpdate();
         },
-        pause: function () {
+        _pause: function () {
             video.play(0);
-            this.state = "pause";
             stopUpdate();
         },
-        resume: function () {
+        _resume: function () {
             video.play(1);
-            this.state = "play";
             startUpdate();
         },
         seek: function (time) {
@@ -3955,6 +3991,7 @@ SB.readyForPlatform('samsung', function () {
             if (self.usePlayerObject) {
                 //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
                 self.plugin = document.getElementById('pluginPlayer');
+
                 $('body').append(self.$plugin);
 
 
@@ -4096,13 +4133,11 @@ SB.readyForPlatform('samsung', function () {
         _stop: function () {
             this.doPlugin('Stop');
         },
-        pause: function () {
+        _pause: function () {
             this.doPlugin('Pause');
-            this.state = "pause";
         },
-        resume: function () {
+        _resume: function () {
             this.doPlugin('Resume');
-            this.state = "play";
         },
         doPlugin: function () {
             var result,

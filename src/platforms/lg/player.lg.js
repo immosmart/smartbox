@@ -83,17 +83,14 @@ SB.readyForPlatform('lg', function () {
 
             from= options.from;
         },
-        pause: function(){
+        _pause: function(){
             this.plugin.play(0);
-            this.state="pause";
         },
-        resume: function(){
+        _resume: function(){
             this.plugin.play(1);
-            this.state="play";
         },
         _stop: function () {
             this.plugin.stop();
-            this.state="stop";
         },
         seek: function(time){
             this.plugin.seek(time*1000);

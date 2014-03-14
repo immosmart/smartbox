@@ -84,14 +84,12 @@ SB.readyForPlatform('philips', function () {
             video.stop();
             stopUpdate();
         },
-        pause: function () {
+        _pause: function () {
             video.play(0);
-            this.state = "pause";
             stopUpdate();
         },
-        resume: function () {
+        _resume: function () {
             video.play(1);
-            this.state = "play";
             startUpdate();
         },
         seek: function (time) {

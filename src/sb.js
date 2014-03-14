@@ -177,6 +177,11 @@
         }
       }
     },
+
+    /**
+     * Add events methods to source object
+     * @param object {Object} source object
+     */
     extendFromEvents: function(object){
           var eventProto,
               extendFunction = _.merge;
@@ -203,7 +208,7 @@
   };
 
 
-    SmartboxAPI.extendFromEvents(SmartboxAPI);
+  SmartboxAPI.extendFromEvents(SmartboxAPI);
 
   _.extend(Smartbox, SmartboxAPI);
 

@@ -599,5 +599,4 @@
       n && nav.current(n);
     });
   });
-
 })(this);

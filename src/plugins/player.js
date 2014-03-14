@@ -14,6 +14,8 @@
      */
     var stub_play = function (self) {
         self.state = "play";
+
+        updateInterval && clearInterval(updateInterval);
         updateInterval = setInterval(function () {
             self.trigger("update");
             self.videoInfo.currentTime += 0.5;
@@ -22,7 +24,7 @@
                 self.trigger("complete");
             }
         }, 500);
-    }
+    };
 
     var inited = false;
 
@@ -152,17 +154,27 @@
          * Player.pause(); //paused
          */
         pause: function () {
-            this._stop();
+          if (this.state === 'play') {
+            this._pause();
             this.state = "pause";
+            this.trigger('pause');
+          }
         },
+        _pause: $.noop,
         /**
          * Resume playback
          * @examples
          * Player.pause(); //resumed
          */
         resume: function () {
+          if (this.state === 'pause') {
+            this._resume();
             stub_play(this);
+            this.state = "play";
+            this.trigger('resume');
+          }
         },
+        _resume: $.noop,
         /**
          * Toggles pause/resume
          * @examples

@@ -80,13 +80,11 @@ SB.readyForPlatform('browser', function () {
             this.$video_container[0].pause();
             this.$video_container[0].src = '';
         },
-        pause: function () {
+        _pause: function () {
             this.$video_container[0].pause();
-            this.state = "pause";
         },
-        resume: function () {
+        _resume: function () {
             this.$video_container[0].play();
-            this.state = "play";
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
