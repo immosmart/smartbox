@@ -93,7 +93,6 @@
 
 
                 var onready=function(){
-                    console.log('clear');
                     self.off('ready', onready);
                     self.off('error', onready);
                     clearTimeout(errorTimeout);
