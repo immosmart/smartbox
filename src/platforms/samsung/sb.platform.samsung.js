@@ -135,6 +135,8 @@
 
           this.keys = sf.key;
 
+          this.keys['RW'] = 69;
+
           document.body.onkeydown = function ( event ) {
             var keyCode = event.keyCode;
             $$log('keyDown ' + keyCode);
