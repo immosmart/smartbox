@@ -32,16 +32,20 @@ SB.readyForPlatform('samsung', function () {
     }
     Player.extend({
         usePlayerObject: true,
+        fullscreenSize: {
+          width: 1280,
+          height: 720
+        },
         _init: function () {
             var self = this;
             //document.body.onload=function(){
             if (self.usePlayerObject) {
                 //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
                 self.plugin = document.getElementById('pluginPlayer');
-
-                $('body').append(self.$plugin);
-
-
+                //var wrap = document.createElement('div');
+                //wrap.className = 'player-wrap';
+                //wrap.appendChild(self.plugin);
+                document.body.appendChild(self.plugin);
             } else {
                 self.plugin = sf.core.sefplugin('Player');
             }
@@ -193,10 +197,7 @@ SB.readyForPlatform('samsung', function () {
                 args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
 
             if (this.usePlayerObject) {
-
-
                 result = safeApply(plugin, methodName, args);
-
             }
             else {
                 if (methodName.indexOf('Buffer') != -1) {
@@ -207,6 +208,75 @@ SB.readyForPlatform('samsung', function () {
             }
 
             return result;
+        },
+        _setSize: function (size) {
+
+          this.isFullscreen = false;
+
+          var width = size.width,
+            height = size.height,
+            x = size.left,
+            y = size.top,
+            videoWidth = this.videoInfo.width,
+            videoHeight = this.videoInfo.height;
+
+          // check if no video sizes
+          if (!videoWidth || !videoHeight) {
+
+            // event for overlay
+            this.trigger('setSize', {
+              width: width,
+              height: height,
+              offsetX: x,
+              offsetY: y
+            });
+            return;
+          }
+
+          var fullscreenSize = this.fullscreenSize,
+            windowRate = width / height,
+            clipRate = videoWidth / videoHeight,
+            w, h;
+
+          if (width === fullscreenSize.width &&
+              height === fullscreenSize.height) {
+            this.isFullscreen = true;
+          }
+
+          if (windowRate > clipRate) {
+              w = height * clipRate;
+              h = height;
+              x += (width - w) / 2;
+          }
+          else {
+              w = width;
+              h = width / clipRate;
+              y += (height - h) / 2;
+          }
+
+/*          if (!this.isFullscreen) {
+            this.doPlugin('SetCropArea', 0, 0, videoWidth, videoHeight);
+            $$log('Reset crop area', 'player');
+          }*/
+
+          //В плеере DPI отличное от приложения
+          this.doPlugin('SetDisplayArea', x * 0.75, y * 0.75, w * 0.75, h * 0.75);
+
+          // хак для паузы после изменения размера
+          // самсунговский плеер автоматически воспроизводит видео после изменения размеров
+          if (this.state === 'PAUSE') {
+            this.pause(true);
+          }
+
+          this.trigger('setSize', {
+            width: width,
+            height: height,
+            offsetX: size.left,
+            offsetY: size.top
+          });
+
+          $$log('Set player size', 'player');
+          $$log('Player size: ' + Math.floor(w) + " * " + Math.floor(h) + " ### Position: top:" + y + " / left: " + x, 'player');
         },
         audio: {
             set: function (index) {

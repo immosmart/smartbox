@@ -36,12 +36,14 @@
 
         config: {
             //Время после которого произойдет событие 'error'
-            errorTimeout: 9000
+            errorTimeout: 9000,
+            size: {
+              left: 0,
+              top: 0,
+              width: 1280,
+              height: 720
+            }
         },
-
-
-
-
 
         /**
          * Inserts player object to DOM and do some init work
@@ -212,6 +214,20 @@
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
+
+        setSize: function ( opt ) {
+          opt = opt || {};
+          var size = this.config.size;
+
+          _.extend(size, opt);
+
+          if (inited) {
+            this._setSize(size);
+          }
+        },
+
+        _setSize: $.noop,
+
         /**
          * Hash contains info about current video
          */

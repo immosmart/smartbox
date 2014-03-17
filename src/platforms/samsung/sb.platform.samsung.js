@@ -17,7 +17,7 @@
             pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
             pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
             pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
-            pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
+            //pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
         },
         samsungFiles = [
             '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
@@ -27,8 +27,7 @@
             '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
             '$MANAGER_WIDGET/Common/API/Plugin.js',
             '$MANAGER_WIDGET/Common/API/Widget.js',
-            '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-            'src/platforms/samsung/localstorage.js'
+            '$MANAGER_WIDGET/Common/API/TVKeyValue.js'
         ];
 
     SB.createPlatform('samsung', {

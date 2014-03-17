@@ -2211,12 +2211,14 @@ $(function () {
 
         config: {
             //Время после которого произойдет событие 'error'
-            errorTimeout: 9000
+            errorTimeout: 9000,
+            size: {
+              left: 0,
+              top: 0,
+              width: 1280,
+              height: 720
+            }
         },
-
-
-
-
 
         /**
          * Inserts player object to DOM and do some init work
@@ -2387,6 +2389,20 @@ $(function () {
             }
             return (hours ? hours + ':' : '') + minutes + ":" + seconds;
         },
+
+        setSize: function ( opt ) {
+          opt = opt || {};
+          var size = this.config.size;
+
+          _.extend(size, opt);
+
+          if (inited) {
+            this._setSize(size);
+          }
+        },
+
+        _setSize: $.noop,
+
         /**
          * Hash contains info about current video
          */
@@ -3042,11 +3058,12 @@ SB.readyForPlatform('browser', function () {
     Player.extend({
         _init: function () {
             var self = this;
-            var ww = 1280;
-            var wh = 720;
 
+            this.$video_container = $('<video></video>', {
+              "id": "smart_player"
+            });
+            this._setSize(this.config.size);
 
-            this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
             var video = this.$video_container[0];
             $('body').append(this.$video_container);
 
@@ -3127,6 +3144,16 @@ SB.readyForPlatform('browser', function () {
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
+        },
+        _setSize: function (size) {
+          this.$video_container.css({
+              position: "absolute",
+              left: size.left + 'px',
+              top: size.top + 'px',
+              width: size.width + 'px',
+              height: size.height + 'px',
+              zIndex: size.zIndex
+          });
         },
         audio: {
             //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
@@ -3985,16 +4012,20 @@ SB.readyForPlatform('samsung', function () {
     }
     Player.extend({
         usePlayerObject: true,
+        fullscreenSize: {
+          width: 1280,
+          height: 720
+        },
         _init: function () {
             var self = this;
             //document.body.onload=function(){
             if (self.usePlayerObject) {
                 //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
                 self.plugin = document.getElementById('pluginPlayer');
-
-                $('body').append(self.$plugin);
-
-
+                //var wrap = document.createElement('div');
+                //wrap.className = 'player-wrap';
+                //wrap.appendChild(self.plugin);
+                document.body.appendChild(self.plugin);
             } else {
                 self.plugin = sf.core.sefplugin('Player');
             }
@@ -4146,10 +4177,7 @@ SB.readyForPlatform('samsung', function () {
                 args = Array.prototype.slice.call(arguments, 1, arguments.length) || [];
 
             if (this.usePlayerObject) {
-
-
                 result = safeApply(plugin, methodName, args);
-
             }
             else {
                 if (methodName.indexOf('Buffer') != -1) {
@@ -4160,6 +4188,75 @@ SB.readyForPlatform('samsung', function () {
             }
 
             return result;
+        },
+        _setSize: function (size) {
+
+          this.isFullscreen = false;
+
+          var width = size.width,
+            height = size.height,
+            x = size.left,
+            y = size.top,
+            videoWidth = this.videoInfo.width,
+            videoHeight = this.videoInfo.height;
+
+          // check if no video sizes
+          if (!videoWidth || !videoHeight) {
+
+            // event for overlay
+            this.trigger('setSize', {
+              width: width,
+              height: height,
+              offsetX: x,
+              offsetY: y
+            });
+            return;
+          }
+
+          var fullscreenSize = this.fullscreenSize,
+            windowRate = width / height,
+            clipRate = videoWidth / videoHeight,
+            w, h;
+
+          if (width === fullscreenSize.width &&
+              height === fullscreenSize.height) {
+            this.isFullscreen = true;
+          }
+
+          if (windowRate > clipRate) {
+              w = height * clipRate;
+              h = height;
+              x += (width - w) / 2;
+          }
+          else {
+              w = width;
+              h = width / clipRate;
+              y += (height - h) / 2;
+          }
+
+/*          if (!this.isFullscreen) {
+            this.doPlugin('SetCropArea', 0, 0, videoWidth, videoHeight);
+            $$log('Reset crop area', 'player');
+          }*/
+
+          //В плеере DPI отличное от приложения
+          this.doPlugin('SetDisplayArea', x * 0.75, y * 0.75, w * 0.75, h * 0.75);
+
+          // хак для паузы после изменения размера
+          // самсунговский плеер автоматически воспроизводит видео после изменения размеров
+          if (this.state === 'PAUSE') {
+            this.pause(true);
+          }
+
+          this.trigger('setSize', {
+            width: width,
+            height: height,
+            offsetX: size.left,
+            offsetY: size.top
+          });
+
+          $$log('Set player size', 'player');
+          $$log('Player size: ' + Math.floor(w) + " * " + Math.floor(h) + " ### Position: top:" + y + " / left: " + x, 'player');
         },
         audio: {
             set: function (index) {
@@ -4221,7 +4318,7 @@ SB.readyForPlatform('samsung', function () {
             pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
             pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
             pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
-            pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
+            //pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
         },
         samsungFiles = [
             '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',
@@ -4231,8 +4328,7 @@ SB.readyForPlatform('samsung', function () {
             '$MANAGER_WIDGET/Common/af/2.0.0/sf.min.js',
             '$MANAGER_WIDGET/Common/API/Plugin.js',
             '$MANAGER_WIDGET/Common/API/Widget.js',
-            '$MANAGER_WIDGET/Common/API/TVKeyValue.js',
-            'src/platforms/samsung/localstorage.js'
+            '$MANAGER_WIDGET/Common/API/TVKeyValue.js'
         ];
 
     SB.createPlatform('samsung', {

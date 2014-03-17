@@ -3,11 +3,12 @@ SB.readyForPlatform('browser', function () {
     Player.extend({
         _init: function () {
             var self = this;
-            var ww = 1280;
-            var wh = 720;
 
+            this.$video_container = $('<video></video>', {
+              "id": "smart_player"
+            });
+            this._setSize(this.config.size);
 
-            this.$video_container = $('<video id="smart_player" style="position: absolute; left: 0; top: 0;width: ' + ww + 'px; height: ' + wh + 'px;"></video>');
             var video = this.$video_container[0];
             $('body').append(this.$video_container);
 
@@ -88,6 +89,16 @@ SB.readyForPlatform('browser', function () {
         },
         seek: function (time) {
             this.$video_container[0].currentTime = time;
+        },
+        _setSize: function (size) {
+          this.$video_container.css({
+              position: "absolute",
+              left: size.left + 'px',
+              top: size.top + 'px',
+              width: size.width + 'px',
+              height: size.height + 'px',
+              zIndex: size.zIndex
+          });
         },
         audio: {
             //https://bugzilla.mozilla.org/show_bug.cgi?id=744896
