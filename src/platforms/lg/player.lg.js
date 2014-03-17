@@ -32,9 +32,12 @@ SB.readyForPlatform('lg', function () {
                 };
                 var self=this;
                 if(from){
-                    _.defer(function(){
+                    var self=this;
+                    var onBufEnd=function(){
+                        self.off('bufferingEnd', onBufEnd);
                         self.seek(from);
-                    });
+                    };
+                    self.on('bufferingEnd', onBufEnd);
                 }
 
                 this.trigger('ready');
