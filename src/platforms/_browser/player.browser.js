@@ -87,8 +87,14 @@ SB.readyForPlatform('browser', function () {
         _resume: function () {
             this.$video_container[0].play();
         },
-        seek: function (time) {
+        _seek: function (time) {
             this.$video_container[0].currentTime = time;
+        },
+        _forward: function (time) {
+            this.$video_container[0].currentTime = this.videoInfo.currentTime + time;
+        },
+        _backward: function (time) {
+          this.$video_container[0].currentTime = this.videoInfo.currentTime - time;
         },
         _setSize: function (size) {
           this.$video_container.css({

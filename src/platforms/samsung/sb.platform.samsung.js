@@ -17,7 +17,7 @@
             pluginObjectTVMW: 'SAMSUNG-INFOLINK-TVMW',
             pluginObjectNetwork: 'SAMSUNG-INFOLINK-NETWORK',
             pluginObjectNNavi: 'SAMSUNG-INFOLINK-NNAVI',
-            //pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
+            pluginPlayer: 'SAMSUNG-INFOLINK-PLAYER'
         },
         samsungFiles = [
             '$MANAGER_WIDGET/Common/af/../webapi/1.0/deviceapis.js',

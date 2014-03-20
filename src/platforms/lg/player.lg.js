@@ -95,7 +95,7 @@ SB.readyForPlatform('lg', function () {
         _stop: function () {
             this.plugin.stop();
         },
-        seek: function(time){
+        _seek: function(time){
             this.plugin.seek(time*1000);
         },
         audio: {

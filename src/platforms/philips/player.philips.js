@@ -92,7 +92,7 @@ SB.readyForPlatform('philips', function () {
             video.play(1);
             startUpdate();
         },
-        seek: function (time) {
+        _seek: function (time) {
             //-10 for test pass
             video.seek((time - 10) * 1000);
         }

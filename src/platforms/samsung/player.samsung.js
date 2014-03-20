@@ -23,13 +23,14 @@ SB.readyForPlatform('samsung', function () {
                 case 7:
                     return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
                 case 8:
-                    return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
+                  return self[method](args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 
             }
         } catch (e) {
             throw e;
         }
-    }
+    };
+
     Player.extend({
         usePlayerObject: true,
         fullscreenSize: {
@@ -37,58 +38,53 @@ SB.readyForPlatform('samsung', function () {
           height: 720
         },
         _init: function () {
-            var self = this;
+            var style,
+              wrap;
             //document.body.onload=function(){
-            if (self.usePlayerObject) {
-                //self.$plugin = $('<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER" style="position: absolute; left: 0; top: 0; width: 1280px; height: 720px;"></object>');
-                self.plugin = document.getElementById('pluginPlayer');
-                //var wrap = document.createElement('div');
-                //wrap.className = 'player-wrap';
-                //wrap.appendChild(self.plugin);
-                document.body.appendChild(self.plugin);
+            if (this.usePlayerObject) {
+                this.plugin = document.getElementById('pluginPlayer');
+                style = this.plugin.style;
+                style.position = 'absolute';
+                style.left = '0px';
+                style.top = '0px';
+                wrap = document.createElement('div');
+                wrap.className = 'player-wrap';
+                wrap.appendChild(this.plugin);
+                document.body.appendChild(wrap);
             } else {
-                self.plugin = sf.core.sefplugin('Player');
+                this.plugin = sf.core.sefplugin('Player');
             }
 
-
-            if (!self.plugin) {
+            if (!this.plugin) {
                 throw new Error('failed to set plugin');
             }
 
-            self.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
-            self.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
-            self.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
-            self.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
-            self.plugin.OnBufferingStart = 'Player.OnBufferingStart';
-            //self.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
-            self.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
-            self.plugin.OnConnectionFailed = 'Player.onError';
-            self.plugin.OnNetworkDisconnected = 'Player.onError';
-            //self.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
+            this.plugin.OnStreamInfoReady = 'Player.OnStreamInfoReady';
+            this.plugin.OnRenderingComplete = 'Player.OnRenderingComplete';
+            this.plugin.OnCurrentPlayTime = 'Player.OnCurrentPlayTime';
+            this.plugin.OnCurrentPlaybackTime = 'Player.OnCurrentPlayTime';
+            this.plugin.OnBufferingStart = 'Player.OnBufferingStart';
+            //this.plugin.OnBufferingProgress = 'Player.OnBufferingProgress';
+            this.plugin.OnBufferingComplete = 'Player.OnBufferingComplete';
+            this.plugin.OnConnectionFailed = 'Player.onError';
+            this.plugin.OnNetworkDisconnected = 'Player.onError';
+            //this.plugin.OnAuthenticationFailed = 'Player.OnAuthenticationFailed';
 
-            self.plugin.OnEvent = 'Player.onEvent';
+            this.plugin.OnEvent = 'Player.onEvent';
             //}
 
         },
-        seek: function (time) {
-            if (time <= 0) {
-                time = 0;
-            }
-            /*if ( this.duration <= time + 1 ) {
-             this.videoInfo.currentTime = this.videoInfo.duration;
-             }
-             else {*/
-            var jump = Math.floor(time - this.videoInfo.currentTime - 1);
-            this.videoInfo.currentTime = time;
-            alert('jump: ' + jump);
+        _seek: function (time) {
+            var jump = Math.floor(time - this.videoInfo.currentTime) + 1;
+
+          alert('SEEK TIME ' + time);
+          alert('jump time ' + jump);
             if (jump < 0) {
-                this.doPlugin('JumpBackward', -jump);
+              this.doPlugin('JumpBackward', -jump);
             }
             else {
-                this.doPlugin('JumpForward', jump);
+              this.doPlugin('JumpForward', jump);
             }
-            //  this.currentTime = time;
-            //}
         },
 
         onError: function(){
@@ -128,7 +124,9 @@ SB.readyForPlatform('samsung', function () {
             Player.trigger('complete');
         },
         OnStreamInfoReady: function () {
-            var duration, width, height, resolution;
+            var duration, width, height, resolution,
+              playerSize = this.config.size,
+              style;
 
             try {
                 duration = this.doPlugin('GetDuration');
@@ -142,6 +140,11 @@ SB.readyForPlatform('samsung', function () {
             if (this.usePlayerObject) {
                 width = this.doPlugin('GetVideoWidth');
                 height = this.doPlugin('GetVideoHeight');
+                style = this.plugin.style;
+                style.left = playerSize.left + 'px';
+                style.top = playerSize.top + 'px';
+                style.width = playerSize.width + 'px';
+                style.height = playerSize.height + 'px';
             } else {
                 resolution = this.doPlugin('GetVideoResolution');
                 if (resolution == -1) {
@@ -157,6 +160,7 @@ SB.readyForPlatform('samsung', function () {
             this.videoInfo.duration = duration;
             this.videoInfo.width = width * 1;
             this.videoInfo.height = height * 1;
+            this._setSize(this.config.size);
             this.trigger('ready');
         },
         OnBufferingStart: function () {
@@ -210,38 +214,21 @@ SB.readyForPlatform('samsung', function () {
             return result;
         },
         _setSize: function (size) {
-
-          this.isFullscreen = false;
-
           var width = size.width,
             height = size.height,
             x = size.left,
             y = size.top,
             videoWidth = this.videoInfo.width,
-            videoHeight = this.videoInfo.height;
+            videoHeight = this.videoInfo.height,
+            windowRate, clipRate, w, h;
 
           // check if no video sizes
           if (!videoWidth || !videoHeight) {
-
-            // event for overlay
-            this.trigger('setSize', {
-              width: width,
-              height: height,
-              offsetX: x,
-              offsetY: y
-            });
             return;
           }
 
-          var fullscreenSize = this.fullscreenSize,
-            windowRate = width / height,
-            clipRate = videoWidth / videoHeight,
-            w, h;
-
-          if (width === fullscreenSize.width &&
-              height === fullscreenSize.height) {
-            this.isFullscreen = true;
-          }
+          windowRate = width / height;
+          clipRate = videoWidth / videoHeight;
 
           if (windowRate > clipRate) {
               w = height * clipRate;
@@ -254,28 +241,19 @@ SB.readyForPlatform('samsung', function () {
               y += (height - h) / 2;
           }
 
-/*          if (!this.isFullscreen) {
-            this.doPlugin('SetCropArea', 0, 0, videoWidth, videoHeight);
-            $$log('Reset crop area', 'player');
-          }*/
+          //Player DPI is not the same as window DPI
+          x = Math.floor(x * 0.75);
+          y = Math.floor(y * 0.75);
+          w = Math.floor(w * 0.75);
+          h = Math.floor(h * 0.75);
+          this.doPlugin('SetDisplayArea', x, y, w, h);
 
-          //В плеере DPI отличное от приложения
-          this.doPlugin('SetDisplayArea', x * 0.75, y * 0.75, w * 0.75, h * 0.75);
-
-          // хак для паузы после изменения размера
-          // самсунговский плеер автоматически воспроизводит видео после изменения размеров
+          // hack for pause
+          // samsung player starts video after setDisplayArea
           if (this.state === 'PAUSE') {
             this.pause(true);
           }
 
-          this.trigger('setSize', {
-            width: width,
-            height: height,
-            offsetX: size.left,
-            offsetY: size.top
-          });
-
-          $$log('Set player size', 'player');
           $$log('Player size: ' + Math.floor(w) + " * " + Math.floor(h) + " ### Position: top:" + y + " / left: " + x, 'player');
         },
         audio: {

@@ -32,11 +32,14 @@
     var errorTimeout;
 
     var Player = window.Player = {
-
-
+        isSeeking: false,
+        // default seek time in seconds
+        jumpLength: 5,
         config: {
-            //Время после которого произойдет событие 'error'
+            //time for 'error' event(if nothing happens)
             errorTimeout: 9000,
+            // use debounce for seek functions
+            useSeekDebounce: true,
             size: {
               left: 0,
               top: 0,
@@ -44,7 +47,6 @@
               height: 720
             }
         },
-
         /**
          * Inserts player object to DOM and do some init work
          * @examples
@@ -142,10 +144,15 @@
          * });  // stop player and avoid possible side effects
          */
         stop: function (silent) {
+          var info = this.videoInfo;
             if (this.state != 'stop') {
                 this._stop();
                 if (!silent) {
                     this.trigger('stop');
+                }
+                if (info.seekTime) {
+                  info.seekTime = null;
+                  this.trigger('seekStop')
                 }
             }
             this.state = 'stop';
@@ -171,12 +178,13 @@
         resume: function () {
           if (this.state === 'pause') {
             this._resume();
-            stub_play(this);
             this.state = "play";
             this.trigger('resume');
           }
         },
-        _resume: $.noop,
+        _resume: function () {
+          stub_play(this);
+        },
         /**
          * Toggles pause/resume
          * @examples
@@ -200,9 +208,9 @@
          * @examples
          * Player.formatTime(PLayer.videoInfo.duration); // => "1:30:27"
          */
-        formatTime: function (seconds) {
-            var hours = Math.floor(seconds / (60 * 60));
-            var divisor_for_minutes = seconds % (60 * 60);
+        formatTime: function (time) {
+            var hours = Math.floor(time / (60 * 60));
+            var divisor_for_minutes = time % (60 * 60);
             var minutes = Math.floor(divisor_for_minutes / 60);
             var divisor_for_seconds = divisor_for_minutes % 60;
             var seconds = Math.ceil(divisor_for_seconds);
@@ -247,7 +255,11 @@
             /**
              * Current playback time in seconds
              */
-            currentTime: 0
+            currentTime: 0,
+            /**
+             * Current seeking time
+             */
+            seekTime: null
         },
 
         /**
@@ -256,7 +268,7 @@
          * @examples
          * Player.seek(20); // seek to 20 seconds
          */
-        seek: function (seconds) {
+        _seek: function (seconds) {
             var self = this;
             self.videoInfo.currentTime = seconds;
             self.pause();
@@ -266,6 +278,79 @@
                 self.resume();
             }, 500);
         },
+
+        seek: function ( time, useDebounce ) {
+          var info = this.videoInfo,
+            jump;
+          if ( time <= 0 ) {
+            time = 0;
+          }
+          if ( time >= info.duration ) {
+            time = info.duration;
+            var state = this.state;
+            this.state = 'STOP';
+            if ( state != 'STOP' ) {
+              this.stop();
+              this.trigger('complete');
+            }
+          } else {
+            if ( this.config.useSeekDebounce && useDebounce) {
+              this.seekDebounce(time);
+            } else {
+              this.seekStop(time);
+            }
+            if (info.seekTime) {
+              this.trigger('seekProgress')
+            }
+          }
+        },
+
+        seekStop: function ( time ) {
+          var info = this.videoInfo;
+          if (this.state !== 'stop') {
+            this._seek(time);
+            info.currentTime = time;
+            if (info.seekTime) {
+              info.seekTime = null;
+              this.trigger('seekStop');
+            }
+            this.trigger('update');
+          }
+        },
+
+        seekDebounce: _.debounce(function (time) {
+          this.seekStop(time)
+        }, 500),
+
+        forward: function ( time ) {
+          time = time || this.jumpLength;
+          if (this.state !== 'stop') {
+            var seekTime = this.setSeekTime(time);
+            this.seek(seekTime, true);
+          }
+        },
+        backward: function (time) {
+          time = time || this.jumpLength;
+          if (this.state !== 'stop') {
+            var seekTime = this.setSeekTime(-time);
+            this.seek(seekTime, true);
+          }
+
+        },
+        setSeekTime: function (time) {
+          var info = this.videoInfo;
+
+          // check for null value
+          if ( _.isNull(info.seekTime) ) {
+            info.seekTime = info.currentTime;
+            this.trigger('seekStart');
+          }
+
+          info.seekTime += time;
+
+          return info.seekTime;
+        },
+
         /**
          * For multi audio tracks videos
          */
