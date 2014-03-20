@@ -37,8 +37,8 @@ describe('Platform', function () {
     });
 
     xit('Should detect platform', function () {
-        $('body').prepend('<div style="color: #ffffff; background: #000000">' + navigator.userAgent + '</div>')
-        expect(SB.platform).toBe('lg');
+        $('body').prepend('<div style="color: #ffffff; background: #000000; position: relative; z-index: 1;">' + navigator.userAgent + '</div>')
+        expect(SB.platformName).toBe('lg');
     });
 
     describe('Local storage', function () {
