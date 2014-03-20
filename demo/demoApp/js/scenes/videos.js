@@ -3,7 +3,7 @@
   var _inited;
     _.templateSettings.interpolate = /\{\{([\s\S]+?)\}\}/g;
 
-  var itemHtml = _.template('<div data-url="{{url}}" data-type="{{type}}" class="video-item nav-item">{{title}}</div>');
+  var itemHtml = _.template('<div class="video-item nav-item">{{title}}</div>');
 
   window.App.scenes.video = {
 
@@ -31,11 +31,8 @@
 
     // handler for click event
     onItemClick: function (e) {
-      var url = e.currentTarget.getAttribute('data-url');
-      Player.play({
-        url: url,
-        type: e.currentTarget.getAttribute('data-type')
-      });
+      var index=$(e.currentTarget).index();
+      Player.play(App.videos[index]);
     },
 
     // showing items from videos.js
