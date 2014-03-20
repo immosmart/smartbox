@@ -27,5 +27,21 @@
             url: 'http://live.iphone.redbull.de.edgesuite.net/webtvHD.m3u8',
             type: 'hls'
         }
+
+        /* //example drm
+         ,{
+         title: 'Armageddon',
+         url: 'http://example.com/armageddon.wvm',
+         type: 'vod',
+         drm: {
+             type: 'widevine',
+             url: 'http://example.com/GetEMMs.cgi',
+             streamID: '123',//optional
+             deviceType: 'tv',//optional
+             portalID: 'portalname',//optional
+             storeFront: 'storeFront'//optional
+         }
+         }
+         */
     ];
 })();
