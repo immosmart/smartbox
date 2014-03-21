@@ -37,7 +37,7 @@
         jumpLength: 5,
         config: {
             //time for 'error' event(if nothing happens)
-            errorTimeout: 9000,
+            errorTimeout: 15000,
             // use debounce for seek functions
             useSeekDebounce: true,
             size: {
