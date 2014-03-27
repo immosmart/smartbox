@@ -52,12 +52,12 @@ describe('Platform', function () {
         });
 
         it('Shold save data', function () {
-            localStorage.setItem('key', 'value');
-            expect(localStorage.getItem('key')).toBe('value');
+            localStorage.setItem('key', 'фывфывфыв');
+            expect(localStorage.getItem('key')).toBe('фывфывфыв');
         });
 
         it('Should delete data', function () {
-            localStorage.setItem('key', 'value');
+            localStorage.setItem('key', 'фывфывфыв');
             localStorage.removeItem('key');
             expect(localStorage.getItem('key')).toBeFalsy();
         });

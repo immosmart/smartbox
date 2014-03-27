@@ -75,13 +75,13 @@
           if (typeof data === 'object') {
             data = JSON.stringify(data);
           }
-          stb.SaveUserData(name, data);
+          stb.SaveUserData(name, encodeURIComponent(data));
         },
         clear: function () {
 
         },
         getItem: function (name) {
-          return stb.LoadUserData(name);
+          return decodeURIComponent(stb.LoadUserData(name));
         },
         removeItem: function (name) {
           stb.SaveUserData(name, null);
