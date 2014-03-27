@@ -324,6 +324,35 @@
 
   _.extend(SB, PlatformApi);
 })(this);
+(function () {
+  /**
+   * Plugin constructor
+   * @param name plugin name
+   * @param api plugin public functions
+   * @returns {Plugin}
+   * @constructor
+   */
+  var Plugin = function ( name, api ) {
+    this.name = name;
+
+    _.extend(this, api);
+    return this;
+  };
+
+  Plugin.prototype.config = {};
+  Plugin.prototype.initialize = $.noop;
+  Plugin.prototype.isManuallyInited = false;
+
+  SB.addPlugin = function ( pluginName, pluginApi ) {
+    var plugin;
+    pluginName = '$$' + pluginName;
+    plugin = this.plugins[pluginName] = new Plugin(pluginName, pluginApi);
+
+    if ( !window[pluginName] ) {
+      window[pluginName] = plugin;
+    }
+  }
+})();
 /**
  * Keyboard Plugin
  */
@@ -1397,6 +1426,7 @@ window.SB.keyboardPresets = {
     $logWrap,
     $logRow,
     Log,
+    LogApi,
     LogPanel;
 
   // append log wrapper to body
@@ -1489,7 +1519,7 @@ window.SB.keyboardPresets = {
   /**
    * Public log API
    */
-  window.SB.utils.log = {
+  LogApi = {
     log: function ( msg, logName ) {
       Log.getPanel(logName).log(msg);
     },
@@ -1529,7 +1559,9 @@ window.SB.keyboardPresets = {
       }
     }
   };
-  window.$$log = SB.utils.log.log;
+  window.SB.utils.log = LogApi;
+  window.$$log = LogApi.log;
+  window.$$logApi = LogApi;
   window.$$error = SB.utils.error;
 
 })(this);

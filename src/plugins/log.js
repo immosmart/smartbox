@@ -9,6 +9,7 @@
     $logWrap,
     $logRow,
     Log,
+    LogApi,
     LogPanel;
 
   // append log wrapper to body
@@ -101,7 +102,7 @@
   /**
    * Public log API
    */
-  window.SB.utils.log = {
+  LogApi = {
     log: function ( msg, logName ) {
       Log.getPanel(logName).log(msg);
     },
@@ -141,7 +142,9 @@
       }
     }
   };
-  window.$$log = SB.utils.log.log;
+  window.SB.utils.log = LogApi;
+  window.$$log = LogApi.log;
+  window.$$logApi = LogApi;
   window.$$error = SB.utils.error;
 
 })(this);
