@@ -278,11 +278,13 @@
 
       //jump to next input if is set
       if ( text.length === opt.max &&
-           opt.next &&
            opt.max != 0 ) {
-        this.hideKeyboard();
-        $$nav.current(opt.next);
-        $$nav.current().click();
+        this.hideKeyboard(true);
+
+        if( opt.next ) {
+          $$nav.current(opt.next);
+          $$nav.current().click();
+        }
       }
     },
 
