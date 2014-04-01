@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget>
+	<mouse itemtype="string">y</mouse>
+	<previewjs itemtype="string"></previewjs>
+	<preicon itemtype="string"></preicon>
+	<cpname itemtype="string"></cpname>
+	<cplogo itemtype="string"></cplogo>
+	<cpauthjs itemtype="string"></cpauthjs>
+	<ver itemtype="string">0.1</ver>
+	<mgrver itemtype="string"></mgrver>
+	<fullwidget itemtype="boolean">y</fullwidget>
+	<srcctl itemtype="boolean">y</srcctl>
+	<ticker itemtype="boolean">n</ticker>
+	<childlock itemtype="boolean">n</childlock>
+	<audiomute itemtype="boolean">y</audiomute>
+	<videomute itemtype="boolean">y</videomute>
+	<dcont itemtype="boolean">y</dcont>
+	<widgetname itemtype="string">SmartBox Player</widgetname>
+	<description itemtype="string"></description>
+	<width itemtype="number">1280</width>
+	<height itemtype="number">720</height>
+	<author itemtype="group">
+		<name itemtype="string">Denis Chinin</name>
+		<email itemtype="string">info@example.com</email>
+		<link itemtype="string">https://github.com/DenisChinin/Player-Demo-Smartbox</link>
+		<organization itemtype="string">Smart</organization>
+	</author>
+	<BigListIcon itemtype="string">icon/sb_demo_95x78.png</BigListIcon>
+	<ListIcon itemtype="string">icon/sb_demo_85x70.png</ListIcon>
+</widget>
