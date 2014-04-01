@@ -40,6 +40,7 @@
             errorTimeout: 15000,
             // use debounce for seek functions
             useSeekDebounce: true,
+            autosize: true,
             size: {
               left: 0,
               top: 0,

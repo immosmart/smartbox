@@ -227,18 +227,24 @@ SB.readyForPlatform('samsung', function () {
             return;
           }
 
-          windowRate = width / height;
-          clipRate = videoWidth / videoHeight;
+          if(this.config.autosize) {
+            windowRate = width / height;
+            clipRate = videoWidth / videoHeight;
 
-          if (windowRate > clipRate) {
-              w = height * clipRate;
-              h = height;
-              x += (width - w) / 2;
+            if (windowRate > clipRate) {
+                w = height * clipRate;
+                h = height;
+                x += (width - w) / 2;
+            }
+            else {
+                w = width;
+                h = width / clipRate;
+                y += (height - h) / 2;
+            }
           }
           else {
-              w = width;
-              h = width / clipRate;
-              y += (height - h) / 2;
+            w = width;
+            h = height;
           }
 
           //Player DPI is not the same as window DPI
