@@ -38,7 +38,8 @@ SB.createPlatform('browser', {
         PAUSE: 99,//numpad 3
         SUBT: 76,//l,
         INFO: 73,//i
-        REC: 82//r
+        REC: 82,//r
+        APP: 81//q
     },
 
     detect: function () {

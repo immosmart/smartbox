@@ -2191,6 +2191,7 @@ $(function () {
             errorTimeout: 15000,
             // use debounce for seek functions
             useSeekDebounce: true,
+            autosize: true,
             size: {
               left: 0,
               top: 0,
@@ -2749,6 +2750,7 @@ $(function () {
     SB.extendFromEvents(Player);
 
 }(this));
+
 (function ($) {
     "use strict";
 
@@ -3339,7 +3341,8 @@ SB.createPlatform('browser', {
         PAUSE: 99,//numpad 3
         SUBT: 76,//l,
         INFO: 73,//i
-        REC: 82//r
+        REC: 82,//r
+        APP: 81//q
     },
 
     detect: function () {
@@ -3812,7 +3815,8 @@ SB.readyForPlatform('mag', function () {
       STOP: 83,
       //PAUSE: 99,
       //SUBT: 76,
-      INFO: 89
+      INFO: 89,
+      APP: 123
       //REC: 82
     },
 
@@ -4326,18 +4330,24 @@ SB.readyForPlatform('samsung', function () {
             return;
           }
 
-          windowRate = width / height;
-          clipRate = videoWidth / videoHeight;
+          if(this.config.autosize) {
+            windowRate = width / height;
+            clipRate = videoWidth / videoHeight;
 
-          if (windowRate > clipRate) {
-              w = height * clipRate;
-              h = height;
-              x += (width - w) / 2;
+            if (windowRate > clipRate) {
+                w = height * clipRate;
+                h = height;
+                x += (width - w) / 2;
+            }
+            else {
+                w = width;
+                h = width / clipRate;
+                y += (height - h) / 2;
+            }
           }
           else {
-              w = width;
-              h = width / clipRate;
-              y += (height - h) / 2;
+            w = width;
+            h = height;
           }
 
           //Player DPI is not the same as window DPI
@@ -4396,6 +4406,7 @@ SB.readyForPlatform('samsung', function () {
         }
     });
 });
+
 /**
  * Samsung platform
  */

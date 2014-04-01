@@ -41,7 +41,8 @@
       STOP: 83,
       //PAUSE: 99,
       //SUBT: 76,
-      INFO: 89
+      INFO: 89,
+      APP: 123
       //REC: 82
     },
 
