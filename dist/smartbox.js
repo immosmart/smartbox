@@ -2250,6 +2250,7 @@ $(function () {
                 self._play(options);
 
 
+                /*
                 var onready=function(){
                     self.off('ready', onready);
                     self.off('error', onready);
@@ -2261,7 +2262,7 @@ $(function () {
 
                 errorTimeout=setTimeout(function(){
                     self.trigger('error');
-                }, self.config.errorTimeout);
+                }, self.config.errorTimeout);*/
 
 
             } else if (options === undefined && this.state === 'pause') {
