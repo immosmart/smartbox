@@ -17,14 +17,14 @@ SB.readyForPlatform('lg', function () {
             if (this.plugin.playState == 5) {
                 this.state = 'stop';
                 this.trigger('complete');
-            } else if (this.plugin.playState == 4) {
+            } else if (this.plugin.playState == 6) {
                 this.trigger('error')
             }
         },
         _update: function () {
             var info = this.plugin.mediaPlayInfo();
 
-            if (info && info.width && !isReady) {
+            if (info && info.duration && !isReady) {
                 //$('#log').append('<div>'+info.duration+'</div>');
 
                 //$$log(JSON.stringify(info));
