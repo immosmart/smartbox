@@ -2183,6 +2183,11 @@ $(function () {
     var errorTimeout;
 
     var Player = window.Player = {
+        mode3d: {
+            OFF: 'off',
+            SIDE_BY_SIDE: 'side_by_side',
+            ABOVE_BELOW: 'above_below'
+        },
         isSeeking: false,
         // default seek time in seconds
         jumpLength: 5,
@@ -3418,6 +3423,11 @@ SB.readyForPlatform('lg', function () {
     var isReady = false, from;
 
     Player.extend({
+        mode3d: {
+            OFF: 'off',
+            SIDE_BY_SIDE: 'side_by_side',
+            ABOVE_BELOW: 'top_bottom'
+        },
         updateDelay: 500,
         _init: function () {
 
@@ -3486,7 +3496,7 @@ SB.readyForPlatform('lg', function () {
             }
 
 
-            $('body').append('<object mode3D="' + (options.is3d ? 'side_by_side' : 'off') + '" '+drm_string+' type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
+            $('body').append('<object mode3D="' + (options.mode3d ? options.mode3d : 'off') + '" '+drm_string+' type="video/mp4" data="" width="1280" height="720" id="pluginPlayer" style="z-index: 0; position: absolute; left: 0; top: 0;"></object>');
             this.plugin = $('#pluginPlayer')[0];
             this.$plugin = $(this.plugin);
 

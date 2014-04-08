@@ -32,6 +32,11 @@
     var errorTimeout;
 
     var Player = window.Player = {
+        mode3d: {
+            OFF: 'off',
+            SIDE_BY_SIDE: 'side_by_side',
+            ABOVE_BELOW: 'above_below'
+        },
         isSeeking: false,
         // default seek time in seconds
         jumpLength: 5,
