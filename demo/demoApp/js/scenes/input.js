@@ -9,7 +9,7 @@
       var $valueText = this.$el.find('.js-input-1-val');
 
       this.$el.find('.js-input-1')
-        .on('change',function () {
+        .on('text_change',function () {
           $valueText.html(this.value);
         })
         .SBInput({

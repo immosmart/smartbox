@@ -53,8 +53,6 @@
         $bg.show();
         $$log('player stop');
       });
-
-
     },
 
     toggleView: function () {

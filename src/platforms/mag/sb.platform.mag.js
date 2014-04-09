@@ -22,8 +22,8 @@
       GREEN: 113,
       YELLOW: 114,
       BLUE: 115,
-      CH_UP: 9,
-      CH_DOWN: 9,
+      CH_UP: 901,
+      CH_DOWN: 902,
       N0: 48,
       N1: 49,
       N2: 50,
@@ -60,6 +60,18 @@
 
       SB(function () {
         var $body = $(document.body);
+        // polyfill for ch+/ch-
+        $body.on('keydown', function (e) {
+          var ev;
+          if ( e.keyCode === 9) {
+            e.stopPropagation();
+
+            e.keyCode = e.shiftKey? 902 : 901;
+
+            ev = $.Event("keydown", e);
+            $body.trigger(ev);
+          }
+        });
         $body.on('nav_key:power', function () {
           var eventName = 'standby_';
           isStandBy = !isStandBy;
