@@ -100,6 +100,7 @@
 
       $el = generateInput(options.input);
       $el.addClass(this.$input[0].className);
+      $el.attr('data-nav_ud',this.$input[0].getAttribute('data-nav_ud'));
 
       this.$input.hide().after($el);
 
