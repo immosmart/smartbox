@@ -634,11 +634,10 @@
     },
 
     hideKeyboard: function ( isComplete ) {
-      var $wrapper = this.$wrapper;
-      $wrapper.removeClass('smart-input-active');
+      this.$wrapper.removeClass('smart-input-active');
       this.$input.trigger('keyboard_hide');
 
-      $keyboardOverlay && $keyboardOverlay.hide();
+      $keyboardOverlay && $keyboardOverlay.detach();
 
       $$nav.restore();
       $$voice.restore();
@@ -698,7 +697,7 @@
           self.hideKeyboard(isComplete);
         });
 
-      $keyboardOverlay.show();
+      $keyboardOverlay.appendTo('body');
 
       var kh = $keyboardPopup.height();
       var kw = $keyboardPopup.width();
