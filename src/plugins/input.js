@@ -311,7 +311,7 @@
       this.$wrapper.removeClass('smart-input-active');
       this.$input.trigger('keyboard_hide');
 
-      $keyboardOverlay && $keyboardOverlay.detach();
+
 
       $$nav.restore();
       $$voice.restore();
@@ -324,6 +324,8 @@
         this.$input.trigger('keyboard_cancel');
       }
       $keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
+
+      $keyboardOverlay && $keyboardOverlay.detach();
     },
 
     showKeyboard: function () {
