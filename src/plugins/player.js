@@ -25,9 +25,7 @@
             }
         }, 500);
     };
-
     var inited = false;
-
 
     var errorTimeout;
 
@@ -61,6 +59,10 @@
         _init: function () {
 
             //no need to do anything because just stub
+        },
+
+        extend: function (obj) {
+          return SB.extend(this, obj);
         },
         /**
          * current player state ["play", "stop", "pause"]
@@ -602,6 +604,7 @@
         }
     };
 
-    SB.extendFromEvents(Player);
+    //SBEvents.call(Player);
+    SB.extend(Player, SBEvents.prototype);
 
 }(this));

@@ -1,22 +1,25 @@
-;(function () {
-  var Smartbox,
-    _ready = false,
+;(function (_global) {
+  var _ready = false,
     readyCallbacks = [],
     userAgent = navigator.userAgent.toLowerCase(),
-    SmartboxAPI;
+    Smartbox;
 
   //private func for applying all ready callbacks
-  var onReady = function () {
+  function onReady() {
+    var cb, scope;
     _ready = true;
 
     for ( var i = 0, len = readyCallbacks.length; i < len; i++ ) {
-      if (typeof readyCallbacks[i] === 'function') {
-        readyCallbacks[i].call(this);
+      cb = readyCallbacks[i][0];
+      scope = readyCallbacks[1];
+      if (typeof cb === 'function') {
+        cb.call(scope);
       }
     }
+
     // no need anymore
     readyCallbacks = null;
-  };
+  }
 
   /**
    * Detecting current platform
@@ -26,7 +29,7 @@
     return userAgent.indexOf(slug) !== -1;
   }
 
-  var initialise = function() {
+  function initialize() {
     Smartbox.setPlugins();
     Smartbox.getDUID();
 
@@ -35,193 +38,205 @@
       onReady();
       onReady = null;
     }, 10);
-  };
+  }
 
-  Smartbox = function ( platform, cb ) {
+  var extend = (function(){
+    if (_global._) {
+      return _global._.extend
+    } else {
+      return $.extend
+    }
+  })();
+
+  Smartbox = function ( platform, cb, scope ) {
     if ( typeof platform === 'string' ) {
-      Smartbox.readyForPlatform(platform, cb);
+      Smartbox.readyForPlatform(platform, cb, scope);
     } else if ( typeof platform === 'function' ) {
-      // first arg - function
-      Smartbox.ready(platform);
+      scope = cb;
+      cb = platform;
+      Smartbox.ready(cb, scope);
     }
   };
 
-  //public smartbox API
-  SmartboxAPI = {
-    version: 0.1,
-    platformName: '',
+  /**
+   * Version of smartbox
+   * @type {number}
+   */
+  Smartbox.version = 0.2;
 
-    userAgent: userAgent,
+  /**
+   * Current platform name
+   * @type {string} default, samsung, lg, etc
+   */
+  Smartbox.platformName = '';
 
-    createPlatform: function ( platformName, platformApi ) {
-      var isCurrent = platformApi.detect && platformApi.detect();
+  /**
+   * User agent of current platform
+   * @type {string}
+   */
+  Smartbox.userAgent = userAgent;
 
-      if ( isCurrent || detect(platformApi.platformUserAgent) ) {
-        this.platformName = platformName;
-        _.extend(this, platformApi);
+  /**
+   * Calling cb after Smartbox ready
+   * @param cb {function} callback
+   * @param scope {object} scope for callback calling
+   */
+  Smartbox.ready = function ( cb, scope ) {
+    scope = scope || _global;
 
-        if (typeof platformApi.onDetect === 'function') {
-          this.onDetect();
-        }
-      }
-    },
+    if ( _ready ) {
+      cb.call(scope);
+    } else {
+      readyCallbacks.push([cb, scope]);
+    }
+  };
 
-    // calling cb after library initialise
-    ready: function ( cb ) {
-      if ( _ready ) {
+  /**
+   * Calling cb after library initialise if platform is current
+   * @param platform {string} platform name
+   * @param cb {function} callback
+   * @param scope {object} scope for callback calling
+   */
+  Smartbox.readyForPlatform = function ( platform, cb, scope ) {
+    var self = this;
+    this.ready(function () {
+      if ( platform == self.platformName ) {
         cb.call(this);
-      } else {
-        readyCallbacks.push(cb);
       }
-    },
+    }, scope);
+  };
 
-    // calling cb after library initialise if platform is current
-    readyForPlatform: function ( platform, cb ) {
-      var self = this;
-      this.ready(function () {
-        if ( platform == self.platformName ) {
-          cb.call(self);
-        }
-      });
-    },
+  /**
+   * TODO: description
+   * @param platformName
+   * @param platformApi
+   */
+  Smartbox.createPlatform = function ( platformName, platformApi ) {
+    var isCurrent = platformApi.detect && platformApi.detect();
 
-    utils: {
+    if ( isCurrent || detect(platformApi.platformUserAgent) ) {
+      this.platformName = platformName;
+      _.extend(this, platformApi);
 
-      /**
-       * Show error message
-       * @param msg
-       */
-      error: function ( msg ) {
-        $$log(msg, 'error');
-      },
+      if (typeof platformApi.onDetect === 'function') {
+        this.onDetect();
+      }
+    }
+  };
 
-      /**
-       * Show messages in log
-       * all functionality in main.js
-       */
-      log: {
-        log: $.noop,
-        state: $.noop,
-        show: $.noop,
-        hide: $.noop,
-        startProfile: $.noop,
-        stopProfile: $.noop
-      },
+  /**
+   * Asynchroniosly adding javascript files
+   * @param filesArray {Array} array of sources of javascript files
+   * @param cb {Function} callback on load javascript files
+   */
+  Smartbox.addExternalJS = function ( filesArray, cb ) {
+    var loadedScripts = 0,
+      len = filesArray.length,
+      el;
 
-      /**
-       * Asynchroniosly adding javascript files
-       * @param filesArray {Array} array of sources of javascript files
-       * @param cb {Function} callback on load javascript files
-       */
-      addExternalJS: function ( filesArray, cb ) {
-        var $externalJsContainer,
-          loadedScripts = 0,
-          len = filesArray.length,
-          el,
-          scriptEl;
+    function onloadScript () {
+      loadedScripts++;
 
-        function onloadScript () {
-          loadedScripts++;
+      if ( loadedScripts === len ) {
+        cb && cb.call();
+      }
+    }
 
-          if ( loadedScripts === len ) {
-            cb && cb.call();
-          }
-        }
+    if ( filesArray.length ) {
+      for ( var i = 0; i < len; i++ ) {
+        el = document.createElement('script');
+        el.type = 'text/javascript';
+        el.onload = onloadScript;
+        el.src = filesArray[i];
+        document.head.appendChild(el);
+      }
+    } else {
+      // if no external js simple call cb
+      cb && cb.call(this);
+    }
+  };
 
-        if ( filesArray.length ) {
+  /**
+   * Add external css filess
+   * @param filesArray {array} array of css sources
+   */
+  Smartbox.addExternalCSS = function ( filesArray ) {
+    var $externalCssContainer,
+      len = filesArray.length,
+      i = 0,
+      el, src;
 
-          $externalJsContainer = document.createDocumentFragment();
-          el = document.createElement('script');
-          el.type = 'text/javascript';
-          el.onload = onloadScript;
+    if ( len ) {
+      $externalCssContainer = document.createDocumentFragment();
 
-          for ( var i = 0; i < len; i++ ) {
-            scriptEl = el.cloneNode();
-            scriptEl.src = filesArray[i];
-            $externalJsContainer.appendChild(scriptEl);
-          }
+      while (i < len) {
+        src = filesArray[i];
+        if (src) {
+          el = document.createElement('link');
+          el.rel = 'stylesheet';
+          el.href = src;
 
-          document.body.appendChild($externalJsContainer);
-        } else {
-
-          // if no external js simple call cb
-          cb && cb.call(this);
-        }
-      },
-
-      addExternalCss: function ( filesArray ) {
-        var $externalCssContainer;
-
-        if ( filesArray.length ) {
-          $externalCssContainer = document.createDocumentFragment();
-          _.each(filesArray, function ( src ) {
-
-            var el = document.createElement('link');
-
-            el.rel = 'stylesheet';
-            el.href = src;
-
-            $externalCssContainer.appendChild(el);
-          });
-
-          document.body.appendChild($externalCssContainer);
-        }
-      },
-
-      addExternalFiles: function ( cb ) {
-        if ( this.externalJs.length ) {
-          this.addExternalJS(this.externalJs, cb);
-        }
-        if ( this.externalCss.length ) {
-          this.addExternalCss(this.externalCss);
+          $externalCssContainer.appendChild(el);
         }
       }
+
+      document.body.appendChild($externalCssContainer);
+    }
+  };
+
+  Smartbox.extend = extend;
+
+  Smartbox.utils = {
+    /**
+     * Show error message
+     * @param msg
+     */
+    error: function ( msg ) {
+      $$log(msg, 'error');
     },
 
     /**
-     * Add events methods to source object
-     * @param object {Object} source object
+     * Show messages in log
+     * all functionality in main.js
      */
-    extendFromEvents: function(object){
-          var eventProto,
-              extendFunction = _.merge;
+    log: {
+      log: $.noop,
+      state: $.noop,
+      show: $.noop,
+      hide: $.noop,
+      startProfile: $.noop,
+      stopProfile: $.noop
+    },
 
-          if (window.EventEmitter) {
-              eventProto = EventEmitter.prototype;
-          } else if (window.Backbone) {
-              eventProto = Backbone.Events;
-          } else if (window.Events) {
-              eventProto = Events.prototype;
-          }
-
-          object.extend = function (proto) {
-              extendFunction(this, proto);
-          };
-
-          object.extend(eventProto);
-      }
+    // for backward compatibility
+    addExternalJS: Smartbox.addExternalJS,
+    addExternalCSS: Smartbox.addExternalCSS
   };
 
+  /**
+   * Main config for library
+   * @type {object}
+   */
   Smartbox.config = {
     DUID: 'real',
     customVolumeEnable: false
   };
 
+  document.head = document.head || document.getElementsByTagName('head')[0];
 
-  SmartboxAPI.extendFromEvents(SmartboxAPI);
-
-  _.extend(Smartbox, SmartboxAPI);
+  extend(Smartbox, SBEvents.prototype);
 
   // exporting library to global
-  window.SB = Smartbox;
-
-
+  _global.SB = Smartbox;
 
   // initialize library
-  window.onload = function () {
-    initialise();
-
-    // we don't need initialise func anymore
-    initialise = null;
-  };
-})();
+  if (typeof document.addEventListener === 'function') {
+    document.addEventListener('DOMContentLoaded', function() {
+      initialize();
+    }, false);
+  } else {
+    document.onload = function() {
+      initialize();
+    };
+  }
+})(this);

@@ -1,2 +1,0 @@
-Player-Demo-Smartbox
-====================
