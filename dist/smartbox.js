@@ -867,11 +867,10 @@
     },
 
     hideKeyboard: function ( isComplete ) {
-      var $wrapper = this.$wrapper;
-      $wrapper.removeClass('smart-input-active');
+      this.$wrapper.removeClass('smart-input-active');
       this.$input.trigger('keyboard_hide');
 
-      $keyboardOverlay && $keyboardOverlay.hide();
+
 
       $$nav.restore();
       $$voice.restore();
@@ -884,6 +883,8 @@
         this.$input.trigger('keyboard_cancel');
       }
       $keyboardPopup && $keyboardPopup.trigger('keyboard_hide');
+
+      $keyboardOverlay && $keyboardOverlay.detach();
     },
 
     showKeyboard: function () {
@@ -931,7 +932,7 @@
           self.hideKeyboard(isComplete);
         });
 
-      $keyboardOverlay.show();
+      $keyboardOverlay.appendTo('body');
 
       var kh = $keyboardPopup.height();
       var kw = $keyboardPopup.width();
