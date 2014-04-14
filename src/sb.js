@@ -44,7 +44,7 @@
     if (_global._) {
       return _global._.extend
     } else {
-      return $.extend
+      return _global.$.extend
     }
   })();
 
