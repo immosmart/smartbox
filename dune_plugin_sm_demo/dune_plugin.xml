@@ -1,0 +1,23 @@
+<dune_plugin>
+  <name>smartbox_demo</name>
+  <caption>Smartbox demoApp</caption>
+  <entry_points>
+    <entry_point>
+        <parent_media_url>root://tv</parent_media_url>
+        <media_url>smartbox_demo</media_url>
+        <caption>Smartbox demoApp</caption>
+        <icon_url>plugin_file://icon.png</icon_url>
+        <actions>
+          <key_enter>
+            <type>launch_media_url</type>
+            <data>
+              <url>www://http://your-http-server/smartbox/demo/demoApp/:::fullscreen=1&amp;webapp_keys=1&amp;zoom_level=100&amp;osd_size=1280x720&amp;overscan=0&amp;background_color=black&amp;input_handler=0</url>
+            </data>
+          </key_enter>
+        </actions>
+        <ip_address_required>yes</ip_address_required>
+        <show_by_default>yes</show_by_default>
+    </entry_point>
+  </entry_points>
+  <type>php</type>
+</dune_plugin>
