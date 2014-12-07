@@ -98,10 +98,6 @@
     };
 
     this.restore = function () {
-      _.each(icons, function ( key ) {
-        Legend[key](savedLegend[key]);
-      });
-
       for ( var key in savedLegend ) {
         this.keys[key](savedLegend[key]);
       }
