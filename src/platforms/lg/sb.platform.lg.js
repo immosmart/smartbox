@@ -52,7 +52,7 @@ SB.createPlatform('lg', {
         this.device = $('#device')[0];
 
         this.modelCode = this.device.version;
-        this.productCode = this.device.platform;
+        this.productCode = this.device.modelName;
 
         this.getDUID();
 
