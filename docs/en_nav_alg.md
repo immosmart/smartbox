@@ -26,7 +26,7 @@ If on the second step intersected elements haven't been found the closest elemen
 
 ![slide6](nav_slides/slide6.png)
 
-In this example moving vertically from the element **B** to the element **A** it's possible to transit the focus but not vise versaю
+In this example moving vertically from the element **B** to the element **A** it's possible to transit the focus but not vise versa.
 It happens because of the bottom edge pf the element **A** is lower then the bottom edge of the element **B**.
 So **A**  is higher and lower **B** at the same time. 
 
